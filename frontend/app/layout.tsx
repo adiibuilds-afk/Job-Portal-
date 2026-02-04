@@ -1,0 +1,78 @@
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: "JobPortal - Premium Government & Private Jobs in India",
+    template: "%s | JobPortal"
+  },
+  description: "India's #1 AI-powered job discovery platform. Find the latest government and private sector job openings with competitive salaries. Updated daily.",
+  keywords: ["jobs", "government jobs", "private jobs", "careers", "india jobs", "job portal", "employment", "freshers jobs", "IT jobs", "banking jobs"],
+  authors: [{ name: "JobPortal" }],
+  creator: "JobPortal",
+  publisher: "JobPortal",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://jobportal.com",
+    siteName: "JobPortal",
+    title: "JobPortal - Premium Government & Private Jobs in India",
+    description: "India's #1 AI-powered job discovery platform. Find the latest government and private sector job openings.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "JobPortal",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "JobPortal - Premium Government & Private Jobs",
+    description: "India's #1 AI-powered job discovery platform",
+    images: ["/og-image.png"],
+  },
+  verification: {
+    google: "your-google-verification-code",
+  },
+  alternates: {
+    canonical: "https://jobportal.com",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" className="dark">
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="theme-color" content="#000000" />
+      </head>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        {children}
+      </body>
+    </html>
+  );
+}
