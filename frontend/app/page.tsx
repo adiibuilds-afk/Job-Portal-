@@ -173,7 +173,7 @@ export default async function Home() {
                   <h3 className="text-lg font-bold text-white mb-2">Premium Alerts</h3>
                   <p className="text-zinc-500 text-sm mb-5">Get instant job notifications on Telegram</p>
                   <a
-                    href="https://t.me/jobupdatebyadi"
+                    href="https://t.me/jobgridupdates"
                     target="_blank"
                     className="block w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all"
                   >

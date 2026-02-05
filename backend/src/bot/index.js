@@ -72,7 +72,7 @@ const setupBot = (token) => {
       if (hasValue(job.salary)) message += `\n💰 *Salary:* ${job.salary}`;
       if (hasValue(job.location)) message += `\n📍 *Location:* ${job.location}`;
       
-      message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n📢 @jobupdatebyadi`;
+      message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n📢 @jobgridupdates`;
 
       await bot.telegram.sendMessage(CHANNEL_ID, message, {
         parse_mode: 'Markdown',

@@ -70,7 +70,7 @@ const processQueue = async (bot) => {
         if (jobData.salary && jobData.salary !== 'N/A') message += `\n💰 *Salary:* ${jobData.salary}`;
         if (jobData.location && jobData.location !== 'N/A') message += `\n📍 *Location:* ${jobData.location}`;
         
-        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n📢 @jobupdatebyadi`;
+        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n📢 @jobgridupdates`;
 
         await bot.telegram.sendMessage(CHANNEL_ID, message, {
             parse_mode: 'Markdown',

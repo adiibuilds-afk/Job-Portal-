@@ -63,7 +63,7 @@ export default function Navbar() {
                             </div>
 
                             <Link
-                                href="https://t.me/jobupdatebyadi"
+                                href="https://t.me/jobgridupdates"
                                 target="_blank"
                                 className="hidden md:flex px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 transition-all text-sm"
                             >
@@ -127,7 +127,7 @@ export default function Navbar() {
 
                             <div className="mt-8">
                                 <Link
-                                    href="https://t.me/jobupdatebyadi"
+                                    href="https://t.me/jobgridupdates"
                                     target="_blank"
                                     className="block w-full py-3 text-center bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl"
                                 >
