@@ -10,7 +10,7 @@ const setupBot = (token) => {
 
   // Channel ID for posting updates
   const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID;
-  const WEBSITE_URL = process.env.WEBSITE_URL || 'http://localhost:3000';
+  const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
 
   // Auth middleware
   const adminOnly = (ctx, next) => {

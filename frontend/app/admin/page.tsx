@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Briefcase, AlertTriangle, Users, TrendingUp, Eye, MousePointer, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid.in';
 
 interface Job {
     _id: string;
@@ -158,8 +158,8 @@ export default function AdminDashboard() {
                     <button
                         onClick={() => setActiveTab('all')}
                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'all'
-                                ? 'bg-amber-500 text-black'
-                                : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                            ? 'bg-amber-500 text-black'
+                            : 'bg-zinc-800 text-zinc-400 hover:text-white'
                             }`}
                     >
                         All Jobs ({jobs.length})
@@ -167,8 +167,8 @@ export default function AdminDashboard() {
                     <button
                         onClick={() => setActiveTab('reported')}
                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'reported'
-                                ? 'bg-red-500 text-white'
-                                : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-zinc-800 text-zinc-400 hover:text-white'
                             }`}
                     >
                         🚨 Reported ({reportedJobs.length})
@@ -210,8 +210,8 @@ export default function AdminDashboard() {
                                         <button
                                             onClick={() => toggleJobStatus(job._id, job.isActive !== false)}
                                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${job.isActive !== false
-                                                    ? 'bg-green-500/10 text-green-400'
-                                                    : 'bg-zinc-700 text-zinc-400'
+                                                ? 'bg-green-500/10 text-green-400'
+                                                : 'bg-zinc-700 text-zinc-400'
                                                 }`}
                                         >
                                             {job.isActive !== false ? (

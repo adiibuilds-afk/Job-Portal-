@@ -9,7 +9,10 @@ const Post = require('./models/Post');
 const Comment = require('./models/Comment');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ['https://jobgrid.in', 'https://www.jobgrid.in', 'http://localhost:3000', 'http://localhost:5000'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Database Connection
