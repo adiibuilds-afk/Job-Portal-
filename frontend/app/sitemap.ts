@@ -14,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Dynamic job pages
     let jobPages: MetadataRoute.Sitemap = [];
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid.in'}/api/jobs`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com'}/api/jobs`);
         const jobs = await res.json();
 
         jobPages = jobs.map((job: { slug: string; createdAt: string }) => ({

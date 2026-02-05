@@ -156,13 +156,41 @@ Example:
       `);
     }
 
-    await ctx.reply('🤖 Processing... If a link is present, I will scan it for details.');
-
     try {
       // Check for URL in text
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const urls = rawText.match(urlRegex);
+      const urls = rawText.match(urlRegex) || [];
       
+      const { ScheduledJob } = require('../models/ScheduledJob'); // Delayed import
+
+      if (urls.length > 1) {
+          // BATCH MODE
+          await ctx.reply(`🔄 Detected ${urls.length} links. Switching to BATCH SCHEDULING mode.`);
+          
+          let scheduledCount = 0;
+          const startTime = new Date();
+          
+          for (let i = 0; i < urls.length; i++) {
+              const url = urls[i];
+              // Schedule every 5 minutes
+              const scheduledTime = new Date(startTime.getTime() + (i * 5 * 60 * 1000));
+              
+              const newScheduledJob = new require('../models/ScheduledJob')({
+                  originalUrl: url,
+                  status: 'pending',
+                  scheduledFor: scheduledTime
+              });
+              
+              await newScheduledJob.save();
+              scheduledCount++;
+          }
+          
+          return ctx.reply(`✅ Successfully scheduled ${scheduledCount} jobs!\n\n🕒 First job: Now\n🕒 Last job: in ${urls.length * 5} minutes\n\nThey will be auto-processed in background.`);
+      }
+
+      // SINGLE MODE (Legacy)
+      await ctx.reply('🤖 Processing... If a link is present, I will scan it for details.');
+
       let enrichedText = rawText;
       let scrapedData = null;
 

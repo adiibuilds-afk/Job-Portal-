@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Briefcase, AlertTriangle, Users, TrendingUp, Eye, MousePointer, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid.in';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com';
 
 interface Job {
     _id: string;

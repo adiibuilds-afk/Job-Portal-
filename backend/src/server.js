@@ -10,7 +10,7 @@ const Comment = require('./models/Comment');
 
 const app = express();
 app.use(cors({
-  origin: ['https://jobgrid.in', 'https://www.jobgrid.in', 'http://localhost:3000', 'http://localhost:5000'],
+  origin: ['https://jobgrid.in', 'https://www.jobgrid.in', 'http://localhost:3000', 'https://jobgrid-in.onrender.com'],
   credentials: true
 }));
 app.use(express.json());
@@ -21,13 +21,22 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.log(err));
 
 // Start Bot
+let botInstance = null;
 if (process.env.TELEGRAM_BOT_TOKEN) {
-  setupBot(process.env.TELEGRAM_BOT_TOKEN);
+  botInstance = setupBot(process.env.TELEGRAM_BOT_TOKEN);
+  
+  // Initialize Scheduler
+  const { initScheduler } = require('./services/scheduler');
+  initScheduler(botInstance);
 } else {
   console.log("Telegram Bot Token not provided, bot not started.");
 }
 
 // Routes
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
+
 app.get('/api/jobs', async (req, res) => {
   try {
     const { q, category, location, batch, tags, jobType, roleType, minSalary, isRemote, ids, page = 1, limit = 20 } = req.query;
