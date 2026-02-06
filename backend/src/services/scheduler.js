@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const ScheduledJob = require('../models/ScheduledJob');
-const { scrapeJobPage } = require('./scraper');
+const { scrapeJobPage, scrapeTalentdJobs } = require('./scraper');
 const { parseJobWithAI } = require('./groq');
 const Job = require('../models/Job');
 const setupBot = require('../bot'); // We will need to access the bot instance or move postToChannel logic
@@ -91,12 +91,48 @@ const processQueue = async (bot) => {
   }
 };
 
+
+// ... existing processQueue ...
+
+const runAutoScraper = async (bot) => {
+    console.log('🕷️ Running Auto-Scraper for Talentd...');
+    const links = await scrapeTalentdJobs();
+    
+    for (const link of links) {
+        // Check if exists
+        const exists = await Job.findOne({ $or: [{ originalUrl: link }, { applyUrl: link }] });
+        if (exists) {
+            // console.log(`Skipping existing: ${link}`);
+            continue;
+        }
+
+        // Check if already queued
+        const queued = await ScheduledJob.findOne({ originalUrl: link });
+        if (queued) continue;
+
+        // Add to Queue
+        const newQueue = new ScheduledJob({
+            originalUrl: link,
+            scheduledFor: new Date(), // Immediate
+            status: 'pending'
+        });
+        await newQueue.save();
+        console.log(`✅ Queued new job: ${link}`);
+    }
+};
+
 const initScheduler = (bot) => {
     // Run every minute to check if any 5-min slot has passed
     cron.schedule('* * * * *', () => {
         processQueue(bot);
     });
-    console.log('⏰ Job Scheduler initialized (1 min checks)');
+
+    // Run Auto-Scraper every hour
+    cron.schedule('0 * * * *', () => {
+        runAutoScraper(bot);
+    });
+    
+    console.log('⏰ Job Scheduler initialized (1 min checks + Hourly Scraper)');
 };
 
-module.exports = { initScheduler };
+module.exports = { initScheduler, runAutoScraper };

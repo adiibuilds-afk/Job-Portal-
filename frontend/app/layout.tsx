@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Providers } from '@/components/Providers';
+import BatchPopup from "@/components/onboarding/BatchPopup";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -51,7 +53,7 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
   verification: {
-    google: "your-google-verification-code",
+    google: "vZ7c5Hm0Ph_6jXcY0HC8N1UdGazM7_hdp68l8SH-jR0",
   },
   alternates: {
     canonical: "https://jobportal.com",
@@ -74,7 +76,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+        <Providers>
+          {children}
+          <BatchPopup />
+        </Providers>
       </body>
     </html>
   );

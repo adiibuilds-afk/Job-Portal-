@@ -7,7 +7,7 @@ export default function Footer() {
     return (
         <footer className="bg-zinc-950 border-t border-zinc-800 relative z-10">
             <div className="max-w-6xl mx-auto px-6 py-16">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
 
                     {/* Brand */}
                     <div className="md:col-span-1">
@@ -35,6 +35,23 @@ export default function Footer() {
                                 <li key={item.name}>
                                     <Link href={item.href} className="text-zinc-500 hover:text-amber-400 text-sm transition-colors">
                                         {item.name}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Popular Searches (SEO) */}
+                    <div>
+                        <h4 className="text-white font-semibold mb-4">Popular Searches</h4>
+                        <ul className="space-y-2">
+                            {['Remote Jobs', 'Bangalore Jobs', 'Frontend Jobs', 'SDE Jobs', 'Freshers 2024'].map((item) => (
+                                <li key={item}>
+                                    <Link
+                                        href={`/jobs/${item.toLowerCase().replace(/ /g, '-')}`}
+                                        className="text-zinc-500 hover:text-amber-400 text-sm transition-colors"
+                                    >
+                                        {item}
                                     </Link>
                                 </li>
                             ))}

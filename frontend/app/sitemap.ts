@@ -7,15 +7,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const staticPages = [
         { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 1 },
         { url: `${baseUrl}/jobs`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
-        { url: `${baseUrl}/category/govt`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
-        { url: `${baseUrl}/category/private`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
+        { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+        { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+        { url: `${baseUrl}/privacy`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
+        { url: `${baseUrl}/terms`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
+        { url: `${baseUrl}/disclaimer`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
+        { url: `${baseUrl}/forum`, lastModified: new Date(), changeFrequency: 'hourly' as const, priority: 0.8 },
     ];
 
-    // Dynamic job pages
+    // SEO Landing Pages (Programmatic)
+    const seoKeywords = ['remote', 'bangalore', 'frontend', 'backend', 'fullstack', 'sde', 'freshers-2024', 'freshers-2025'];
+    const seoPages = seoKeywords.map(keyword => ({
+        url: `${baseUrl}/jobs/${keyword}-jobs`,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 0.8,
+    }));
+
+    // Dynamic Job Pages
     let jobPages: MetadataRoute.Sitemap = [];
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com'}/api/jobs`);
-        const jobs = await res.json();
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com'}/api/jobs?limit=1000`);
+        const data = await res.json();
+        const jobs = data.jobs || [];
 
         jobPages = jobs.map((job: { slug: string; createdAt: string }) => ({
             url: `${baseUrl}/job/${job.slug}`,
@@ -27,5 +41,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         console.error('Failed to fetch jobs for sitemap', error);
     }
 
-    return [...staticPages, ...jobPages];
+    // Dynamic Forum Pages
+    let forumPages: MetadataRoute.Sitemap = [];
+    try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com'}/api/forum/posts?limit=100`);
+        const posts = await res.json();
+
+        forumPages = Array.isArray(posts) ? posts.map((post: { _id: string; createdAt: string }) => ({
+            url: `${baseUrl}/forum/${post._id}`,
+            lastModified: new Date(post.createdAt),
+            changeFrequency: 'daily' as const,
+            priority: 0.6,
+        })) : [];
+    } catch (error) {
+        console.error('Failed to fetch forum posts for sitemap', error);
+    }
+
+    return [...staticPages, ...seoPages, ...jobPages, ...forumPages];
 }

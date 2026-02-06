@@ -1,5 +1,7 @@
 import JobActions from '@/components/JobActions';
 import AdBanner from '@/components/AdBanner';
+import ColdEmailGenerator from './ColdEmailGenerator';
+import ResumeMatcher from './ResumeMatcher';
 import { Job } from '@/types';
 
 interface JobSidebarProps {
@@ -55,6 +57,12 @@ export default function JobSidebar({ job, slug }: JobSidebarProps) {
                     )}
                 </div>
             )}
+
+            {/* Cold Email Generator */}
+            <ColdEmailGenerator jobTitle={job.title} company={job.company} tags={job.tags} />
+
+            {/* AI Resume Matcher */}
+            <ResumeMatcher jobId={job._id} jobTitle={job.title} />
 
             {/* Share */}
             <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6">

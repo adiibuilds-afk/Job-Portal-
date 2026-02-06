@@ -56,8 +56,17 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-amber-500/20 flex items-center justify-center text-xl font-bold text-amber-400 group-hover:border-amber-500/40 transition-colors">
-                            {job.company.charAt(0)}
+                        <div className="relative">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-amber-500/20 flex items-center justify-center text-xl font-bold text-amber-400 group-hover:border-amber-500/40 transition-colors">
+                                {job.company.charAt(0)}
+                            </div>
+                            {/* Freshness Pulse (< 4 hours) */}
+                            {new Date().getTime() - new Date(job.createdAt).getTime() < 4 * 60 * 60 * 1000 && (
+                                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                </span>
+                            )}
                         </div>
                         <div>
                             <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-1">
@@ -132,7 +141,10 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                     </div>
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-xs text-zinc-400">
                         <Clock className="w-3.5 h-3.5 text-zinc-500" />
-                        {format(new Date(job.createdAt), 'MMM d')}
+                        {new Date().getTime() - new Date(job.createdAt).getTime() < 4 * 60 * 60 * 1000
+                            ? <span className="text-green-400 font-bold">New</span>
+                            : format(new Date(job.createdAt), 'MMM d')
+                        }
                     </div>
                 </div>
 

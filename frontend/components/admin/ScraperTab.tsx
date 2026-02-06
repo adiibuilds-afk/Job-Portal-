@@ -46,6 +46,36 @@ export default function ScraperTab({ apiUrl }: ScraperTabProps) {
                     {`{ "status": "waiting", "message": "Enter a URL above to test extraction results." }`}
                 </div>
             </div>
+
+            <div className="mt-8 bg-zinc-900 border border-zinc-800 rounded-3xl p-10 shadow-2xl">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 className="text-2xl font-black text-white mb-2">Auto-Scraper Control</h2>
+                        <p className="text-zinc-500">Manage the hourly generic scraper (Talentd, etc).</p>
+                    </div>
+                </div>
+
+                <div className="flex gap-4">
+                    <button
+                        onClick={async () => {
+                            if (!confirm('This will trigger the full scraper sequence immediately. Continue?')) return;
+                            try {
+                                const res = await fetch(`${apiUrl}/api/admin/scraper/trigger`, { method: 'POST' });
+                                const data = await res.json();
+                                alert(data.message);
+                            } catch (err) {
+                                alert('Failed to trigger scraper');
+                            }
+                        }}
+                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all"
+                    >
+                        🚀 Trigger Now (Manual Run)
+                    </button>
+                    <div className="px-6 py-3 bg-zinc-800 rounded-xl text-zinc-400 font-mono text-sm flex items-center">
+                        Schedule: Hourly (0 * * * *)
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

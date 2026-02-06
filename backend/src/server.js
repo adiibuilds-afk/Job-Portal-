@@ -32,6 +32,15 @@ if (process.env.TELEGRAM_BOT_TOKEN) {
   console.log("Telegram Bot Token not provided, bot not started.");
 }
 
+const userRoutes = require('./routes/user');
+app.use('/api/user', userRoutes);
+
+const resumeRoutes = require('./routes/resume');
+app.use('/api/resume', resumeRoutes);
+
+const adminRoutes = require('./routes/admin');
+app.use('/api/admin', adminRoutes);
+
 // Routes
 app.get('/', (req, res) => {
   res.send('API is running...');
@@ -73,8 +82,9 @@ app.get('/api/jobs', async (req, res) => {
         }
     }
     if (tags) query.tags = { $in: [tags] }; // Matches if tags array contains the requested tag
-    if (jobType) query.jobType = jobType;
-    if (roleType) query.roleType = roleType;
+    if (tags) query.tags = { $in: [tags] }; // Matches if tags array contains the requested tag
+    if (jobType) query.jobType = { $regex: jobType, $options: 'i' };
+    if (roleType) query.roleType = { $regex: roleType, $options: 'i' };
     if (minSalary) query.minSalary = { $gte: parseInt(minSalary) };
     if (isRemote === 'true') query.isRemote = true;
 

@@ -8,6 +8,7 @@ import JobsTab from '@/components/admin/JobsTab';
 import QueueTab from '@/components/admin/QueueTab';
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import ScraperTab from '@/components/admin/ScraperTab';
+import BatchAlerts from '@/components/admin/BatchAlerts';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com';
 
@@ -18,7 +19,7 @@ export default function AdminDashboard() {
     const [chartData, setChartData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [cleaning, setCleaning] = useState(false);
-    const [activeTab, setActiveTab] = useState<'jobs' | 'queue' | 'analytics' | 'scraper'>('jobs');
+    const [activeTab, setActiveTab] = useState<'jobs' | 'queue' | 'analytics' | 'scraper' | 'alerts'>('jobs');
     const [jobFilter, setJobFilter] = useState<'all' | 'reported'>('all');
 
     useEffect(() => {
@@ -154,6 +155,10 @@ export default function AdminDashboard() {
 
                 {activeTab === 'scraper' && (
                     <ScraperTab apiUrl={API_URL} />
+                )}
+
+                {activeTab === 'alerts' && (
+                    <BatchAlerts />
                 )}
             </div>
         </main>

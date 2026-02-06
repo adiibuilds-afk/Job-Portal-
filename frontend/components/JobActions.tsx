@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Bookmark, Flag, Link2, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useSavedJobs } from '@/hooks/useSavedJobs';
+import { useAppliedJobs } from '@/hooks/useAppliedJobs';
 import { reportJob } from '@/services/api';
 
 interface JobActionsProps {
@@ -39,16 +40,41 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
         setTimeout(() => setIsCopied(false), 2000);
     };
 
+    const { isApplied, markAsApplied } = useAppliedJobs();
+    const applied = isApplied(jobId);
+
     return (
         <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 space-y-4">
             <h4 className="font-bold text-white mb-4">Quick Actions</h4>
+
+            {/* Mark as Applied */}
+            <button
+                onClick={() => markAsApplied(jobId)}
+                disabled={applied}
+                className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${applied
+                    ? 'bg-green-500 text-black border border-green-500 scale-100 cursor-default'
+                    : 'bg-white text-black border border-white hover:scale-105 transition-transform'
+                    }`}
+            >
+                {applied ? (
+                    <>
+                        <CheckCircle className="w-5 h-5" />
+                        Applied ✅
+                    </>
+                ) : (
+                    <>
+                        <CheckCircle className="w-5 h-5" />
+                        Mark as Applied
+                    </>
+                )}
+            </button>
 
             {/* Save Job */}
             <button
                 onClick={() => toggleSave(jobId)}
                 className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${saved
-                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-amber-500/30 hover:text-amber-400'
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-amber-500/30 hover:text-amber-400'
                     }`}
             >
                 <Bookmark className={`w-5 h-5 ${saved ? 'fill-amber-400' : ''}`} />
@@ -59,8 +85,8 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
             <button
                 onClick={handleCopyLink}
                 className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${isCopied
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-green-500/30 hover:text-green-400'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-blue-500/30 hover:text-blue-400'
                     }`}
             >
                 {isCopied ? (
@@ -81,8 +107,8 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
                 onClick={handleReport}
                 disabled={isReported || reporting}
                 className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${isReported
-                        ? 'bg-red-500/10 text-red-400 border border-red-500/20 cursor-not-allowed'
-                        : 'bg-zinc-800/50 text-zinc-500 border border-zinc-700/50 hover:border-red-500/30 hover:text-red-400'
+                    ? 'bg-red-500/10 text-red-400 border border-red-500/20 cursor-not-allowed'
+                    : 'bg-zinc-800/50 text-zinc-500 border border-zinc-700/50 hover:border-red-500/30 hover:text-red-400'
                     }`}
             >
                 {isReported ? (

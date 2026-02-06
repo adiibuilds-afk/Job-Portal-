@@ -1,11 +1,13 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, Search, Crown, X } from 'lucide-react';
+import { Menu, Search, Crown, X, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Navbar() {
+    const { data: session } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
@@ -62,6 +64,38 @@ export default function Navbar() {
                                 />
                             </div>
 
+                            {session ? (
+                                <div className="hidden md:flex items-center gap-3">
+                                    <Link href="/profile">
+                                        {session.user?.image ? (
+                                            <img
+                                                src={session.user.image}
+                                                alt="Profile"
+                                                className="w-10 h-10 rounded-full border border-zinc-700"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center font-bold text-black border border-amber-400">
+                                                {session.user?.name?.charAt(0) || 'U'}
+                                            </div>
+                                        )}
+                                    </Link>
+                                    <button
+                                        onClick={() => signOut()}
+                                        className="text-zinc-400 hover:text-white text-sm font-medium"
+                                    >
+                                        Log Out
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => signIn('google')}
+                                    className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-white text-zinc-950 font-bold rounded-xl transition-all text-sm shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95"
+                                >
+                                    <LogIn className="w-4 h-4" />
+                                    <span>Log In</span>
+                                </button>
+                            )}
+
                             <Link
                                 href="https://t.me/jobgridupdates"
                                 target="_blank"
@@ -106,6 +140,22 @@ export default function Navbar() {
                                 </button>
                             </div>
 
+                            {session && (
+                                <div className="flex items-center gap-3 mb-6 p-4 bg-zinc-800/50 rounded-xl border border-zinc-700">
+                                    {session.user?.image ? (
+                                        <img src={session.user.image} alt="Profile" className="w-10 h-10 rounded-full" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center font-bold text-black">
+                                            {session.user?.name?.charAt(0) || 'U'}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className="text-white font-semibold text-sm">{session.user?.name}</p>
+                                        <p className="text-zinc-500 text-xs">{session.user?.email}</p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="space-y-2">
                                 {[
                                     { name: 'Home', href: '/' },
@@ -123,9 +173,34 @@ export default function Navbar() {
                                         {item.name}
                                     </Link>
                                 ))}
+                                {session && (
+                                    <Link
+                                        href="/profile"
+                                        onClick={() => setMobileOpen(false)}
+                                        className="block px-4 py-3 text-zinc-300 hover:text-amber-400 hover:bg-zinc-800 rounded-xl transition-all"
+                                    >
+                                        My Profile
+                                    </Link>
+                                )}
                             </div>
 
-                            <div className="mt-8">
+                            <div className="mt-8 space-y-3">
+                                {session ? (
+                                    <button
+                                        onClick={() => signOut()}
+                                        className="block w-full py-3 text-center bg-zinc-800 text-white font-bold rounded-xl border border-zinc-700"
+                                    >
+                                        Log Out
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => signIn('google')}
+                                        className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-100 text-black font-bold rounded-xl hover:bg-white transition-all"
+                                    >
+                                        <LogIn className="w-4 h-4" />
+                                        Log In with Google
+                                    </button>
+                                )}
                                 <Link
                                     href="https://t.me/jobgridupdates"
                                     target="_blank"

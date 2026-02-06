@@ -3,6 +3,7 @@ import JobCard from '@/components/JobCard';
 import Navbar from '@/components/Navbar';
 import LatestJobsTicker from '@/components/LatestJobsTicker';
 import Footer from '@/components/Footer';
+import HiringHeatmap from '@/components/home/HiringHeatmap';
 import AdBanner from '@/components/AdBanner';
 import EmailSubscription from '@/components/EmailSubscription';
 import { Job } from '@/types';
@@ -118,6 +119,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <HiringHeatmap />
 
       {/* Jobs Section */}
       <section className="relative px-4 pb-32">
