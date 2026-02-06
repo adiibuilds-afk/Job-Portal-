@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { Job } from '@/types';
 import { MapPin, Banknote, Clock, ArrowUpRight, Building2, Bookmark, Flag, Check } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow, formatDistanceToNowStrict } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useSavedJobs } from '@/hooks/useSavedJobs';
 import { reportJob } from '@/services/api';
 import { useState } from 'react';
+import { useSession, signIn } from 'next-auth/react';
+import { useAppliedJobs } from '@/hooks/useAppliedJobs';
 
 interface JobCardProps {
     job: Job;
@@ -19,9 +21,21 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
     const saved = isSaved(job._id);
     const [reported, setReported] = useState(false);
 
+    const { data: session } = useSession();
+    const { isApplied, markAsApplied } = useAppliedJobs();
+    const applied = isApplied(job._id);
+
     const handleReport = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (!session) {
+            if (confirm('Please login to report jobs. Login now?')) {
+                signIn();
+            }
+            return;
+        }
+
         if (confirm('Are you sure you want to report this job as expired or spam?')) {
             try {
                 await reportJob(job._id, 'User reported via card');
@@ -36,7 +50,25 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
     const handleSave = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!session) {
+            if (confirm('Please login to save jobs. Login now?')) {
+                signIn();
+            }
+            return;
+        }
         toggleSave(job._id);
+    };
+
+    const handleApplyMark = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!session) {
+            if (confirm('Please login to track your applications. Login now?')) {
+                signIn();
+            }
+            return;
+        }
+        markAsApplied(job._id);
     };
 
     return (
@@ -57,8 +89,20 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-4">
                         <div className="relative">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-amber-500/20 flex items-center justify-center text-xl font-bold text-amber-400 group-hover:border-amber-500/40 transition-colors">
-                                {job.company.charAt(0)}
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-amber-500/20 flex items-center justify-center text-xl font-bold text-amber-400 group-hover:border-amber-500/40 transition-colors overflow-hidden">
+                                {job.companyLogo ? (
+                                    <img
+                                        src={job.companyLogo}
+                                        alt={job.company}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                            (e.target as HTMLImageElement).parentElement!.innerText = job.company.charAt(0);
+                                        }}
+                                    />
+                                ) : (
+                                    job.company.charAt(0)
+                                )}
                             </div>
                             {/* Freshness Pulse (< 4 hours) */}
                             {new Date().getTime() - new Date(job.createdAt).getTime() < 4 * 60 * 60 * 1000 && (
@@ -87,8 +131,15 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                         )}
                         <div className="flex gap-2">
                             <button
+                                onClick={handleApplyMark}
+                                className={`p-2 rounded-xl transition-all border ${applied ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-zinc-800 text-zinc-500 border-zinc-700 hover:text-white hover:border-zinc-500'}`}
+                                title={applied ? "Applied" : "Mark as Applied"}
+                            >
+                                <Check className="w-4 h-4" />
+                            </button>
+                            <button
                                 onClick={handleSave}
-                                className={`p-2 rounded-full transition-colors ${saved ? 'bg-amber-500/20 text-amber-400' : 'bg-zinc-800 text-zinc-500 hover:text-white'}`}
+                                className={`p-2 rounded-xl transition-all border ${saved ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-zinc-800 text-zinc-500 border-zinc-700 hover:text-white hover:border-zinc-500'}`}
                                 title={saved ? "Unsave" : "Save Job"}
                             >
                                 <Bookmark className={`w-4 h-4 ${saved ? 'fill-current' : ''}`} />
@@ -96,7 +147,7 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                             <button
                                 onClick={handleReport}
                                 disabled={reported}
-                                className={`p-2 rounded-full bg-zinc-800 transition-colors ${reported ? 'text-green-500' : 'text-zinc-500 hover:text-red-500'}`}
+                                className={`p-2 rounded-xl border transition-all ${reported ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-zinc-800 text-zinc-500 border-zinc-700 hover:text-red-500 hover:border-red-500/30'}`}
                                 title="Report Job"
                             >
                                 {reported ? <Check className="w-4 h-4" /> : <Flag className="w-4 h-4" />}
@@ -141,10 +192,7 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                     </div>
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-xs text-zinc-400">
                         <Clock className="w-3.5 h-3.5 text-zinc-500" />
-                        {new Date().getTime() - new Date(job.createdAt).getTime() < 4 * 60 * 60 * 1000
-                            ? <span className="text-green-400 font-bold">New</span>
-                            : format(new Date(job.createdAt), 'MMM d')
-                        }
+                        {formatDistanceToNowStrict(new Date(job.createdAt), { addSuffix: true })}
                     </div>
                 </div>
 

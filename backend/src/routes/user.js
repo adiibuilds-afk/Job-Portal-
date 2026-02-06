@@ -17,6 +17,28 @@ const attachUser = async (req, res, next) => {
     next();
 };
 
+// Toggle Job in Saved List
+router.post('/saved', attachUser, async (req, res) => {
+    try {
+        const { jobId } = req.body;
+        const user = req.user;
+
+        const index = user.savedJobs.findIndex(id => id.toString() === jobId);
+        if (index > -1) {
+            user.savedJobs.splice(index, 1);
+            await user.save();
+            return res.json({ message: 'Removed from saved', savedJobs: user.savedJobs });
+        } else {
+            user.savedJobs.push(jobId);
+            await user.save();
+            return res.json({ message: 'Added to saved', savedJobs: user.savedJobs });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // Mark Job as Applied
 router.post('/applied', attachUser, async (req, res) => {
     try {
@@ -53,6 +75,7 @@ router.get('/profile', async (req, res) => {
 
         res.json({ user });
     } catch (error) {
+        console.error('Profile API Error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });

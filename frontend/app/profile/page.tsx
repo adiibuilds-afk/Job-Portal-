@@ -7,12 +7,15 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import axios from "axios";
 
+import EditProfileModal from "@/components/profile/EditProfileModal";
+import { User as UserIcon, Mail, GraduationCap, MapPin, Calendar, Edit3, Shield, Star } from "lucide-react";
+
 export default function ProfilePage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'applied' | 'saved'>('applied');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -44,112 +47,172 @@ export default function ProfilePage() {
     if (!session) return null;
 
     return (
-        <main className="min-h-screen bg-black text-white">
+        <main className="min-h-screen bg-black text-white selection:bg-amber-500 selection:text-black">
             <Navbar />
-            <div className="max-w-5xl mx-auto px-4 pt-32 pb-20">
-                {/* Profile Header */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-3xl p-8 mb-8 backdrop-blur-xl">
-                    <div className="flex flex-col md:flex-row items-center gap-8">
-                        {session.user?.image ? (
-                            <img
-                                src={session.user.image}
-                                alt="Profile"
-                                className="w-32 h-32 rounded-full border-4 border-amber-500/20 shadow-2xl shadow-amber-500/10"
-                            />
-                        ) : (
-                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-4xl font-bold text-black border-4 border-amber-500/20 shadow-2xl shadow-amber-500/10">
-                                {session.user?.name?.charAt(0) || 'U'}
-                            </div>
-                        )}
-                        <div className="text-center md:text-left flex-1">
-                            <h1 className="text-4xl font-bold text-white mb-2">{session.user?.name}</h1>
-                            <p className="text-zinc-400 text-lg mb-4">{session.user?.email}</p>
-                            <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                                <div className="px-5 py-2 rounded-full bg-zinc-800 text-zinc-300 text-sm font-medium border border-zinc-700">
-                                    🎓 {userData?.degree || "Student"}
+
+            <div className="max-w-4xl mx-auto px-4 pt-32 pb-20">
+                {/* Hero Profile Section */}
+                <div className="relative mb-12">
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent blur-3xl -z-10" />
+
+                    <div className="flex flex-col md:flex-row items-center gap-8 p-8 bg-zinc-900/40 border border-zinc-800 rounded-[2.5rem] backdrop-blur-xl">
+                        <div className="relative group">
+                            {session.user?.image ? (
+                                <img
+                                    src={session.user.image}
+                                    alt="Profile"
+                                    className="w-40 h-40 rounded-[2rem] object-cover border-2 border-zinc-800 group-hover:border-amber-500/50 transition-all duration-500"
+                                />
+                            ) : (
+                                <div className="w-40 h-40 rounded-[2rem] bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-5xl font-black text-amber-500 border-2 border-zinc-800 group-hover:border-amber-500/50 transition-all">
+                                    {session.user?.name?.charAt(0) || 'U'}
                                 </div>
-                                <div className="px-5 py-2 rounded-full bg-zinc-800 text-zinc-300 text-sm font-medium border border-zinc-700">
-                                    📍 {userData?.location || "India"}
-                                </div>
+                            )}
+                            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20 text-black">
+                                <Shield className="w-5 h-5" />
                             </div>
                         </div>
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={() => signOut({ callbackUrl: '/' })}
-                                className="px-6 py-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-all font-bold text-sm"
-                            >
-                                Log Out
-                            </button>
+
+                        <div className="flex-1 text-center md:text-left">
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
+                                <h1 className="text-4xl font-black tracking-tight">{session.user?.name}</h1>
+                                <span className="px-3 py-1 bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-widest rounded-full border border-amber-500/20">
+                                    Verified Member
+                                </span>
+                            </div>
+                            <div className="flex flex-col md:flex-row gap-4 text-zinc-400 font-medium mb-6">
+                                <div className="flex items-center gap-2">
+                                    <Mail className="w-4 h-4 text-zinc-600" />
+                                    {session.user?.email}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4 text-zinc-600" />
+                                    {userData?.location || "Not Set"}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                                <button
+                                    onClick={() => setIsEditModalOpen(true)}
+                                    className="flex items-center gap-2 px-6 py-2.5 bg-white text-black font-bold rounded-xl hover:bg-amber-500 transition-all hover:scale-105 active:scale-95"
+                                >
+                                    <Edit3 className="w-4 h-4" />
+                                    Edit Profile
+                                </button>
+                                <button
+                                    onClick={() => signOut({ callbackUrl: '/' })}
+                                    className="px-6 py-2.5 bg-zinc-800 text-zinc-400 font-bold rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all border border-zinc-700"
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Statistics Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
-                        <p className="text-zinc-500 text-sm mb-1">Applied Jobs</p>
-                        <p className="text-3xl font-bold text-white">{userData?.appliedJobs?.length || 0}</p>
-                    </div>
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
-                        <p className="text-zinc-500 text-sm mb-1">Saved Jobs</p>
-                        <p className="text-3xl font-bold text-white">{userData?.savedJobs?.length || 0}</p>
-                    </div>
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
-                        <p className="text-zinc-500 text-sm mb-1">Profile Views</p>
-                        <p className="text-3xl font-bold text-white">14</p>
-                    </div>
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
-                        <p className="text-zinc-500 text-sm mb-1">Match Score</p>
-                        <p className="text-3xl font-bold text-green-400">High</p>
-                    </div>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {/* Details Column */}
+                    <div className="md:col-span-2 space-y-8">
+                        <section className="bg-zinc-900/40 border border-zinc-800 rounded-[2rem] p-8">
+                            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                                <GraduationCap className="w-5 h-5 text-amber-500" />
+                                Educational Background
+                            </h3>
+                            <div className="space-y-6">
+                                <div className="flex gap-4 p-4 bg-zinc-800/20 rounded-2xl border border-zinc-800/50">
+                                    <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center">
+                                        <GraduationCap className="w-6 h-6 text-zinc-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-white text-lg">{userData?.degree || "Not Specified"}</h4>
+                                        <p className="text-zinc-500">Qualification</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 p-4 bg-zinc-800/20 rounded-2xl border border-zinc-800/50">
+                                    <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center">
+                                        <Calendar className="w-6 h-6 text-zinc-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-white text-lg">{userData?.batch || "Not Specified"} Batch</h4>
+                                        <p className="text-zinc-500">Graduation Year</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
 
-                {/* Tabs */}
-                <div className="flex space-x-1 bg-zinc-900/50 p-1 rounded-2xl mb-8 border border-zinc-800 w-fit">
-                    <button
-                        onClick={() => setActiveTab('applied')}
-                        className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'applied'
-                                ? 'bg-zinc-800 text-white shadow-lg'
-                                : 'text-zinc-500 hover:text-zinc-300'
-                            }`}
-                    >
-                        Applied Jobs ({userData?.appliedJobs?.length || 0})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('saved')}
-                        className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'saved'
-                                ? 'bg-zinc-800 text-white shadow-lg'
-                                : 'text-zinc-500 hover:text-zinc-300'
-                            }`}
-                    >
-                        Saved Jobs ({userData?.savedJobs?.length || 0})
-                    </button>
-                </div>
+                        <section className="bg-zinc-900/40 border border-zinc-800 rounded-[2rem] p-8">
+                            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                                <Star className="w-5 h-5 text-amber-500" />
+                                Quick Links
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => router.push('/dashboard')}
+                                    className="p-6 bg-zinc-800/40 border border-zinc-800 rounded-2xl hover:border-amber-500/30 transition-all text-left group"
+                                >
+                                    <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center mb-4 group-hover:bg-amber-500 group-hover:text-black transition-colors">
+                                        <Calendar className="w-5 h-5" />
+                                    </div>
+                                    <span className="font-bold block text-white">My Dashboard</span>
+                                    <span className="text-xs text-zinc-500">Applications & Tracking</span>
+                                </button>
+                                <button
+                                    onClick={() => router.push('/saved')}
+                                    className="p-6 bg-zinc-800/40 border border-zinc-800 rounded-2xl hover:border-amber-500/30 transition-all text-left group"
+                                >
+                                    <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center mb-4 group-hover:bg-amber-500 group-hover:text-black transition-colors">
+                                        <Star className="w-5 h-5" />
+                                    </div>
+                                    <span className="font-bold block text-white">Saved Jobs</span>
+                                    <span className="text-xs text-zinc-500">Wishlisted Roles</span>
+                                </button>
+                            </div>
+                        </section>
+                    </div>
 
-                {/* Content */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                    {activeTab === 'applied' && userData?.appliedJobs?.map((item: any) => (
-                        <DashboardJobCard key={item._id} job={item.jobId} appliedAt={item.appliedAt} type="applied" />
-                    ))}
-                    {activeTab === 'saved' && userData?.savedJobs?.map((job: any) => (
-                        <DashboardJobCard key={job._id} job={job} type="saved" />
-                    ))}
-
-                    {(activeTab === 'applied' && (!userData?.appliedJobs || userData.appliedJobs.length === 0)) && (
-                        <div className="col-span-full py-20 text-center">
-                            <p className="text-zinc-500 mb-4">You haven't applied to any jobs yet.</p>
-                            <button onClick={() => router.push('/jobs')} className="text-amber-400 font-bold hover:underline">Find Jobs</button>
+                    {/* Stats/Badge Column */}
+                    <div className="space-y-8">
+                        <div className="bg-gradient-to-br from-amber-500 to-yellow-600 rounded-[2rem] p-8 text-black shadow-2xl shadow-amber-500/10">
+                            <h3 className="text-2xl font-black mb-4 leading-tight text-black">Member Since</h3>
+                            <div className="text-5xl font-black mb-1">
+                                {new Date(userData?.createdAt || Date.now()).getFullYear()}
+                            </div>
+                            <p className="text-black/60 font-medium">Standard License</p>
                         </div>
-                    )}
 
-                    {(activeTab === 'saved' && (!userData?.savedJobs || userData.savedJobs.length === 0)) && (
-                        <div className="col-span-full py-20 text-center">
-                            <p className="text-zinc-500 mb-4">No saved jobs found.</p>
-                            <button onClick={() => router.push('/jobs')} className="text-amber-400 font-bold hover:underline">Browse Jobs</button>
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Account Status</span>
+                                <div className="flex h-2 w-2 relative">
+                                    <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75" />
+                                    <div className="bg-green-500 rounded-full h-2 w-2 relative" />
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center py-2 border-b border-zinc-800">
+                                    <span className="text-zinc-400">Email Status</span>
+                                    <span className="text-green-500 font-bold text-sm">Active</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-zinc-800">
+                                    <span className="text-zinc-400">Jobs Tracking</span>
+                                    <span className="text-zinc-200 font-bold text-sm">Enabled</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2">
+                                    <span className="text-zinc-400">Security</span>
+                                    <span className="text-zinc-200 font-bold text-sm">Normal</span>
+                                </div>
+                            </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
+
+            <EditProfileModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                user={{ ...userData, email: session.user?.email }}
+                onUpdate={fetchUserData}
+            />
             <Footer />
         </main>
     );

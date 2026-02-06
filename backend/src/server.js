@@ -41,6 +41,10 @@ app.use('/api/resume', resumeRoutes);
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
 
+// Serve static files
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+
 // Routes
 app.get('/', (req, res) => {
   res.send('API is running...');
@@ -258,13 +262,35 @@ app.get('/api/jobs/:id/similar', async (req, res) => {
 });
 
 // Email subscription endpoint with filters
+const { sendWelcomeEmail } = require('./services/email');
+const Subscriber = require('./models/Subscriber');
+
 app.post('/api/subscribe', async (req, res) => {
   try {
-    const { email, filters } = req.body;
-    // TODO: Store in Subscriber model
-    console.log('New subscription:', email, filters);
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    // Check if already exists
+    let sub = await Subscriber.findOne({ email });
+    if (sub) {
+      if (!sub.isActive) {
+        sub.isActive = true;
+        await sub.save();
+        // Send welcome email again if they re-subscribe? 
+        // For now, just acknowledged.
+      }
+      return res.json({ success: true, message: 'Already subscribed!' });
+    }
+
+    const newSub = new Subscriber({ email });
+    await newSub.save();
+    
+    // Trigger Welcome Email
+    sendWelcomeEmail(email).catch(err => console.error('Background email failed:', err));
+    
     res.json({ success: true, message: 'Subscribed successfully!' });
   } catch (err) {
+    if (err.code === 11000) return res.json({ success: true, message: 'Already subscribed!' });
     res.status(500).json({ error: err.message });
   }
 });
@@ -405,32 +431,7 @@ app.post('/api/admin/queue/:id/run', async (req, res) => {
   }
 });
 
-// ========== SUBSCRIPTION ROUTES ==========
-const Subscriber = require('./models/Subscriber');
-
-app.post('/api/subscribe', async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: 'Email is required' });
-
-    // Check if already exists
-    let sub = await Subscriber.findOne({ email });
-    if (sub) {
-      if (!sub.isActive) {
-        sub.isActive = true;
-        await sub.save();
-      }
-      return res.json({ success: true, message: 'Already subscribed!' });
-    }
-
-    const newSub = new Subscriber({ email });
-    await newSub.save();
-    res.json({ success: true, message: 'Subscribed successfully!' });
-  } catch (err) {
-    if (err.code === 11000) return res.json({ success: true, message: 'Already subscribed!' });
-    res.status(500).json({ error: err.message });
-  }
-});
+// Consolidated subscription routes above
 
 // ========== ANALYTICS & CLEANUP ==========
 app.get('/api/admin/analytics/detailed', async (req, res) => {

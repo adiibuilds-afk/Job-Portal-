@@ -9,9 +9,11 @@ interface JobsTabProps {
     setJobFilter: (filter: 'all' | 'reported') => void;
     toggleJobStatus: (id: string, current: boolean) => void;
     deleteJob: (id: string) => void;
+    clearAllJobs: () => void;
+    clearReportedJobs: () => void;
 }
 
-export default function JobsTab({ jobs, analytics, jobFilter, setJobFilter, toggleJobStatus, deleteJob }: JobsTabProps) {
+export default function JobsTab({ jobs, analytics, jobFilter, setJobFilter, toggleJobStatus, deleteJob, clearAllJobs, clearReportedJobs }: JobsTabProps) {
     const reportedJobs = jobs.filter(j => (j.reportCount || 0) > 0);
     const displayJobs = jobFilter === 'reported' ? reportedJobs : jobs;
 
@@ -35,10 +37,30 @@ export default function JobsTab({ jobs, analytics, jobFilter, setJobFilter, togg
                 ))}
             </div>
 
-            {/* Filter Bar */}
-            <div className="flex gap-4 mb-6">
-                <button onClick={() => setJobFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-bold ${jobFilter === 'all' ? 'bg-zinc-800 text-white' : 'text-zinc-600'}`}>All</button>
-                <button onClick={() => setJobFilter('reported')} className={`px-4 py-2 rounded-lg text-sm font-bold ${jobFilter === 'reported' ? 'bg-red-500/10 text-red-500' : 'text-zinc-600'}`}>Reported</button>
+            {/* Filter & Actions Bar */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div className="flex gap-4">
+                    <button onClick={() => setJobFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-bold ${jobFilter === 'all' ? 'bg-zinc-800 text-white' : 'text-zinc-600'}`}>All</button>
+                    <button onClick={() => setJobFilter('reported')} className={`px-4 py-2 rounded-lg text-sm font-bold ${jobFilter === 'reported' ? 'bg-red-500/10 text-red-500' : 'text-zinc-600'}`}>Reported</button>
+                </div>
+                <div className="flex gap-3">
+                    {reportedJobs.length > 0 && (
+                        <button
+                            onClick={clearReportedJobs}
+                            className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-black rounded-lg transition-all border border-red-500/20 uppercase tracking-wider flex items-center gap-2"
+                        >
+                            <Trash2 className="w-4 h-4" /> Clear Reported
+                        </button>
+                    )}
+                    {jobs.length > 0 && (
+                        <button
+                            onClick={clearAllJobs}
+                            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-red-400 text-xs font-black rounded-lg transition-all border border-zinc-700 uppercase tracking-wider flex items-center gap-2"
+                        >
+                            <Trash2 className="w-4 h-4" /> Delete All Jobs
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Table */}
@@ -56,11 +78,30 @@ export default function JobsTab({ jobs, analytics, jobFilter, setJobFilter, togg
                         {displayJobs.map(job => (
                             <tr key={job._id} className="hover:bg-zinc-800/30 transition-colors">
                                 <td className="px-6 py-5">
-                                    <Link href={`/job/${job.slug}`} className="text-white font-bold block mb-1 hover:text-amber-400">
-                                        {job.title}
-                                    </Link>
-                                    <span className="text-zinc-500 text-sm">{job.company}</span>
-                                    {job.reportCount! > 0 && <span className="ml-3 text-red-500 text-[10px] bg-red-500/10 px-2 py-0.5 rounded-full">🚨 {job.reportCount}</span>}
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-amber-500 overflow-hidden shrink-0">
+                                            {job.companyLogo ? (
+                                                <img
+                                                    src={job.companyLogo}
+                                                    alt={job.company}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                        (e.target as HTMLImageElement).parentElement!.innerText = job.company.charAt(0);
+                                                    }}
+                                                />
+                                            ) : (
+                                                job.company.charAt(0)
+                                            )}
+                                        </div>
+                                        <div>
+                                            <Link href={`/job/${job.slug}`} className="text-white font-bold block mb-1 hover:text-amber-400">
+                                                {job.title}
+                                            </Link>
+                                            <span className="text-zinc-500 text-sm">{job.company}</span>
+                                            {job.reportCount! > 0 && <span className="ml-3 text-red-500 text-[10px] bg-red-500/10 px-2 py-0.5 rounded-full">🚨 {job.reportCount}</span>}
+                                        </div>
+                                    </div>
                                 </td>
                                 <td className="px-6 py-5">
                                     <div className="flex items-center gap-4">

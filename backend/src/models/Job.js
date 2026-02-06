@@ -4,6 +4,7 @@ const slugify = require('slugify');
 const JobSchema = new mongoose.Schema({
   title: { type: String, default: '' },
   company: { type: String, default: '' },
+  companyLogo: { type: String }, // URL to company logo
   slug: { type: String, unique: true },
   location: { type: String },
   eligibility: { type: String },

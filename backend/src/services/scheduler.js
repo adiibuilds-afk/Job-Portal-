@@ -8,9 +8,44 @@ const setupBot = require('../bot'); // We will need to access the bot instance o
 // Since postToChannel is inside the bot setup which is a function, we might need a way to access it.
 // Alternatively, we can refactor postToChannel to be a standalone service or pass the bot instance here.
 // For now, let's assume we can get the bot instance or copy the posting logic.
-// A better approach is to make postToChannel a shared service.
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const sharp = require('sharp'); // For image compression
 
-// We will restart the bot to get the instance or just use Telegraf to send message directly if we have token and channel ID.
+// Helper to download logo
+const downloadAndSaveLogo = async (url) => {
+    try {
+        if (!url || !url.startsWith('http')) return null;
+
+        const response = await axios({
+            url,
+            responseType: 'arraybuffer', // Sharp needs buffer
+        });
+
+        // Ensure directory exists
+        const uploadDir = path.join(__dirname, '../../public/uploads/logos');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        // Generate filename (webp)
+        const filename = `logo-${Date.now()}-${Math.floor(Math.random() * 1000)}.webp`;
+        const filePath = path.join(uploadDir, filename);
+
+        // Process with Sharp
+        // Resize to 80px width (standard icon size), convert to WebP, quality 80
+        await sharp(response.data)
+            .resize(80) 
+            .webp({ quality: 80 })
+            .toFile(filePath);
+
+        return `/uploads/logos/${filename}`;
+    } catch (error) {
+        console.error('Failed to download/compress logo:', error.message);
+        return null; 
+    }
+};
 
 const processQueue = async (bot) => {
   console.log('⏳ Checking for scheduled jobs...');
@@ -52,7 +87,43 @@ const processQueue = async (bot) => {
         jobData.applyUrl = job.originalUrl;
     }
 
-    // 3. Save to DB
+    // Assign company logo from scraper if AI missed it
+    if (!jobData.companyLogo && scraped.companyLogo) {
+        jobData.companyLogo = scraped.companyLogo;
+    }
+
+    // Sanitize Logo: Remove generic/placeholder logos
+    if (jobData.companyLogo && jobData.companyLogo.includes('talentd-orange-icon.avif')) {
+        console.log('🚫 Removing generic Talentd logo.');
+        jobData.companyLogo = ''; // Set to empty so frontend shows initial
+    }
+
+    // Localize/Proxy specific external logos (e.g. brain.talentd.in)
+    if (jobData.companyLogo && jobData.companyLogo.includes('brain.talentd.in')) {
+        console.log(`📥 Downloading logo: ${jobData.companyLogo}`);
+        const localLogo = await downloadAndSaveLogo(jobData.companyLogo);
+        if (localLogo) {
+            jobData.companyLogo = localLogo; // Use local path
+        }
+    }
+
+    // 3. De-duplication Check (Content-based)
+    // Check if an active job with same Title and Company exists
+    const existingJob = await Job.findOne({
+        title: { $regex: new RegExp(`^${jobData.title}$`, 'i') },
+        company: { $regex: new RegExp(`^${jobData.company}$`, 'i') },
+        isActive: true
+    });
+
+    if (existingJob) {
+        job.status = 'failed';
+        job.error = `Duplicate Content: ${jobData.title} at ${jobData.company}`;
+        await job.save();
+        console.log(`⚠️ Skipped duplicate job: ${jobData.title} at ${jobData.company}`);
+        return;
+    }
+
+    // 4. Save to DB
     const newJob = new Job(jobData);
     await newJob.save();
 
@@ -95,30 +166,57 @@ const processQueue = async (bot) => {
 // ... existing processQueue ...
 
 const runAutoScraper = async (bot) => {
-    console.log('🕷️ Running Auto-Scraper for Talentd...');
-    const links = await scrapeTalentdJobs();
+    console.log('🕷️ Running Auto-Scraper for Talentd & RG Jobs...');
+    const { scrapeTalentdJobs, scrapeRgJobs } = require('./scraper');
     
+    // 1. Talentd
+    const talentdLinks = await scrapeTalentdJobs();
+    await queueLinks(talentdLinks);
+
+    // 2. RG Jobs
+    const rgLinks = await scrapeRgJobs();
+    await queueLinks(rgLinks);
+};
+
+const queueLinks = async (links) => {
+    // 1. Get the latest scheduled time effectively
+    // We look for the latest pending job to append to the end of the queue
+    const lastJob = await ScheduledJob.findOne({ status: 'pending' }).sort({ scheduledFor: -1 });
+    
+    let nextScheduleTime = lastJob ? new Date(lastJob.scheduledFor) : new Date();
+    
+    // If the queue is empty or the last job was in the past, start from NOW
+    if (nextScheduleTime < new Date()) {
+        nextScheduleTime = new Date();
+    }
+
+    let queuedCount = 0;
+
     for (const link of links) {
-        // Check if exists
+        // Check if exists in Jobs (already posted)
         const exists = await Job.findOne({ $or: [{ originalUrl: link }, { applyUrl: link }] });
-        if (exists) {
-            // console.log(`Skipping existing: ${link}`);
-            continue;
-        }
+        if (exists) continue;
 
         // Check if already queued
         const queued = await ScheduledJob.findOne({ originalUrl: link });
         if (queued) continue;
 
+        // Add 2 minutes buffer for the next slot
+        // If it's the very first job being added now, it will be Now + 2 mins
+        // If we want the first one to be immediate, we could adjust logic, but +2m safety is fine.
+        nextScheduleTime = new Date(nextScheduleTime.getTime() + 2 * 60000);
+
         // Add to Queue
         const newQueue = new ScheduledJob({
             originalUrl: link,
-            scheduledFor: new Date(), // Immediate
+            scheduledFor: nextScheduleTime,
             status: 'pending'
         });
         await newQueue.save();
-        console.log(`✅ Queued new job: ${link}`);
+        console.log(`✅ Queued new job: ${link} for ${nextScheduleTime.toLocaleString()}`);
+        queuedCount++;
     }
+    return queuedCount;
 };
 
 const initScheduler = (bot) => {
@@ -135,4 +233,4 @@ const initScheduler = (bot) => {
     console.log('⏰ Job Scheduler initialized (1 min checks + Hourly Scraper)');
 };
 
-module.exports = { initScheduler, runAutoScraper };
+module.exports = { initScheduler, runAutoScraper, queueLinks };

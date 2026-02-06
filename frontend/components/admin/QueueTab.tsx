@@ -5,9 +5,13 @@ interface QueueTabProps {
     queue: QueueItem[];
     runQueueItem: (id: string) => void;
     deleteQueueItem: (id: string) => void;
+    clearQueue: (status?: string) => void;
 }
 
-export default function QueueTab({ queue, runQueueItem, deleteQueueItem }: QueueTabProps) {
+export default function QueueTab({ queue, runQueueItem, deleteQueueItem, clearQueue }: QueueTabProps) {
+    const pendingCount = queue.filter(q => q.status === 'pending').length;
+    const processedCount = queue.filter(q => q.status === 'processed').length;
+
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2">
             <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl">
@@ -16,9 +20,27 @@ export default function QueueTab({ queue, runQueueItem, deleteQueueItem }: Queue
                         <h2 className="text-2xl font-black text-white">Bot Automation Queue</h2>
                         <p className="text-zinc-500">Links pending AI processing and channel posting</p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-xs text-zinc-600 tracking-widest uppercase mb-1">Interval</p>
-                        <span className="text-amber-500 font-black">5 MINUTES</span>
+                    <div className="flex items-center gap-4">
+                        {pendingCount > 0 && (
+                            <button
+                                onClick={() => clearQueue('pending')}
+                                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-black rounded-lg transition-all border border-red-500/20 uppercase tracking-wider"
+                            >
+                                Clear Queue
+                            </button>
+                        )}
+                        {processedCount > 0 && (
+                            <button
+                                onClick={() => clearQueue('processed')}
+                                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-[10px] font-black rounded-lg transition-all border border-zinc-700 uppercase tracking-wider"
+                            >
+                                Clear History
+                            </button>
+                        )}
+                        <div className="text-right ml-4">
+                            <p className="text-xs text-zinc-600 tracking-widest uppercase mb-1">Interval</p>
+                            <span className="text-amber-500 font-black">5 MINUTES</span>
+                        </div>
                     </div>
                 </div>
                 <table className="w-full text-left">

@@ -3,9 +3,11 @@ import JobCard from '@/components/JobCard';
 import Navbar from '@/components/Navbar';
 import LatestJobsTicker from '@/components/LatestJobsTicker';
 import Footer from '@/components/Footer';
-import HiringHeatmap from '@/components/home/HiringHeatmap';
-import AdBanner from '@/components/AdBanner';
-import EmailSubscription from '@/components/EmailSubscription';
+import dynamicImport from 'next/dynamic';
+
+const HiringHeatmap = dynamicImport(() => import('@/components/home/HiringHeatmap'));
+const AdBanner = dynamicImport(() => import('@/components/AdBanner'));
+const EmailSubscription = dynamicImport(() => import('@/components/EmailSubscription'));
 import { Job } from '@/types';
 import { Search, Crown, TrendingUp, Users, Briefcase, ArrowRight, Sparkles } from 'lucide-react';
 
@@ -13,8 +15,16 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   let jobs: Job[] = [];
+  let totalJobs = 0;
   try {
-    jobs = await getJobs();
+    const res = await getJobs();
+    if (Array.isArray(res)) {
+      jobs = res;
+      totalJobs = res.length;
+    } else {
+      jobs = res.jobs || [];
+      totalJobs = res.pagination?.total || jobs.length;
+    }
   } catch (error) {
     console.error('Failed to fetch jobs', error);
   }
@@ -105,7 +115,7 @@ export default async function Home() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {[
-              { icon: Briefcase, value: '500+', label: 'Tech Jobs' },
+              { icon: Briefcase, value: `${totalJobs}+`, label: 'Tech Jobs' },
               { icon: Users, value: '10K+', label: 'Engineers' },
               { icon: TrendingUp, value: '2025', label: 'Batch Focused' },
               { icon: Sparkles, value: 'AI', label: 'Powered Match' },
@@ -120,7 +130,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <HiringHeatmap />
 
       {/* Jobs Section */}
       <section className="relative px-4 pb-32">

@@ -15,6 +15,7 @@ Convert the following raw job post into clean JSON.
 Fields:
 title
 company
+companyLogo
 location
 eligibility
 salary

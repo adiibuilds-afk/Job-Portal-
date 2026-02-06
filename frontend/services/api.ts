@@ -36,11 +36,7 @@ export async function getJobs(params?: {
 
     const res = await axios.get(url);
 
-    // Handle both old and new API response format
-    if (res.data.jobs) {
-        return res.data.jobs as Job[];
-    }
-    return res.data as Job[];
+    return res.data;
 }
 
 export async function getJobBySlug(slug: string): Promise<Job> {

@@ -85,22 +85,74 @@ export default function AdminDashboard() {
         }
     };
 
+    const clearQueue = async (status: string = 'pending') => {
+        const confirmMsg = status === 'pending'
+            ? 'Clear all pending jobs from the queue?'
+            : 'Clear all processed job history?';
+
+        if (!confirm(`${confirmMsg} This cannot be undone.`)) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/queue/clear?status=${status}`, { method: 'DELETE' });
+            const data = await res.json();
+            alert(data.message);
+            fetchData();
+        } catch (err) {
+            console.error('Failed to clear queue', err);
+            alert('Failed to clear queue');
+        }
+    };
+
+    const clearAllJobs = async () => {
+        if (!confirm('EXTREME CAUTION: This will delete ALL job listings from the database. Are you absolutely sure?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/admin/jobs/clear`, { method: 'DELETE' });
+            const data = await res.json();
+            alert(data.message);
+            fetchData();
+        } catch (err) {
+            console.error('Failed to clear jobs', err);
+            alert('Failed to clear jobs');
+        }
+    };
+
+    const clearReportedJobs = async () => {
+        if (!confirm('Clear all reported jobs from the database?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/admin/jobs/reported`, { method: 'DELETE' });
+            const data = await res.json();
+            alert(data.message);
+            fetchData();
+        } catch (err) {
+            console.error('Failed to clear reported jobs', err);
+            alert('Failed to clear reported jobs');
+        }
+    };
+
     const toggleJobStatus = async (jobId: string, currentStatus: boolean) => {
         try {
+            const res = await fetch(`${API_URL}/api/admin/jobs/${jobId}/toggle`, { method: 'PUT' });
+            if (!res.ok) throw new Error('Failed to toggle');
+
             setJobs(jobs.map(j =>
                 j._id === jobId ? { ...j, isActive: !currentStatus } : j
             ));
         } catch (err) {
             console.error('Failed to toggle job status', err);
+            alert('Failed to update status');
         }
     };
 
     const deleteJob = async (jobId: string) => {
         if (!confirm('Are you sure you want to delete this job?')) return;
         try {
+            const res = await fetch(`${API_URL}/api/admin/jobs/${jobId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete');
+
             setJobs(jobs.filter(j => j._id !== jobId));
         } catch (err) {
             console.error('Failed to delete job', err);
+            alert('Failed to delete job');
         }
     };
 
@@ -134,6 +186,8 @@ export default function AdminDashboard() {
                         setJobFilter={setJobFilter}
                         toggleJobStatus={toggleJobStatus}
                         deleteJob={deleteJob}
+                        clearAllJobs={clearAllJobs}
+                        clearReportedJobs={clearReportedJobs}
                     />
                 )}
 
@@ -142,6 +196,7 @@ export default function AdminDashboard() {
                         queue={queue}
                         runQueueItem={runQueueItem}
                         deleteQueueItem={deleteQueueItem}
+                        clearQueue={clearQueue}
                     />
                 )}
 

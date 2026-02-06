@@ -17,7 +17,9 @@ export const useAppliedJobs = () => {
         if (!session?.user?.email) return;
         try {
             const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/user/profile?email=${session.user.email}`);
-            const ids = data.user.appliedJobs.map((j: any) => j.jobId._id);
+            const ids = data.user.appliedJobs
+                .filter((j: any) => j.jobId)
+                .map((j: any) => j.jobId._id);
             setAppliedJobIds(ids);
         } catch (error) {
             console.error('Error fetching applied jobs', error);

@@ -22,8 +22,20 @@ export default function JobHeader({ job }: JobHeaderProps) {
             {/* Header Content */}
             <div className="p-8 border-b border-zinc-800">
                 <div className="flex items-start gap-5 mb-6">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-amber-500/20 flex items-center justify-center text-2xl font-black text-amber-400">
-                        {job.company.charAt(0)}
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-amber-500/20 flex items-center justify-center text-2xl font-black text-amber-400 overflow-hidden">
+                        {job.companyLogo ? (
+                            <img
+                                src={job.companyLogo}
+                                alt={job.company}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (e.target as HTMLImageElement).parentElement!.innerText = job.company.charAt(0);
+                                }}
+                            />
+                        ) : (
+                            job.company.charAt(0)
+                        )}
                     </div>
                     <div>
                         <div className="flex items-center gap-3 mb-2">

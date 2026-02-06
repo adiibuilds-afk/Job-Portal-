@@ -6,6 +6,8 @@ import { useSavedJobs } from '@/hooks/useSavedJobs';
 import { useAppliedJobs } from '@/hooks/useAppliedJobs';
 import { reportJob } from '@/services/api';
 
+import { useSession, signIn } from 'next-auth/react';
+
 interface JobActionsProps {
     jobId: string;
     jobTitle: string;
@@ -13,6 +15,7 @@ interface JobActionsProps {
 }
 
 export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps) {
+    const { data: session } = useSession();
     const { isSaved, toggleSave } = useSavedJobs();
     const [isReported, setIsReported] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
@@ -21,6 +24,12 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
     const saved = isSaved(jobId);
 
     const handleReport = async () => {
+        if (!session) {
+            if (confirm('Please login to report jobs. Login now?')) {
+                signIn();
+            }
+            return;
+        }
         if (isReported || reporting) return;
         setReporting(true);
         try {
@@ -43,13 +52,23 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
     const { isApplied, markAsApplied } = useAppliedJobs();
     const applied = isApplied(jobId);
 
+    const handleMarkApplied = () => {
+        if (!session) {
+            if (confirm('Please login to track your applications. Login now?')) {
+                signIn();
+            }
+            return;
+        }
+        markAsApplied(jobId);
+    };
+
     return (
         <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 space-y-4">
             <h4 className="font-bold text-white mb-4">Quick Actions</h4>
 
             {/* Mark as Applied */}
             <button
-                onClick={() => markAsApplied(jobId)}
+                onClick={handleMarkApplied}
                 disabled={applied}
                 className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${applied
                     ? 'bg-green-500 text-black border border-green-500 scale-100 cursor-default'
@@ -71,7 +90,15 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
 
             {/* Save Job */}
             <button
-                onClick={() => toggleSave(jobId)}
+                onClick={() => {
+                    if (!session) {
+                        if (confirm('Please login to save jobs. Login now?')) {
+                            signIn();
+                        }
+                        return;
+                    }
+                    toggleSave(jobId);
+                }}
                 className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${saved
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                     : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-amber-500/30 hover:text-amber-400'

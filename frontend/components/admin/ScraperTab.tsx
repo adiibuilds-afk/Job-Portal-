@@ -55,24 +55,41 @@ export default function ScraperTab({ apiUrl }: ScraperTabProps) {
                     </div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                     <button
                         onClick={async () => {
-                            if (!confirm('This will trigger the full scraper sequence immediately. Continue?')) return;
+                            if (!confirm('This will trigger the Talentd scraper immediately. Continue?')) return;
                             try {
-                                const res = await fetch(`${apiUrl}/api/admin/scraper/trigger`, { method: 'POST' });
+                                const res = await fetch(`${apiUrl}/api/admin/scrape/talentd`, { method: 'POST' });
                                 const data = await res.json();
                                 alert(data.message);
                             } catch (err) {
-                                alert('Failed to trigger scraper');
+                                alert('Failed to trigger Talentd scraper');
                             }
                         }}
-                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all"
+                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20"
                     >
-                        🚀 Trigger Now (Manual Run)
+                        🕷️ Scrape Talentd
                     </button>
+
+                    <button
+                        onClick={async () => {
+                            if (!confirm('This will trigger the RG Jobs scraper immediately. Continue?')) return;
+                            try {
+                                const res = await fetch(`${apiUrl}/api/admin/scrape/rgjobs`, { method: 'POST' });
+                                const data = await res.json();
+                                alert(data.message);
+                            } catch (err) {
+                                alert('Failed to trigger RG Jobs scraper');
+                            }
+                        }}
+                        className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20"
+                    >
+                        🚀 Scrape RG Jobs
+                    </button>
+
                     <div className="px-6 py-3 bg-zinc-800 rounded-xl text-zinc-400 font-mono text-sm flex items-center">
-                        Schedule: Hourly (0 * * * *)
+                        Auto-Schedule: Hourly (0 * * * *)
                     </div>
                 </div>
             </div>

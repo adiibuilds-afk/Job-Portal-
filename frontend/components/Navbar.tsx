@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Menu, Search, Crown, X, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
@@ -9,6 +10,8 @@ import { useSession, signIn, signOut } from "next-auth/react";
 export default function Navbar() {
     const { data: session } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const searchParams = useSearchParams();
+    const q = searchParams.get('q') || '';
 
     return (
         <>
@@ -39,8 +42,8 @@ export default function Navbar() {
                             {[
                                 { name: 'Home', href: '/' },
                                 { name: 'All Jobs', href: '/jobs' },
+                                { name: 'Dashboard', href: '/dashboard' },
                                 { name: 'Internships', href: '/jobs?jobType=Internship' },
-                                { name: 'Saved', href: '/saved' },
                                 { name: 'Admin', href: '/admin' },
                             ].map((item) => (
                                 <Link
@@ -55,14 +58,15 @@ export default function Navbar() {
 
                         {/* Actions */}
                         <div className="flex items-center space-x-3">
-                            <div className="hidden md:flex items-center bg-zinc-900/80 border border-zinc-800 px-4 py-2.5 rounded-xl">
+                            <form action="/jobs" className="hidden md:flex items-center bg-zinc-900/80 border border-zinc-800 px-4 py-2.5 rounded-xl">
                                 <Search className="w-4 h-4 text-zinc-500 mr-3" />
                                 <input
                                     type="text"
+                                    name="q"
                                     placeholder="Search..."
                                     className="bg-transparent border-none outline-none text-sm w-28 focus:w-40 transition-all text-white placeholder:text-zinc-600"
                                 />
-                            </div>
+                            </form>
 
                             {session ? (
                                 <div className="hidden md:flex items-center gap-3">
