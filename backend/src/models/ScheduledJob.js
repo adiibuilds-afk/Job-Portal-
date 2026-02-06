@@ -17,6 +17,15 @@ const scheduledJobSchema = new mongoose.Schema({
   error: {
     type: String,
   },
+  // RG Jobs specific fields
+  source: {
+    type: String,
+    enum: ['default', 'rgjobs'],
+    default: 'default'
+  },
+  rgJobData: {
+    type: String, // JSON string of full RG job data
+  },
   createdAt: {
     type: Date,
     default: Date.now,

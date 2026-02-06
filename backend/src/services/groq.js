@@ -66,8 +66,16 @@ Rules:
     });
 
     const content = completion.choices[0]?.message?.content || '{}';
-    // Clean potential markdown if model disregards instruction
-    const jsonString = content.replace(/^```json/, '').replace(/```$/, '');
+    
+    // Robust JSON extraction
+    const startObj = content.indexOf('{');
+    const endObj = content.lastIndexOf('}');
+    
+    let jsonString = '{}';
+    if (startObj !== -1 && endObj !== -1) {
+        jsonString = content.substring(startObj, endObj + 1);
+    }
+
     return JSON.parse(jsonString);
   } catch (error) {
     console.error('AI Parsing Error:', error);
@@ -75,4 +83,62 @@ Rules:
   }
 };
 
-module.exports = { parseJobWithAI };
+/**
+ * Generate SEO-optimized title and description for job listings
+ */
+const generateSEOContent = async (jobData) => {
+  try {
+    const prompt = `You are an SEO expert for a job portal. Generate SEO-optimized, professional content for this job.
+
+Company: ${jobData.company}
+Original Title: ${jobData.title}
+Role: ${jobData.role || 'Software Engineer'}
+Location: ${jobData.location}
+Salary: ${jobData.salary || 'Competitive'}
+Batch: ${jobData.batch || 'Not specified'}
+
+Original Description:
+${jobData.description?.substring(0, 800)}
+
+Generate JSON with these fields:
+1. "title": Clean, SEO-friendly title (Examples: "Software Engineer at Google", "Frontend Developer - React"). 
+   - CRITICAL: DO NOT include "Role, Responsibilities & Skills", "Eligibility", "Internship Opportunity", "Required Skills" in the title.
+   - Removing suffixes is MANDATORY.
+2. "description": A compelling 2-3 sentence meta description (max 160 chars).
+3. "rolesResponsibility": A bulleted list (using •) of clear roles and responsibilities.
+4. "requirements": A bulleted list (using •) of technical and soft skill requirements.
+5. "eligibility": A concise eligibility criteria string (e.g., "B.Tech/B.E. 2024/2025 Batch").
+
+Rules:
+- Title must be purely the role and company (e.g., "Java Developer at Amazon").
+- NO "Hiring for", "Job in", or long suffixes in title.
+- Content should be professional, grammatically correct, and formatted with bullet points for lists.
+- Output ONLY valid JSON, no markdown.`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: 'system', content: 'You are an SEO content generator. Output only valid JSON.' },
+        { role: 'user', content: prompt }
+      ],
+      model: 'llama-3.3-70b-versatile',
+    });
+
+    const content = completion.choices[0]?.message?.content || '{}';
+    
+    // Robust JSON extraction: Find first '{' and last '}'
+    const startObj = content.indexOf('{');
+    const endObj = content.lastIndexOf('}');
+    
+    let jsonString = '{}';
+    if (startObj !== -1 && endObj !== -1) {
+        jsonString = content.substring(startObj, endObj + 1);
+    }
+    
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error('SEO Generation Error:', error);
+    return null;
+  }
+};
+
+module.exports = { parseJobWithAI, generateSEOContent };

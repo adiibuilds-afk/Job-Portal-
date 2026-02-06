@@ -118,7 +118,7 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                         {/* Title & Company */}
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                                <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors truncate">
+                                <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors break-words leading-tight">
                                     {job.title}
                                 </h3>
                                 {job.isFeatured && (

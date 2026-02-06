@@ -241,12 +241,19 @@ const initScheduler = (bot) => {
         processQueue(bot);
     });
 
-    // Run Auto-Scraper every hour
+    // Run Auto-Scraper every hour (for Talentd with AI processing)
     cron.schedule('0 * * * *', () => {
         runAutoScraper(bot);
     });
+
+    // RG Jobs Direct Import (every 2 hours, AI + 30s delay, max 20 jobs)
+    const { importRGJobsDirect } = require('../scripts/importRGJobs');
+    cron.schedule('0 */2 * * *', async () => {
+        console.log('🔄 Running scheduled RG Jobs import...');
+        await importRGJobsDirect(20);
+    });
     
-    console.log('⏰ Job Scheduler initialized (1 min checks + Hourly Scraper)');
+    console.log('⏰ Job Scheduler initialized (1 min checks + Hourly Scraper + 2hr RG Jobs)');
 };
 
 module.exports = { initScheduler, runAutoScraper, queueLinks };
