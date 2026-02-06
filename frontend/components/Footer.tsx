@@ -15,7 +15,7 @@ export default function Footer() {
                             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center">
                                 <Crown className="w-5 h-5 text-black" />
                             </div>
-                            <span className="text-xl font-bold text-white">Job<span className="text-amber-400">Portal</span></span>
+                            <span className="text-xl font-bold text-white">Job<span className="text-amber-400">Grid</span></span>
                         </Link>
                         <p className="text-zinc-500 text-sm leading-relaxed">
                             India&apos;s premium job discovery platform. AI-powered matching for government and private sectors.
@@ -24,12 +24,17 @@ export default function Footer() {
 
                     {/* Quick Links */}
                     <div>
-                        <h4 className="text-white font-semibold mb-4">Quick Links</h4>
+                        <h4 className="text-white font-semibold mb-4">Company</h4>
                         <ul className="space-y-2">
-                            {['Home', 'Browse Jobs', 'Govt Jobs', 'Private Jobs', 'About Us'].map((item) => (
-                                <li key={item}>
-                                    <Link href="/" className="text-zinc-500 hover:text-amber-400 text-sm transition-colors">
-                                        {item}
+                            {[
+                                { name: 'About Us', href: '/about' },
+                                { name: 'Contact Us', href: '/contact' },
+                                { name: 'Privacy Policy', href: '/privacy' },
+                                { name: 'Terms of Service', href: '/terms' }
+                            ].map((item) => (
+                                <li key={item.name}>
+                                    <Link href={item.href} className="text-zinc-500 hover:text-amber-400 text-sm transition-colors">
+                                        {item.name}
                                     </Link>
                                 </li>
                             ))}
@@ -38,11 +43,11 @@ export default function Footer() {
 
                     {/* Categories */}
                     <div>
-                        <h4 className="text-white font-semibold mb-4">Categories</h4>
+                        <h4 className="text-white font-semibold mb-4">Job Categories</h4>
                         <ul className="space-y-2">
-                            {['IT & Software', 'Banking', 'Government', 'Healthcare', 'Education', 'Engineering'].map((item) => (
+                            {['Engineering', 'Software', 'Data Science', 'SDE', 'Internships'].map((item) => (
                                 <li key={item}>
-                                    <Link href="/jobs" className="text-zinc-500 hover:text-amber-400 text-sm transition-colors">
+                                    <Link href={`/jobs?q=${item}`} className="text-zinc-500 hover:text-amber-400 text-sm transition-colors">
                                         {item}
                                     </Link>
                                 </li>
@@ -52,19 +57,15 @@ export default function Footer() {
 
                     {/* Contact */}
                     <div>
-                        <h4 className="text-white font-semibold mb-4">Contact</h4>
+                        <h4 className="text-white font-semibold mb-4">Contact Hub</h4>
                         <ul className="space-y-3">
                             <li className="flex items-center gap-2 text-zinc-500 text-sm">
                                 <Mail className="w-4 h-4 text-amber-500" />
-                                contact@jobportal.com
-                            </li>
-                            <li className="flex items-center gap-2 text-zinc-500 text-sm">
-                                <Phone className="w-4 h-4 text-amber-500" />
-                                +91 9876543210
+                                support@jobgrid.in
                             </li>
                             <li className="flex items-start gap-2 text-zinc-500 text-sm">
                                 <MapPin className="w-4 h-4 text-amber-500 mt-0.5" />
-                                New Delhi, India
+                                Remote, India
                             </li>
                         </ul>
                     </div>
@@ -72,10 +73,11 @@ export default function Footer() {
 
                 {/* Bottom */}
                 <div className="mt-12 pt-8 border-t border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-zinc-600 text-sm">© 2024 JobPortal. All rights reserved.</p>
+                    <p className="text-zinc-600 text-sm">© 2026 JobGrid. All rights reserved.</p>
                     <div className="flex items-center gap-6">
-                        <Link href="/privacy" className="text-zinc-600 hover:text-amber-400 text-sm transition-colors">Privacy</Link>
-                        <Link href="/terms" className="text-zinc-600 hover:text-amber-400 text-sm transition-colors">Terms</Link>
+                        <Link href="/privacy" className="text-zinc-600 hover:text-amber-400 text-sm transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="text-zinc-600 hover:text-amber-400 text-sm transition-colors">Terms of Service</Link>
+                        <Link href="/disclaimer" className="text-zinc-600 hover:text-amber-400 text-sm transition-colors">Disclaimer</Link>
                         <Link href="/contact" className="text-zinc-600 hover:text-amber-400 text-sm transition-colors">Contact</Link>
                     </div>
                 </div>

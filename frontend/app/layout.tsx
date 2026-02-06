@@ -56,6 +56,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://jobportal.com",
   },
+  other: {
+    'google-adsense-account': 'ca-pub-3356299280733421',
+  },
 };
 
 export default function RootLayout({

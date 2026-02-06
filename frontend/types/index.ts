@@ -22,5 +22,20 @@ export interface Job {
     views: number;
     clicks: number;
     isFeatured: boolean;
+    isActive?: boolean;
+    reportCount?: number;
     createdAt: string;
+}
+
+export interface QueueItem {
+    _id: string;
+    originalUrl: string;
+    status: 'pending' | 'processed' | 'failed';
+    scheduledFor: string;
+}
+
+export interface AdminAnalytics {
+    totalJobs: number;
+    totalViews: number;
+    totalClicks: number;
 }

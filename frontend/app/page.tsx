@@ -1,6 +1,7 @@
 import { getJobs } from '@/services/api';
 import JobCard from '@/components/JobCard';
 import Navbar from '@/components/Navbar';
+import LatestJobsTicker from '@/components/LatestJobsTicker';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import EmailSubscription from '@/components/EmailSubscription';
@@ -27,7 +28,7 @@ export default async function Home() {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
 
       <Navbar />
-
+      <LatestJobsTicker />
       {/* Hero Section */}
       <section className="relative pt-44 pb-28 px-4">
         <div className="max-w-6xl mx-auto text-center">

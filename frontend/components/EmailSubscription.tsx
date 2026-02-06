@@ -3,16 +3,28 @@
 import { useState } from 'react';
 import { Mail, CheckCircle } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com';
+
 export default function EmailSubscription() {
     const [email, setEmail] = useState('');
     const [subscribed, setSubscribed] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (email) {
-            // TODO: Connect to actual email service
-            setSubscribed(true);
-            setEmail('');
+            try {
+                const res = await fetch(`${API_URL}/api/subscribe`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                if (res.ok) {
+                    setSubscribed(true);
+                    setEmail('');
+                }
+            } catch (err) {
+                console.error('Subscription failed', err);
+            }
         }
     };
 

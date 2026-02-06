@@ -26,7 +26,7 @@ export default function Navbar() {
                             </div>
                             <div>
                                 <span className="text-xl font-bold text-white">
-                                    Job<span className="text-amber-400">Portal</span>
+                                    Job<span className="text-amber-400">Grid</span>
                                 </span>
                                 <p className="text-xs text-amber-500/60">Premium Careers</p>
                             </div>
@@ -38,8 +38,8 @@ export default function Navbar() {
                                 { name: 'Home', href: '/' },
                                 { name: 'All Jobs', href: '/jobs' },
                                 { name: 'Internships', href: '/jobs?jobType=Internship' },
-                                { name: 'Dashboard', href: '/dashboard' },
                                 { name: 'Saved', href: '/saved' },
+                                { name: 'Admin', href: '/admin' },
                             ].map((item) => (
                                 <Link
                                     key={item.name}

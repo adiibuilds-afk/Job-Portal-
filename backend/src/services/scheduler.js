@@ -58,7 +58,7 @@ const processQueue = async (bot) => {
 
     // 4. Post to Telegram
     const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID;
-    const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid-in.onrender.com';
+    const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
 
     if (CHANNEL_ID) {
         const jobUrl = `${WEBSITE_URL}/job/${newJob.slug}`;

@@ -355,6 +355,128 @@ app.post('/api/forum/posts/:id/comments', async (req, res) => {
   }
 });
 
+// ========== ADMIN QUEUE ROUTES ==========
+const ScheduledJob = require('./models/ScheduledJob');
+
+// Get all pending/processed queue items
+app.get('/api/admin/queue', async (req, res) => {
+  try {
+    const queue = await ScheduledJob.find().sort({ scheduledFor: -1 }).limit(100);
+    res.json(queue);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete a queue item
+app.delete('/api/admin/queue/:id', async (req, res) => {
+  try {
+    await ScheduledJob.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Queue item deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Manually trigger a queue item
+app.post('/api/admin/queue/:id/run', async (req, res) => {
+  try {
+    const job = await ScheduledJob.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+    
+    // In a real app, we'd call the processor function here. 
+    // To keep it simple, we'll just set the scheduledFor to NOW and let the cron pick it up in < 1 min.
+    job.scheduledFor = new Date();
+    await job.save();
+    
+    res.json({ success: true, message: 'Job scheduled for immediate processing' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ========== SUBSCRIPTION ROUTES ==========
+const Subscriber = require('./models/Subscriber');
+
+app.post('/api/subscribe', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    // Check if already exists
+    let sub = await Subscriber.findOne({ email });
+    if (sub) {
+      if (!sub.isActive) {
+        sub.isActive = true;
+        await sub.save();
+      }
+      return res.json({ success: true, message: 'Already subscribed!' });
+    }
+
+    const newSub = new Subscriber({ email });
+    await newSub.save();
+    res.json({ success: true, message: 'Subscribed successfully!' });
+  } catch (err) {
+    if (err.code === 11000) return res.json({ success: true, message: 'Already subscribed!' });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ========== ANALYTICS & CLEANUP ==========
+app.get('/api/admin/analytics/detailed', async (req, res) => {
+    try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const dailyStats = await Job.aggregate([
+            { $match: { createdAt: { $gte: sevenDaysAgo } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 },
+                    views: { $sum: "$views" }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        res.json(dailyStats);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/admin/cleanup', async (req, res) => {
+  try {
+    // Basic logic: Delete jobs older than 30 days that aren't featured
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const result = await Job.deleteMany({
+      createdAt: { $lt: thirtyDaysAgo },
+      isFeatured: false
+    });
+    
+    res.json({ success: true, message: `Cleaned up ${result.deletedCount} old jobs.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/debug/scrape', async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ error: 'URL is required' });
+    
+    const { scrapeJobPage } = require('./services/scraper');
+    const result = await scrapeJobPage(url);
+    
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
