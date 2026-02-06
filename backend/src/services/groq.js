@@ -78,6 +78,10 @@ Rules:
 
     return JSON.parse(jsonString);
   } catch (error) {
+    if (error?.error?.code === 'rate_limit_exceeded') {
+        console.error('❌ Groq Rate Limit Exceeded!');
+        return { error: 'rate_limit_exceeded' };
+    }
     console.error('AI Parsing Error:', error);
     return null;
   }
@@ -136,7 +140,11 @@ Rules:
     
     return JSON.parse(jsonString);
   } catch (error) {
-    console.error('SEO Generation Error:', error);
+    if (error?.status === 429 || error?.error?.code === 'rate_limit_exceeded' || error?.error?.error?.code === 'rate_limit_exceeded') {
+        console.error('❌ Groq Rate Limit Exceeded! (Stopping)');
+        return { error: 'rate_limit_exceeded' };
+    }
+    console.error('SEO Generation Error:', error.message || error);
     return null;
   }
 };

@@ -170,6 +170,10 @@ const mapToJobSchema = async (rgJob) => {
             description: finalDescription
         });
 
+        if (seoData && seoData.error === 'rate_limit_exceeded') {
+            return { error: 'rate_limit_exceeded' };
+        }
+
         if (seoData) {
             if (seoData.title) finalTitle = seoData.title;
             if (seoData.description) finalDescription = seoData.description;
@@ -178,6 +182,10 @@ const mapToJobSchema = async (rgJob) => {
             if (seoData.eligibility) finalEligibility = formatAiValue(seoData.eligibility);
         }
     } catch (err) {
+        if (err?.error === 'rate_limit_exceeded' || err?.message === 'rate_limit_exceeded') {
+             // Retain partial data maybe? No, user wants to STOP.
+             return { error: 'rate_limit_exceeded' };
+        }
         console.error('   ⚠️ SEO Generation failed, using raw data');
     }
 
@@ -321,6 +329,13 @@ const importRGJobsDirect = async (limit = 1) => {
             if (exists) continue;
 
             const jobData = await mapToJobSchema(rgJob);
+
+            // Check if AI hit rate limit
+            if (jobData && jobData.error === 'rate_limit_exceeded') {
+                console.log('🛑 Stopping import due to AI Rate Limit Exceeded (Groq 429).');
+                break; // Stop the loop immediately
+            }
+
             const newJob = new Job(jobData);
             await newJob.save();
 
@@ -328,10 +343,10 @@ const importRGJobsDirect = async (limit = 1) => {
             console.log(`✅ Imported: ${newJob.title}`);
             console.log(`   🔗 https://jobgrid.in/job/${newJob.slug}`);
             
-            // Wait 30 seconds before next import (throttle)
+            // Wait 5 seconds before next import (throttle)
             if (imported < limit) {
-                console.log('   ⏳ Waiting 30s before next job...');
-                await new Promise(resolve => setTimeout(resolve, 30000));
+                console.log('   ⏳ Waiting 5s before next job...');
+                await new Promise(resolve => setTimeout(resolve, 5000));
             }
         }
 

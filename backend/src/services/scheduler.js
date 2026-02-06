@@ -253,7 +253,16 @@ const initScheduler = (bot) => {
         await importRGJobsDirect(20);
     });
     
-    console.log('⏰ Job Scheduler initialized (1 min checks + Hourly Scraper + 2hr RG Jobs)');
+    
+    // Indian Jobs API Import (every 3 days)
+    const { importIndianApiJobs } = require('../scripts/importIndianApiJobs');
+    cron.schedule('0 0 */3 * *', async () => {
+        console.log('🔄 Running scheduled Indian Jobs API import...');
+        // Standard limit 50, or as needed
+        await importIndianApiJobs(50);
+    });
+
+    console.log('⏰ Job Scheduler initialized (1 min checks + Hourly Scraper + 2hr RG Jobs + 3d Indian API)');
 };
 
 module.exports = { initScheduler, runAutoScraper, queueLinks };
