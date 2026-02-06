@@ -1,9 +1,9 @@
-import { getJobBySlug, getJobs } from '@/services/api';
+import { getJobBySlug, getSimilarJobs } from '@/services/api';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import JobCard from '@/components/JobCard';
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles, Users, TrendingUp, Clock, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { Job } from '@/types';
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         const { slug } = await params;
         const job = await getJobBySlug(slug);
         return {
-            title: `${job.title} at ${job.company}`,
+            title: `${job.title} at ${job.company} | JobGrid`,
             description: `${job.title} job opening at ${job.company}. Location: ${job.location}. Salary: ${job.salary}. Apply now!`,
             openGraph: {
                 title: `${job.title} at ${job.company}`,
@@ -40,49 +40,88 @@ export default async function JobDetail({ params }: { params: Promise<{ slug: st
 
     try {
         job = await getJobBySlug(slug);
-        const allJobs = await getJobs();
-        relatedJobs = (allJobs as Job[])
-            .filter((j: Job) => j.category === job.category && j._id !== job._id)
-            .slice(0, 3);
     } catch (err) {
         return notFound();
     }
+
+    try {
+        relatedJobs = await getSimilarJobs(job._id);
+    } catch (err) {
+        console.error("Failed to fetch related jobs", err);
+        relatedJobs = [];
+    }
+
+    // Calculate freshness
+    const hoursAgo = Math.floor((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60));
+    const isFresh = hoursAgo < 24;
 
     return (
         <main className="min-h-screen bg-black relative overflow-hidden">
             <JobSchema job={job} />
 
-            {/* Background */}
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[150px]"></div>
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-yellow-500/5 rounded-full blur-[100px]"></div>
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.02)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
+            {/* Background Effects */}
+            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-amber-500/5 rounded-full blur-[200px] pointer-events-none" />
+            <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] bg-yellow-500/5 rounded-full blur-[150px] pointer-events-none" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.015)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
 
             <Navbar />
 
-            <div className="relative pt-32 pb-20 px-4">
-                <div className="max-w-5xl mx-auto">
+            <div className="relative pt-28 pb-20 px-4">
+                <div className="max-w-6xl mx-auto">
 
-                    <Link
-                        href="/"
-                        className="inline-flex items-center gap-2 text-zinc-500 hover:text-amber-400 font-medium mb-8 transition-colors group"
-                    >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        Back to jobs
-                    </Link>
+                    {/* Breadcrumb & Back */}
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href="/jobs"
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all font-medium text-sm group"
+                            >
+                                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                All Jobs
+                            </Link>
+                            <span className="text-zinc-700">/</span>
+                            <span className="text-zinc-500 text-sm truncate max-w-[200px]">{job.company}</span>
+                        </div>
+
+                        {/* Quick Stats */}
+                        <div className="hidden md:flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-zinc-500 text-sm">
+                                <Users className="w-4 h-4 text-blue-400" />
+                                <span><strong className="text-white">{job.views || 0}</strong> views</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-zinc-500 text-sm">
+                                <TrendingUp className="w-4 h-4 text-green-400" />
+                                <span><strong className="text-white">{job.clicks || 0}</strong> clicks</span>
+                            </div>
+                            {isFresh && (
+                                <span className="px-3 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full border border-green-500/20 flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3" /> Posted {hoursAgo}h ago
+                                </span>
+                            )}
+                        </div>
+                    </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                        {/* Main */}
-                        <div className="lg:col-span-8">
+                        {/* Main Content */}
+                        <div className="lg:col-span-8 space-y-8">
                             <JobHeader job={job} />
                             <JobContent job={job} />
 
                             {/* Related Jobs */}
                             {relatedJobs.length > 0 && (
-                                <div className="mt-10">
-                                    <h2 className="text-2xl font-bold text-white mb-6">Related Jobs</h2>
+                                <div className="mt-12">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                                            <Sparkles className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-white">Similar Opportunities</h2>
+                                            <p className="text-zinc-500 text-sm">Jobs you might also be interested in</p>
+                                        </div>
+                                    </div>
                                     <div className="space-y-4">
-                                        {relatedJobs.map((rJob, idx) => (
+                                        {relatedJobs.slice(0, 3).map((rJob, idx) => (
                                             <JobCard key={rJob._id} job={rJob} index={idx} />
                                         ))}
                                     </div>

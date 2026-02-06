@@ -37,7 +37,32 @@ const UserSchema = new mongoose.Schema({
         minSalary: Number
     },
     degree: String, // e.g. 'B.Tech'
-    graduationYear: Number // e.g. 2025
+    graduationYear: Number, // e.g. 2025
+    resumeScans: {
+        count: { type: Number, default: 0 },
+        lastReset: { type: Date, default: Date.now }
+    },
+
+    // Grid Coins System
+    gridCoins: { type: Number, default: 0 },
+    referralCode: { type: String, unique: true, sparse: true },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    referralCount: { type: Number, default: 0 },
+    
+    // Login Streak (7-day streak = 10 coins)
+    loginStreak: { type: Number, default: 0 },
+    lastLoginDate: { type: Date },
+    
+    // Weekly Share Limit (max 20 coins/week from shares)
+    weeklyShares: { type: Number, default: 0 },
+    weeklySharesReset: { type: Date, default: Date.now },
+
+    // Advanced Gamification
+    badges: { type: [String], default: [] },
+    skills: { type: [String], default: [] },
+    portfolioUrl: { type: String },
+    tier: { type: String, enum: ['Bronze', 'Silver', 'Gold', 'Diamond'], default: 'Bronze' },
+    profileRewardsClaimed: { type: [String], default: [] } // e.g. ['skills', 'portfolio']
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

@@ -20,6 +20,11 @@ export interface Job {
     minSalary?: number;
     isRemote?: boolean;
 
+    // Detailed Content
+    rolesResponsibility?: string;
+    requirements?: string;
+    niceToHave?: string;
+
     views: number;
     clicks: number;
     isFeatured: boolean;

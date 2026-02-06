@@ -32,6 +32,10 @@ if (process.env.TELEGRAM_BOT_TOKEN) {
   console.log("Telegram Bot Token not provided, bot not started.");
 }
 
+// Start Resume Queue Worker
+const { startWorker } = require('./services/resumeQueueWorker');
+startWorker();
+
 const userRoutes = require('./routes/user');
 app.use('/api/user', userRoutes);
 
@@ -40,6 +44,9 @@ app.use('/api/resume', resumeRoutes);
 
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
+
+const adminAuthRoutes = require('./routes/adminAuth');
+app.use('/api/admin/auth', adminAuthRoutes);
 
 // Serve static files
 const path = require('path');
@@ -231,11 +238,39 @@ app.get('/api/stats', async (req, res) => {
       topCompanies,
       remoteCount,
       onsiteCount: totalJobs - remoteCount
-    });
+        });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Salary Analytics Endpoint
+app.get('/api/analytics/salary', async (req, res) => {
+  try {
+    const stats = await Job.aggregate([
+      { 
+        $match: { 
+          minSalary: { $gt: 0 },
+          roleType: { $ne: null }
+        } 
+      },
+      { 
+        $group: {
+          _id: "$roleType",
+          avgSalary: { $avg: "$minSalary" },
+          minSalary: { $min: "$minSalary" },
+          maxSalary: { $max: "$minSalary" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { avgSalary: -1 } }
+    ]);
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // Similar Jobs endpoint
 app.get('/api/jobs/:id/similar', async (req, res) => {

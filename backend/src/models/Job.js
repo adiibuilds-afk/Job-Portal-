@@ -23,6 +23,11 @@ const JobSchema = new mongoose.Schema({
   minSalary: { type: Number, default: 0 },
   isRemote: { type: Boolean, default: false },
 
+  // Detailed Description Fields
+  rolesResponsibility: { type: String, default: '' },
+  requirements: { type: String, default: '' },
+  niceToHave: { type: String, default: '' },
+
   // Analytics & Status
   views: { type: Number, default: 0 },
   clicks: { type: Number, default: 0 },

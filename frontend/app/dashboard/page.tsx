@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import axios from "axios";
@@ -10,6 +10,12 @@ import { getPublicStats } from '@/services/api';
 import { TrendingUp, Briefcase, Building2, Code, Users, Globe, Laptop, BookmarkCheck, LayoutDashboard, Sparkles, LogOut, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HiringHeatmap from "@/components/home/HiringHeatmap";
+import { toast } from 'react-hot-toast';
+import ResumeScorerTab from "@/components/dashboard/ResumeScorerTab";
+import ActivityHeatmap from "@/components/dashboard/ActivityHeatmap";
+import GridCoinsWidget from "@/components/dashboard/GridCoinsWidget";
+import GridCoinsTab from "@/components/dashboard/GridCoinsTab";
+import { Coins } from 'lucide-react';
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -17,11 +23,17 @@ export default function DashboardPage() {
     const [userData, setUserData] = useState<any>(null);
     const [marketStats, setMarketStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'tracker' | 'insights'>('tracker');
+    const [activeTab, setActiveTab] = useState<'tracker' | 'insights' | 'ai-scorer' | 'coins'>('tracker');
     const [activeTrackerTab, setActiveTrackerTab] = useState<'applied' | 'saved'>('applied');
+    const toastShown = useRef(false);
 
     useEffect(() => {
-        if (status === "unauthenticated") {
+        if (status === "unauthenticated" && !toastShown.current) {
+            toastShown.current = true;
+            toast.error("You must be logged in to view your dashboard", {
+                icon: '🔒',
+                duration: 4000
+            });
             router.push("/");
         } else if (session?.user?.email) {
             Promise.all([fetchUserData(), fetchMarketStats()]).finally(() => setLoading(false));
@@ -108,6 +120,24 @@ export default function DashboardPage() {
                             <TrendingUp className="w-4 h-4" />
                             Market Insights
                         </button>
+                        <button
+                            onClick={() => setActiveTab('ai-scorer')}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'ai-scorer'
+                                ? 'bg-zinc-800 text-white shadow-xl border border-zinc-700'
+                                : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            AI Scanner
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('coins')}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'coins'
+                                ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 shadow-xl border border-amber-500/30'
+                                : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                            <Coins className="w-4 h-4" />
+                            Grid Coins
+                        </button>
                     </div>
                 </div>
 
@@ -127,6 +157,9 @@ export default function DashboardPage() {
                                 <ActivityCard title="Profile Rank" value="Top 15%" icon={<Sparkles className="w-5 h-5" />} color="text-purple-400" />
                                 <ActivityCard title="Batch" value={userData?.batch || '2025'} icon={<Users className="w-5 h-5" />} color="text-green-400" />
                             </div>
+
+                            {/* Activity Heatmap */}
+                            <ActivityHeatmap />
 
                             {/* Job Tracker Section */}
                             <div className="bg-zinc-900/40 border border-zinc-800 rounded-[2.5rem] p-8 min-h-[500px]">
@@ -170,7 +203,7 @@ export default function DashboardPage() {
                                 </div>
                             </div>
                         </motion.div>
-                    ) : (
+                    ) : activeTab === 'insights' ? (
                         <motion.div
                             key="insights"
                             initial={{ opacity: 0, y: 20 }}
@@ -195,7 +228,25 @@ export default function DashboardPage() {
                                 <HiringHeatmap />
                             </div>
                         </motion.div>
-                    )}
+                    ) : activeTab === 'ai-scorer' ? (
+                        <motion.div
+                            key="ai-scorer"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                        >
+                            <ResumeScorerTab />
+                        </motion.div>
+                    ) : activeTab === 'coins' ? (
+                        <motion.div
+                            key="coins"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                        >
+                            <GridCoinsTab />
+                        </motion.div>
+                    ) : null}
                 </AnimatePresence>
             </div>
 
@@ -257,7 +308,7 @@ function ChartPanel({ title, icon, data, total, isTags }: any) {
         <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-8">
             <h3 className="text-xl font-bold text-white mb-8 flex items-center gap-2">{icon} {title}</h3>
             <div className="space-y-4">
-                {data.map((item: any) => (
+                {[...data].sort((a: any, b: any) => b.count - a.count).map((item: any) => (
                     <div key={item._id} className="flex flex-col gap-2">
                         <div className="flex justify-between text-sm">
                             <span className="text-zinc-300 font-medium">{item._id || 'General'}</span>

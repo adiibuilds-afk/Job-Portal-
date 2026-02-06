@@ -47,10 +47,15 @@ const downloadAndSaveLogo = async (url) => {
     }
 };
 
+const Settings = require('../models/Settings');
+
 const processQueue = async (bot) => {
-  console.log('⏳ Checking for scheduled jobs...');
-  
   try {
+    const pauseSetting = await Settings.findOne({ key: 'posting_queue_paused' });
+    if (pauseSetting && pauseSetting.value === true) {
+        return;
+    }
+
     const job = await ScheduledJob.findOne({ 
       status: 'pending', 
       scheduledFor: { $lte: new Date() } 
@@ -210,10 +215,12 @@ const queueLinks = async (links) => {
         const queued = await ScheduledJob.findOne({ originalUrl: link });
         if (queued) continue;
 
-        // Add 2 minutes buffer for the next slot
-        // If it's the very first job being added now, it will be Now + 2 mins
-        // If we want the first one to be immediate, we could adjust logic, but +2m safety is fine.
-        nextScheduleTime = new Date(nextScheduleTime.getTime() + 2 * 60000);
+        // Check Interval Setting
+        const intervalSetting = await Settings.findOne({ key: 'schedule_interval_minutes' });
+        const intervalMinutes = intervalSetting ? parseInt(intervalSetting.value) : 60; // Default 60 mins
+
+        // Add interval buffer for the next slot
+        nextScheduleTime = new Date(nextScheduleTime.getTime() + intervalMinutes * 60000);
 
         // Add to Queue
         const newQueue = new ScheduledJob({

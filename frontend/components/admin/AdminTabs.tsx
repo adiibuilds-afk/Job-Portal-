@@ -1,8 +1,8 @@
-import { List, Clock, MousePointer, BarChart3, Bell } from 'lucide-react';
+import { List, Clock, MousePointer, BarChart3, Bell, Settings } from 'lucide-react';
 
 interface AdminTabsProps {
-    activeTab: 'jobs' | 'queue' | 'analytics' | 'scraper' | 'alerts';
-    setActiveTab: (tab: 'jobs' | 'queue' | 'analytics' | 'scraper' | 'alerts') => void;
+    activeTab: 'jobs' | 'queue' | 'analytics' | 'scraper' | 'alerts' | 'settings';
+    setActiveTab: (tab: 'jobs' | 'queue' | 'analytics' | 'scraper' | 'alerts' | 'settings') => void;
     pendingCount: number;
 }
 
@@ -43,6 +43,12 @@ export default function AdminTabs({ activeTab, setActiveTab, pendingCount }: Adm
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'alerts' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-zinc-500 hover:text-white'}`}
             >
                 <Bell className="w-4 h-4" /> Alerts
+            </button>
+            <button
+                onClick={() => setActiveTab('settings')}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'settings' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-zinc-500 hover:text-white'}`}
+            >
+                <Settings className="w-4 h-4" /> Settings
             </button>
         </div>
     );

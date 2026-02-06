@@ -29,8 +29,10 @@ export default function Footer() {
                             {[
                                 { name: 'About Us', href: '/about' },
                                 { name: 'Contact Us', href: '/contact' },
+                                { name: 'Updates', href: '/updates' },
                                 { name: 'Privacy Policy', href: '/privacy' },
-                                { name: 'Terms of Service', href: '/terms' }
+                                { name: 'Disclaimer', href: '/disclaimer' },
+                                { name: 'Terms & Conditions', href: '/terms' }
                             ].map((item) => (
                                 <li key={item.name}>
                                     <Link href={item.href} className="text-zinc-500 hover:text-amber-400 text-sm transition-colors">

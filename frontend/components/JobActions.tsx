@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from 'react';
-import { Bookmark, Flag, Link2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Bookmark, Flag, Link2, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
 import { useSavedJobs } from '@/hooks/useSavedJobs';
 import { useAppliedJobs } from '@/hooks/useAppliedJobs';
 import { reportJob } from '@/services/api';
 
 import { useSession, signIn } from 'next-auth/react';
+import { toast } from 'react-hot-toast';
 
 interface JobActionsProps {
     jobId: string;
@@ -25,9 +26,7 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
 
     const handleReport = async () => {
         if (!session) {
-            if (confirm('Please login to report jobs. Login now?')) {
-                signIn();
-            }
+            toast.error('Please login to report jobs.', { icon: '🔒' });
             return;
         }
         if (isReported || reporting) return;
@@ -46,6 +45,7 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
         const url = `${window.location.origin}/job/${jobSlug}`;
         navigator.clipboard.writeText(url);
         setIsCopied(true);
+        toast.success('Link copied to clipboard!');
         setTimeout(() => setIsCopied(false), 2000);
     };
 
@@ -54,9 +54,7 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
 
     const handleMarkApplied = () => {
         if (!session) {
-            if (confirm('Please login to track your applications. Login now?')) {
-                signIn();
-            }
+            toast.error('Please login to track your applications.', { icon: '🔒' });
             return;
         }
         markAsApplied(jobId);
@@ -92,9 +90,7 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
             <button
                 onClick={() => {
                     if (!session) {
-                        if (confirm('Please login to save jobs. Login now?')) {
-                            signIn();
-                        }
+                        toast.error('Please login to save jobs.', { icon: '🔒' });
                         return;
                     }
                     toggleSave(jobId);

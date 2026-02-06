@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Job, QueueItem, AdminAnalytics } from '@/types';
-import AdminHeader from '@/components/admin/AdminHeader';
-import AdminTabs from '@/components/admin/AdminTabs';
+import AdminSidebar, { AdminTab } from '@/components/admin/AdminSidebar';
+import CEODashboard from '@/components/admin/CEODashboard';
 import JobsTab from '@/components/admin/JobsTab';
 import QueueTab from '@/components/admin/QueueTab';
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import ScraperTab from '@/components/admin/ScraperTab';
 import BatchAlerts from '@/components/admin/BatchAlerts';
+import SettingsTab from '@/components/admin/SettingsTab';
+import UsersTab from '@/components/admin/UsersTab'; // Assuming we'll create this next
+import { toast } from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com';
 
@@ -19,12 +22,49 @@ export default function AdminDashboard() {
     const [chartData, setChartData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [cleaning, setCleaning] = useState(false);
-    const [activeTab, setActiveTab] = useState<'jobs' | 'queue' | 'analytics' | 'scraper' | 'alerts'>('jobs');
+    const [activeTab, setActiveTab] = useState<AdminTab>('ceo');
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const [jobFilter, setJobFilter] = useState<'all' | 'reported'>('all');
+    const [dashboardStats, setDashboardStats] = useState<any>(null);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+
+
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`${API_URL}/api/admin/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                setIsAuthenticated(true);
+                sessionStorage.setItem('adminAuth', 'true');
+                toast.success(data.message);
+            } else {
+                toast.error(data.message || 'Invalid Credentials');
+            }
+        } catch (err) {
+            toast.error('Login failed. Server error.');
+            console.error(err);
+        }
+    };
+
+    const fetchDashboardStats = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/admin/dashboard-stats`);
+            const data = await res.json();
+            setDashboardStats(data);
+        } catch (err) {
+            console.error('Failed to fetch CEO stats', err);
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -57,7 +97,7 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(`${API_URL}/api/admin/cleanup`, { method: 'POST' });
             const data = await res.json();
-            alert(data.message);
+            toast.success(data.message);
             fetchData();
         } catch (err) {
             console.error('Cleanup failed', err);
@@ -95,11 +135,11 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(`${API_URL}/api/admin/queue/clear?status=${status}`, { method: 'DELETE' });
             const data = await res.json();
-            alert(data.message);
+            toast.success(data.message);
             fetchData();
         } catch (err) {
             console.error('Failed to clear queue', err);
-            alert('Failed to clear queue');
+            toast.error('Failed to clear queue');
         }
     };
 
@@ -108,11 +148,11 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(`${API_URL}/api/admin/jobs/clear`, { method: 'DELETE' });
             const data = await res.json();
-            alert(data.message);
+            toast.success(data.message);
             fetchData();
         } catch (err) {
             console.error('Failed to clear jobs', err);
-            alert('Failed to clear jobs');
+            toast.error('Failed to clear jobs');
         }
     };
 
@@ -121,11 +161,11 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(`${API_URL}/api/admin/jobs/reported`, { method: 'DELETE' });
             const data = await res.json();
-            alert(data.message);
+            toast.success(data.message);
             fetchData();
         } catch (err) {
             console.error('Failed to clear reported jobs', err);
-            alert('Failed to clear reported jobs');
+            toast.error('Failed to clear reported jobs');
         }
     };
 
@@ -139,7 +179,7 @@ export default function AdminDashboard() {
             ));
         } catch (err) {
             console.error('Failed to toggle job status', err);
-            alert('Failed to update status');
+            toast.error('Failed to update status');
         }
     };
 
@@ -152,9 +192,72 @@ export default function AdminDashboard() {
             setJobs(jobs.filter(j => j._id !== jobId));
         } catch (err) {
             console.error('Failed to delete job', err);
-            alert('Failed to delete job');
+            toast.error('Failed to delete job');
         }
     };
+
+    useEffect(() => {
+        // Check session storage for persistence
+        const auth = sessionStorage.getItem('adminAuth');
+        if (auth === 'true') {
+            setIsAuthenticated(true);
+            fetchData();
+            fetchDashboardStats();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchData();
+            fetchDashboardStats();
+        }
+    }, [isAuthenticated]);
+
+    if (!isAuthenticated) {
+        return (
+            <main className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10 pointer-events-none" />
+                <div className="w-full max-w-md bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 shadow-2xl relative z-10">
+                    <div className="text-center mb-8">
+                        <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/20">
+                            <span className="text-3xl">👑</span>
+                        </div>
+                        <h1 className="text-2xl font-black text-white">Admin Access</h1>
+                        <p className="text-zinc-500">Enter secure credentials to continue</p>
+                    </div>
+
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <div>
+                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Username</label>
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="w-full bg-zinc-950 border border-zinc-800 text-white px-4 py-3 rounded-xl focus:border-amber-500 focus:outline-none transition-colors font-medium"
+                                placeholder="Enter username"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Password</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-zinc-950 border border-zinc-800 text-white px-4 py-3 rounded-xl focus:border-amber-500 focus:outline-none transition-colors font-medium"
+                                placeholder="Enter password"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-2"
+                        >
+                            Access Dashboard
+                        </button>
+                    </form>
+                </div>
+            </main>
+        );
+    }
 
     if (loading) {
         return (
@@ -168,53 +271,68 @@ export default function AdminDashboard() {
     }
 
     return (
-        <main className="min-h-screen bg-black">
-            <div className="max-w-7xl mx-auto p-8">
-                <AdminHeader />
+        <main className="min-h-screen bg-black flex overflow-hidden">
+            <AdminSidebar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isCollapsed={isCollapsed}
+                setIsCollapsed={setIsCollapsed}
+                pendingCount={queue.filter(q => q.status === 'pending').length}
+            />
 
-                <AdminTabs
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    pendingCount={queue.filter(q => q.status === 'pending').length}
-                />
+            <div className={`flex-1 transition-all duration-300 h-screen overflow-y-auto ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
+                <div className="max-w-7xl mx-auto p-12">
+                    {/* Page Content Mapper */}
+                    {activeTab === 'ceo' && (
+                        <CEODashboard stats={dashboardStats} loading={loading} />
+                    )}
 
-                {activeTab === 'jobs' && (
-                    <JobsTab
-                        jobs={jobs}
-                        analytics={analytics}
-                        jobFilter={jobFilter}
-                        setJobFilter={setJobFilter}
-                        toggleJobStatus={toggleJobStatus}
-                        deleteJob={deleteJob}
-                        clearAllJobs={clearAllJobs}
-                        clearReportedJobs={clearReportedJobs}
-                    />
-                )}
+                    {activeTab === 'jobs' && (
+                        <JobsTab
+                            jobs={jobs}
+                            analytics={analytics}
+                            jobFilter={jobFilter}
+                            setJobFilter={setJobFilter}
+                            toggleJobStatus={toggleJobStatus}
+                            deleteJob={deleteJob}
+                            clearAllJobs={clearAllJobs}
+                            clearReportedJobs={clearReportedJobs}
+                        />
+                    )}
 
-                {activeTab === 'queue' && (
-                    <QueueTab
-                        queue={queue}
-                        runQueueItem={runQueueItem}
-                        deleteQueueItem={deleteQueueItem}
-                        clearQueue={clearQueue}
-                    />
-                )}
+                    {activeTab === 'users' && (
+                        <UsersTab apiUrl={API_URL} />
+                    )}
 
-                {activeTab === 'analytics' && (
-                    <AnalyticsTab
-                        chartData={chartData}
-                        runCleanup={runCleanup}
-                        cleaning={cleaning}
-                    />
-                )}
+                    {activeTab === 'queue' && (
+                        <QueueTab
+                            queue={queue}
+                            runQueueItem={runQueueItem}
+                            deleteQueueItem={deleteQueueItem}
+                            clearQueue={clearQueue}
+                        />
+                    )}
 
-                {activeTab === 'scraper' && (
-                    <ScraperTab apiUrl={API_URL} />
-                )}
+                    {activeTab === 'analytics' && (
+                        <AnalyticsTab
+                            chartData={chartData}
+                            runCleanup={runCleanup}
+                            cleaning={cleaning}
+                        />
+                    )}
 
-                {activeTab === 'alerts' && (
-                    <BatchAlerts />
-                )}
+                    {activeTab === 'scraper' && (
+                        <ScraperTab apiUrl={API_URL} />
+                    )}
+
+                    {activeTab === 'alerts' && (
+                        <BatchAlerts />
+                    )}
+
+                    {activeTab === 'settings' && (
+                        <SettingsTab refreshData={fetchData} />
+                    )}
+                </div>
             </div>
         </main>
     );

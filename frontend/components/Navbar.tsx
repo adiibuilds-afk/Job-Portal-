@@ -4,14 +4,21 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Menu, Search, Crown, X, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSession, signIn, signOut } from "next-auth/react";
 
-export default function Navbar() {
+function NavbarContent() {
     const { data: session } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
     const searchParams = useSearchParams();
     const q = searchParams.get('q') || '';
+
+    const navLinks = [
+        { name: 'Home', href: '/' },
+        { name: 'All Jobs', href: '/jobs' },
+        { name: 'Dashboard', href: '/dashboard' },
+        { name: 'Internships', href: '/jobs?jobType=Internship' },
+    ];
 
     return (
         <>
@@ -39,13 +46,7 @@ export default function Navbar() {
 
                         {/* Desktop Menu */}
                         <div className="hidden lg:flex items-center space-x-1">
-                            {[
-                                { name: 'Home', href: '/' },
-                                { name: 'All Jobs', href: '/jobs' },
-                                { name: 'Dashboard', href: '/dashboard' },
-                                { name: 'Internships', href: '/jobs?jobType=Internship' },
-                                { name: 'Admin', href: '/admin' },
-                            ].map((item) => (
+                            {navLinks.map((item) => (
                                 <Link
                                     key={item.name}
                                     href={item.href}
@@ -64,6 +65,7 @@ export default function Navbar() {
                                     type="text"
                                     name="q"
                                     placeholder="Search..."
+                                    defaultValue={q}
                                     className="bg-transparent border-none outline-none text-sm w-28 focus:w-40 transition-all text-white placeholder:text-zinc-600"
                                 />
                             </form>
@@ -161,13 +163,7 @@ export default function Navbar() {
                             )}
 
                             <div className="space-y-2">
-                                {[
-                                    { name: 'Home', href: '/' },
-                                    { name: 'All Jobs', href: '/jobs' },
-                                    { name: 'Internships', href: '/jobs?jobType=Internship' },
-                                    { name: 'Freshers', href: '/jobs?batch=2025' },
-                                    { name: 'Saved', href: '/saved' },
-                                ].map((item) => (
+                                {navLinks.map((item) => (
                                     <Link
                                         key={item.name}
                                         href={item.href}
@@ -218,5 +214,13 @@ export default function Navbar() {
                 )}
             </AnimatePresence>
         </>
+    );
+}
+
+export default function Navbar() {
+    return (
+        <Suspense fallback={<div className="fixed top-0 left-0 right-0 z-50 px-4 py-6"><div className="max-w-7xl mx-auto h-20 bg-black/60 rounded-2xl" /></div>}>
+            <NavbarContent />
+        </Suspense>
     );
 }

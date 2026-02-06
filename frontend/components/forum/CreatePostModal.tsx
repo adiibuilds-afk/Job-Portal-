@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
 import { X, Send } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
@@ -35,7 +36,7 @@ export default function CreatePostModal({ isOpen, onClose, refresh }: CreatePost
             setContent('');
         } catch (error) {
             console.error('Failed to create post', error);
-            alert('Failed to post. Please try again.');
+            toast.error('Failed to post. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -71,8 +72,8 @@ export default function CreatePostModal({ isOpen, onClose, refresh }: CreatePost
                                     key={cat}
                                     onClick={() => setCategory(cat)}
                                     className={`px-3 py-1.5 rounded-lg text-sm border ${category === cat
-                                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                                            : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
+                                        ? 'bg-indigo-600 border-indigo-600 text-white'
+                                        : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
                                         }`}
                                 >
                                     {cat}

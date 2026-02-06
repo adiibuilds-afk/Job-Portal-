@@ -49,18 +49,18 @@ export default function EmailSubscription() {
                     <p className="text-xs text-zinc-500">Get jobs in your inbox</p>
                 </div>
             </div>
-            <form onSubmit={handleSubmit} className="flex gap-2">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
                 <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
-                    className="flex-1 px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-white text-sm placeholder:text-zinc-600 outline-none focus:border-amber-500/50 transition-colors"
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white text-sm placeholder:text-zinc-600 outline-none focus:border-amber-500/50 transition-colors"
                     required
                 />
                 <button
                     type="submit"
-                    className="px-4 py-2.5 bg-amber-500 text-black font-bold rounded-xl text-sm hover:bg-amber-400 transition-colors"
+                    className="w-full py-3 bg-amber-500 text-black font-black rounded-xl text-sm hover:bg-amber-400 transition-colors"
                 >
                     Subscribe
                 </button>

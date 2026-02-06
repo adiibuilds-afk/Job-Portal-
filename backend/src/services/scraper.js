@@ -5,21 +5,32 @@ const scrapeJobPage = async (url) => {
   try {
     // Special handling for RG Jobs API
     if (url.includes('rgjobs.in/job/')) {
+        // Regex to capture the ID which comes after /job/ and before the next slash or end of string
         const match = url.match(/job\/(\d+)/);
         if (match && match[1]) {
             const id = match[1];
             console.log(`[Scraper] Using RG Jobs API for ID: ${id}`);
-            const apiRes = await axios.get(`https://api.rgjobs.in/api/job/${id}`, { timeout: 10000 });
-            if (apiRes.data && apiRes.data.status === 200) {
-                const job = apiRes.data;
-                return {
-                    success: true,
-                    title: job.title,
-                    content: `${job.description}\n\nRoles & Responsibilities:\n${job.rolesAndResponsibilities}\n\nRequirements:\n${job.requirements}`,
-                    applyUrl: job.joblink,
-                    companyLogo: job.image ? `https://api.rgjobs.in/${job.image}` : '',
-                    sourceUrl: url,
-                };
+            try {
+                const apiRes = await axios.get(`https://api.rgjobs.in/api/job/${id}`, { 
+                    timeout: 10000,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    }
+                });
+                
+                if (apiRes.data && (apiRes.data.status === 200 || apiRes.data.id)) {
+                    const job = apiRes.data;
+                    return {
+                        success: true,
+                        title: job.title,
+                        content: `${job.description || ''}\n\nRoles & Responsibilities:\n${job.rolesAndResponsibilities || ''}\n\nRequirements:\n${job.requirements || ''}`,
+                        applyUrl: job.joblink || url,
+                        companyLogo: job.image ? (job.image.startsWith('http') ? job.image : `https://api.rgjobs.in/${job.image}`) : '',
+                        sourceUrl: url,
+                    };
+                }
+            } catch (apiErr) {
+                console.warn(`[Scraper] RG Jobs API failed for ${url}: ${apiErr.message}. Falling back to normal scraping.`);
             }
         }
     }
@@ -41,9 +52,12 @@ const scrapeJobPage = async (url) => {
     
     jsonLdScripts.each((i, el) => {
         try {
-            const data = JSON.parse($(el).html());
-            // It could be a single object or an array
+            const text = $(el).html();
+            if (!text) return;
+            const data = JSON.parse(text);
+            
             const searchJobPosting = (obj) => {
+                if (!obj) return null;
                 if (obj['@type'] === 'JobPosting') return obj;
                 if (Array.isArray(obj)) return obj.find(searchJobPosting);
                 if (obj['@graph']) return obj['@graph'].find(searchJobPosting);
@@ -57,6 +71,33 @@ const scrapeJobPage = async (url) => {
         } catch (e) {}
     });
 
+    // Extract Logo from generic selectors if not in Schema
+    let logo = structuredData?.hiringOrganization?.logo;
+    if (!logo) {
+         const logoSelectors = [
+            'img[alt*="logo"]',
+            'img[src*="logo"]',
+            '.company-logo img',
+            '.employer-logo img',
+            '.logo img',
+            'img[class*="CompanyLogo"]'
+         ];
+         for (const sel of logoSelectors) {
+             const img = $(sel).first();
+             if (img.length) {
+                 logo = img.attr('src');
+                 if (logo) break;
+             }
+         }
+         // Fix relative logo URLs
+         if (logo && !logo.startsWith('http')) {
+             try {
+                logo = new URL(logo, url).href;
+             } catch(e) {}
+         }
+    }
+
+
     if (structuredData) {
         console.log(`[Scraper] Found JSON-LD for: ${structuredData.title}`);
         return {
@@ -64,7 +105,7 @@ const scrapeJobPage = async (url) => {
             title: structuredData.title,
             content: structuredData.description,
             applyUrl: structuredData.url || url,
-            companyLogo: structuredData.hiringOrganization?.logo || '',
+            companyLogo: logo || '',
             sourceUrl: url,
         };
     }
@@ -120,13 +161,15 @@ const scrapeJobPage = async (url) => {
     const title = $('title').text().trim() || '';
     
     // Try to find apply URL on the page
-    let applyUrl = ''; // Default to empty, don't default to url yet
+    let applyUrl = ''; 
     
     // Selectors for Apply buttons
     const applySelectors = [
         'a[href*="apply"]',
         'a:contains("Apply")',
-        'button:contains("Apply") parent(a)',
+        'a:contains("APPLY")',
+        'a.wp-block-button__link',
+        '.wp-block-button__link',
         'a:contains("Visit")',
         'a:contains("Official")'
     ];
@@ -153,7 +196,7 @@ const scrapeJobPage = async (url) => {
                 if (url.includes('talentd.in') && absoluteUrl.includes('talentd.in') && !absoluteUrl.includes('/apply')) {
                     return; 
                 }
-
+                
                 // 3. Prioritize external links
                 if (!absoluteUrl.includes(new URL(url).hostname)) {
                     applyUrl = absoluteUrl;
@@ -169,6 +212,12 @@ const scrapeJobPage = async (url) => {
         if (applyUrl && !applyUrl.includes(new URL(url).hostname)) break; // Stop if we found an external one
     }
 
+    // Default to known apply link logic for specific sites
+    if (!applyUrl) {
+         // Some WP sites use window.location logic in buttons, hard to scrape.
+         // But we can check for common patterns.
+    }
+
     // Default to Source URL ONLY if it's NOT an aggregator like Talentd
     if (!applyUrl) {
         if (!url.includes('talentd.in') && !url.includes('naukri.com') && !url.includes('linkedin.com')) {
@@ -181,7 +230,7 @@ const scrapeJobPage = async (url) => {
       title,
       content,
       applyUrl,
-      companyLogo,
+      companyLogo: logo || '',
       sourceUrl: url,
     };
   } catch (error) {

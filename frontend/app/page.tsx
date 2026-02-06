@@ -4,6 +4,9 @@ import Navbar from '@/components/Navbar';
 import LatestJobsTicker from '@/components/LatestJobsTicker';
 import Footer from '@/components/Footer';
 import dynamicImport from 'next/dynamic';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 
 const HiringHeatmap = dynamicImport(() => import('@/components/home/HiringHeatmap'));
 const AdBanner = dynamicImport(() => import('@/components/AdBanner'));
@@ -14,6 +17,12 @@ import { Search, Crown, TrendingUp, Users, Briefcase, ArrowRight, Sparkles } fro
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  const session = await getServerSession(authOptions);
+
+  if (session) {
+    redirect("/jobs");
+  }
+
   let jobs: Job[] = [];
   let totalJobs = 0;
   try {
