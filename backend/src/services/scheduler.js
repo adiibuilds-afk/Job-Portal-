@@ -84,7 +84,16 @@ const processQueue = async (bot) => {
 
     // Ensure apply URL
     if (!jobData.applyUrl || jobData.applyUrl === 'N/A') {
-        jobData.applyUrl = job.originalUrl;
+        // Fallback to original URL only if it's NOT an aggregator like Talentd
+        if (job.originalUrl && !job.originalUrl.includes('talentd.in')) {
+            jobData.applyUrl = job.originalUrl;
+        }
+    }
+
+    // STRICT FILTER: User requested NO Talentd apply links
+    if (jobData.applyUrl && jobData.applyUrl.includes('talentd.in')) {
+        console.log('🚫 Removing Talentd apply link explicitly.');
+        jobData.applyUrl = ''; 
     }
 
     // Assign company logo from scraper if AI missed it

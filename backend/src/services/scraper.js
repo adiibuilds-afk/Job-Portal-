@@ -120,37 +120,60 @@ const scrapeJobPage = async (url) => {
     const title = $('title').text().trim() || '';
     
     // Try to find apply URL on the page
-    let applyUrl = url;
-    const applyLinks = $('a[href*="apply"], a:contains("Apply"), button:contains("Apply")').first();
-    // Try to find company logo
-    let companyLogo = '';
-    const logoSelectors = [
-      'img[src*="logo"]',
-      'img[class*="logo"]',
-      '.company-logo img',
-      '.brand-logo img',
-      'header img',
-      'img[alt*="logo"]',
-      'img[alt*="Logo"]',
+    let applyUrl = ''; // Default to empty, don't default to url yet
+    
+    // Selectors for Apply buttons
+    const applySelectors = [
+        'a[href*="apply"]',
+        'a:contains("Apply")',
+        'button:contains("Apply") parent(a)',
+        'a:contains("Visit")',
+        'a:contains("Official")'
     ];
 
-    for (const selector of logoSelectors) {
-      const img = $(selector).first();
-      if (img.length && img.attr('src')) {
-        const src = img.attr('src');
-        companyLogo = src.startsWith('http') ? src : (src.startsWith('/') ? `${new URL(url).origin}${src}` : src);
-        break;
-      }
+    for (const selector of applySelectors) {
+        $(selector).each((i, el) => {
+            const href = $(el).attr('href');
+            if (href && href.length > 5) {
+                // Resolve relative URLs
+                let absoluteUrl = href;
+                if (!href.startsWith('http')) {
+                    if (href.startsWith('/')) {
+                        absoluteUrl = `${new URL(url).origin}${href}`;
+                    } else {
+                        return; // Skip weird relative links
+                    }
+                }
+
+                // VALIDATION:
+                // 1. Must not be the same as current page
+                if (absoluteUrl === url) return;
+                
+                // 2. If we are on talentd, link should NOT be talentd (unless it's a specific apply path)
+                if (url.includes('talentd.in') && absoluteUrl.includes('talentd.in') && !absoluteUrl.includes('/apply')) {
+                    return; 
+                }
+
+                // 3. Prioritize external links
+                if (!absoluteUrl.includes(new URL(url).hostname)) {
+                    applyUrl = absoluteUrl;
+                    return false; // Found external link, stop loop
+                }
+                
+                // 4. Fallback to internal apply link if no external found yet
+                if (!applyUrl) {
+                    applyUrl = absoluteUrl;
+                }
+            }
+        });
+        if (applyUrl && !applyUrl.includes(new URL(url).hostname)) break; // Stop if we found an external one
     }
 
-    if (applyLinks.attr('href')) {
-      const href = applyLinks.attr('href');
-      if (href.startsWith('http')) {
-        applyUrl = href;
-      } else if (href.startsWith('/')) {
-        const urlObj = new URL(url);
-        applyUrl = `${urlObj.origin}${href}`;
-      }
+    // Default to Source URL ONLY if it's NOT an aggregator like Talentd
+    if (!applyUrl) {
+        if (!url.includes('talentd.in') && !url.includes('naukri.com') && !url.includes('linkedin.com')) {
+             applyUrl = url;
+        }
     }
 
     return {
