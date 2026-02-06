@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import axios from "axios";
@@ -73,7 +73,9 @@ export default function DashboardPage() {
 
     return (
         <main className="min-h-screen bg-black text-white selection:bg-amber-500 selection:text-black">
-            <Navbar />
+            <Suspense fallback={null}>
+                <Navbar />
+            </Suspense>
 
             <div className="max-w-7xl mx-auto px-4 pt-32 pb-20">
                 {/* Dashboard Header */}

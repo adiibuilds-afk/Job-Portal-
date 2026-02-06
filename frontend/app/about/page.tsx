@@ -1,10 +1,13 @@
+import { Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export default function AboutPage() {
     return (
         <main className="min-h-screen bg-black text-white">
-            <Navbar />
+            <Suspense fallback={null}>
+                <Navbar />
+            </Suspense>
             <div className="max-w-4xl mx-auto px-6 pt-32 pb-20">
                 <h1 className="text-5xl font-black mb-8 bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-yellow-500">
                     About JobGrid

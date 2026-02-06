@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { MessageSquare, ThumbsUp, Eye, Plus, Search } from 'lucide-react';
@@ -32,7 +32,9 @@ export default function ForumPage() {
 
     return (
         <main className="min-h-screen bg-black text-white">
-            <Navbar />
+            <Suspense fallback={null}>
+                <Navbar />
+            </Suspense>
 
             <div className="pt-28 pb-20 px-4 max-w-6xl mx-auto">
                 <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
@@ -55,8 +57,8 @@ export default function ForumPage() {
                             key={cat}
                             onClick={() => setFilter(cat)}
                             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border transition-all ${filter === cat
-                                    ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400'
-                                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                                ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400'
+                                : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                                 }`}
                         >
                             {cat === 'all' ? 'All Topics' : cat}
