@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from '@/components/Providers';
 import BatchPopup from "@/components/onboarding/BatchPopup";
+import { Analytics } from '@vercel/analytics/next';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -81,6 +82,7 @@ export default function RootLayout({
           {children}
           <BatchPopup />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
