@@ -10,6 +10,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://jobgrid.in'),
   title: {
     default: "JobPortal - Premium Government & Private Jobs in India",
     template: "%s | JobPortal"

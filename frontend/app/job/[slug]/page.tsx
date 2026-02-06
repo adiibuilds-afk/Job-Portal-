@@ -41,8 +41,8 @@ export default async function JobDetail({ params }: { params: Promise<{ slug: st
     try {
         job = await getJobBySlug(slug);
         const allJobs = await getJobs();
-        relatedJobs = allJobs
-            .filter(j => j.category === job.category && j._id !== job._id)
+        relatedJobs = (allJobs as Job[])
+            .filter((j: Job) => j.category === job.category && j._id !== job._id)
             .slice(0, 3);
     } catch (err) {
         return notFound();
