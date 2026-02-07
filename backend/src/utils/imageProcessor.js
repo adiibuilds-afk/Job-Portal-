@@ -43,7 +43,9 @@ const downloadAndProcessLogo = async (imageUrl, companyName = 'company') => {
             .webp({ quality: 80 })
             .toFile(filePath);
 
-        return `/uploads/logos/${filename}`;
+        // Return absolute URL so images work on production
+        const BACKEND_URL = process.env.BACKEND_URL || 'https://jobgrid-in.onrender.com';
+        return `${BACKEND_URL}/uploads/logos/${filename}`;
     } catch (error) {
         console.error(`   ❌ Logo processing failed: ${error.message}`);
         return null;

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-export type AdminTab = 'ceo' | 'jobs' | 'users' | 'queue' | 'scraper' | 'analytics' | 'alerts' | 'settings';
+export type AdminTab = 'ceo' | 'jobs' | 'users' | 'queue' | 'cron' | 'scraper' | 'analytics' | 'alerts' | 'notifications' | 'audit' | 'health' | 'settings';
 
 interface AdminSidebarProps {
     activeTab: AdminTab;
@@ -40,9 +40,13 @@ export default function AdminSidebar({
         { id: 'jobs', label: 'Manage Jobs', icon: Briefcase, color: 'text-blue-500' },
         { id: 'users', label: 'User Index', icon: Users, color: 'text-green-500' },
         { id: 'queue', label: 'Bot Queue', icon: Clock, color: 'text-purple-500', badge: pendingCount },
+        { id: 'cron', label: 'Cron Control', icon: Clock, color: 'text-cyan-500' },
         { id: 'scraper', label: 'Scraper Test', icon: MousePointer, color: 'text-pink-500' },
         { id: 'analytics', label: 'Deep Analytics', icon: BarChart3, color: 'text-cyan-500' },
         { id: 'alerts', label: 'Batch Alerts', icon: Bell, color: 'text-orange-500' },
+        { id: 'notifications', label: 'Broadcasts', icon: Bell, color: 'text-purple-500' },
+        { id: 'audit', label: 'Audit Log', icon: BarChart3, color: 'text-indigo-500' },
+        { id: 'health', label: 'System Health', icon: Settings, color: 'text-green-500' },
         { id: 'settings', label: 'Global Config', icon: Settings, color: 'text-zinc-400' },
     ];
 
@@ -74,8 +78,8 @@ export default function AdminSidebar({
                             key={item.id}
                             onClick={() => setActiveTab(item.id as AdminTab)}
                             className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${isActive
-                                    ? 'bg-amber-500/10 text-white'
-                                    : 'text-zinc-500 hover:text-white hover:bg-zinc-900'
+                                ? 'bg-amber-500/10 text-white'
+                                : 'text-zinc-500 hover:text-white hover:bg-zinc-900'
                                 }`}
                         >
                             {/* Active Indicator Line */}

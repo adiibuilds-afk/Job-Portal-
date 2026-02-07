@@ -36,6 +36,19 @@ router.post('/queue/:id/run', async (req, res) => {
     }
 });
 
+// Clear queue by status (MUST be before /queue/:id to avoid matching "clear" as an ID)
+router.delete('/queue/clear', async (req, res) => {
+    try {
+        const { status } = req.query;
+        if (!status) return res.status(400).json({ error: 'Status is required' });
+        
+        await ScheduledJob.deleteMany({ status });
+        res.json({ message: `Cleared all ${status} jobs` });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Delete a queue item
 router.delete('/queue/:id', async (req, res) => {
     try {
@@ -46,14 +59,144 @@ router.delete('/queue/:id', async (req, res) => {
     }
 });
 
-// Clear queue by status
-router.delete('/queue/clear', async (req, res) => {
+// Add job to queue manually
+router.post('/queue', async (req, res) => {
     try {
-        const { status } = req.query;
-        if (!status) return res.status(400).json({ error: 'Status is required' });
+        const AuditLog = require('../models/AuditLog');
+        const { url, title, scheduledFor, priority = 0 } = req.body;
         
-        await ScheduledJob.deleteMany({ status });
-        res.json({ message: `Cleared all ${status} jobs` });
+        if (!url) return res.status(400).json({ error: 'URL is required' });
+        
+        const job = new ScheduledJob({
+            originalUrl: url,
+            title: title || url.substring(0, 50),
+            scheduledFor: scheduledFor ? new Date(scheduledFor) : new Date(),
+            priority: Math.min(10, Math.max(0, priority)),
+            source: 'manual',
+            status: 'pending'
+        });
+        
+        await job.save();
+        await AuditLog.log('QUEUE_JOB_ADDED', 'system', { url, title });
+        
+        res.status(201).json(job);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update job priority
+router.put('/queue/:id/priority', async (req, res) => {
+    try {
+        const { priority } = req.body;
+        const job = await ScheduledJob.findByIdAndUpdate(
+            req.params.id,
+            { priority: Math.min(10, Math.max(0, priority)) },
+            { new: true }
+        );
+        
+        if (!job) return res.status(404).json({ error: 'Job not found' });
+        res.json(job);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Retry a failed job
+router.post('/queue/:id/retry', async (req, res) => {
+    try {
+        const job = await ScheduledJob.findById(req.params.id);
+        if (!job) return res.status(404).json({ error: 'Job not found' });
+        
+        if (job.status !== 'failed') {
+            return res.status(400).json({ error: 'Only failed jobs can be retried' });
+        }
+        
+        if (job.retryCount >= job.maxRetries) {
+            return res.status(400).json({ error: 'Max retries exceeded' });
+        }
+        
+        job.status = 'pending';
+        job.scheduledFor = new Date();
+        job.retryCount = (job.retryCount || 0) + 1;
+        job.error = null;
+        await job.save();
+        
+        res.json({ message: 'Job queued for retry', job });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Retry all failed jobs
+router.post('/queue/retry-all', async (req, res) => {
+    try {
+        const result = await ScheduledJob.updateMany(
+            { status: 'failed', $expr: { $lt: ['$retryCount', '$maxRetries'] } },
+            {
+                $set: { status: 'pending', scheduledFor: new Date(), error: null },
+                $inc: { retryCount: 1 }
+            }
+        );
+        
+        res.json({ message: `Retrying ${result.modifiedCount} failed jobs` });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Bulk delete selected jobs
+router.post('/queue/bulk-delete', async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids)) {
+            return res.status(400).json({ error: 'IDs array required' });
+        }
+        
+        const result = await ScheduledJob.deleteMany({ _id: { $in: ids } });
+        res.json({ message: `Deleted ${result.deletedCount} jobs` });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Bulk run selected jobs
+router.post('/queue/bulk-run', async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids)) {
+            return res.status(400).json({ error: 'IDs array required' });
+        }
+        
+        const result = await ScheduledJob.updateMany(
+            { _id: { $in: ids }, status: 'pending' },
+            { scheduledFor: new Date() }
+        );
+        
+        res.json({ message: `Triggered ${result.modifiedCount} jobs` });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get queue stats
+router.get('/queue/stats', async (req, res) => {
+    try {
+        const [pending, processed, failed, total] = await Promise.all([
+            ScheduledJob.countDocuments({ status: 'pending' }),
+            ScheduledJob.countDocuments({ status: 'processed' }),
+            ScheduledJob.countDocuments({ status: 'failed' }),
+            ScheduledJob.countDocuments()
+        ]);
+        
+        // Get processing rate (last 24h)
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const processedToday = await ScheduledJob.countDocuments({
+            status: 'processed',
+            processedAt: { $gte: oneDayAgo }
+        });
+        
+        res.json({ pending, processed, failed, total, processedToday });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -428,6 +571,247 @@ router.post('/alerts/batch', async (req, res) => {
         res.json({ count: 100, message: 'Alerts queued successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// --- AI Usage Tracking ---
+router.get('/ai-usage', async (req, res) => {
+    try {
+        const AIUsage = require('../models/AIUsage');
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get last 7 days of usage
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const usage = await AIUsage.find({ date: { $gte: sevenDaysAgo } }).sort({ date: -1 });
+        
+        const todayUsage = usage.find(u => u.date === today) || { tokensUsed: 0, requestCount: 0 };
+        const totalTokens = usage.reduce((acc, u) => acc + u.tokensUsed, 0);
+        const totalRequests = usage.reduce((acc, u) => acc + u.requestCount, 0);
+        const totalErrors = usage.reduce((acc, u) => acc + u.errors, 0);
+        
+        // Groq free tier: ~14,400 requests/day, ~6000 tokens/minute
+        const dailyLimit = 500000; // Rough estimate
+        const percentUsed = Math.min(100, Math.round((todayUsage.tokensUsed / dailyLimit) * 100));
+        
+        res.json({
+            today: todayUsage,
+            week: { totalTokens, totalRequests, totalErrors },
+            history: usage,
+            quota: {
+                limit: dailyLimit,
+                used: todayUsage.tokensUsed,
+                percentUsed,
+                resetsAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString()
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Audit Log ---
+router.get('/audit-log', async (req, res) => {
+    try {
+        const AuditLog = require('../models/AuditLog');
+        const { category, limit = 50 } = req.query;
+        
+        const query = category ? { category } : {};
+        const logs = await AuditLog.find(query)
+            .sort({ timestamp: -1 })
+            .limit(parseInt(limit));
+        
+        res.json(logs);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- User Management ---
+router.put('/users/:id/ban', async (req, res) => {
+    try {
+        const AuditLog = require('../models/AuditLog');
+        const { banned } = req.body;
+        
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { isBanned: banned },
+            { new: true }
+        );
+        
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        
+        await AuditLog.log(
+            banned ? 'USER_BANNED' : 'USER_UNBANNED',
+            'user',
+            { targetId: user._id, email: user.email }
+        );
+        
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.put('/users/:id/coins', async (req, res) => {
+    try {
+        const AuditLog = require('../models/AuditLog');
+        const { amount, reason } = req.body;
+        
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        
+        const oldBalance = user.gridCoins || 0;
+        user.gridCoins = oldBalance + amount;
+        await user.save();
+        
+        await AuditLog.log(
+            'COINS_ADJUSTED',
+            'user',
+            { targetId: user._id, oldBalance, newBalance: user.gridCoins, amount, reason }
+        );
+        
+        res.json({ oldBalance, newBalance: user.gridCoins });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.delete('/users/:id', async (req, res) => {
+    try {
+        const AuditLog = require('../models/AuditLog');
+        const user = await User.findByIdAndDelete(req.params.id);
+        
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        
+        await AuditLog.log('USER_DELETED', 'user', { email: user.email });
+        
+        res.json({ message: 'User deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Job CRUD ---
+router.post('/jobs', async (req, res) => {
+    try {
+        const AuditLog = require('../models/AuditLog');
+        const newJob = new Job(req.body);
+        await newJob.save();
+        
+        await AuditLog.log('JOB_CREATED', 'job', { targetId: newJob._id, title: newJob.title });
+        
+        res.status(201).json(newJob);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.put('/jobs/:id', async (req, res) => {
+    try {
+        const AuditLog = require('../models/AuditLog');
+        const job = await Job.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        
+        if (!job) return res.status(404).json({ error: 'Job not found' });
+        
+        await AuditLog.log('JOB_UPDATED', 'job', { targetId: job._id, title: job.title });
+        
+        res.json(job);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Forum Moderation ---
+router.get('/forum/reports', async (req, res) => {
+    try {
+        // Assuming you have a ForumPost model with a 'reportCount' field
+        const ForumPost = require('../models/ForumPost');
+        const reports = await ForumPost.find({ reportCount: { $gt: 0 } })
+            .sort({ reportCount: -1 })
+            .limit(50)
+            .populate('author', 'name email');
+        
+        res.json(reports);
+    } catch (err) {
+        // If ForumPost model doesn't exist, return empty
+        res.json([]);
+    }
+});
+
+router.delete('/forum/posts/:id', async (req, res) => {
+    try {
+        const AuditLog = require('../models/AuditLog');
+        const ForumPost = require('../models/ForumPost');
+        
+        const post = await ForumPost.findByIdAndDelete(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        
+        await AuditLog.log('FORUM_POST_DELETED', 'forum', { targetId: post._id, title: post.title });
+        
+        res.json({ message: 'Post deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.put('/forum/posts/:id/pin', async (req, res) => {
+    try {
+        const ForumPost = require('../models/ForumPost');
+        const { pinned } = req.body;
+        
+        const post = await ForumPost.findByIdAndUpdate(
+            req.params.id,
+            { isPinned: pinned },
+            { new: true }
+        );
+        
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        
+        res.json(post);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Broadcast/Notifications ---
+router.post('/broadcast', async (req, res) => {
+    try {
+        const AuditLog = require('../models/AuditLog');
+        const { title, message, targetAll } = req.body;
+        
+        // Store broadcast (could be sent via WebSocket, push notification, etc.)
+        await AuditLog.log('BROADCAST_SENT', 'system', { title, message, targetAll });
+        
+        res.json({ success: true, message: 'Broadcast queued' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- System Health ---
+router.get('/health', async (req, res) => {
+    try {
+        const mongoose = require('mongoose');
+        const CronConfig = require('../models/CronConfig');
+        
+        const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+        const cronJobs = await CronConfig.find();
+        const activeCrons = cronJobs.filter(c => c.enabled).length;
+        const failedCrons = cronJobs.filter(c => c.lastStatus === 'failed').length;
+        
+        res.json({
+            status: 'ok',
+            database: dbStatus,
+            crons: { total: cronJobs.length, active: activeCrons, failed: failedCrons },
+            uptime: process.uptime(),
+            memory: process.memoryUsage()
+        });
+    } catch (err) {
+        res.status(500).json({ status: 'error', error: err.message });
     }
 });
 

@@ -10,7 +10,11 @@ import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import ScraperTab from '@/components/admin/ScraperTab';
 import BatchAlerts from '@/components/admin/BatchAlerts';
 import SettingsTab from '@/components/admin/SettingsTab';
-import UsersTab from '@/components/admin/UsersTab'; // Assuming we'll create this next
+import UsersTab from '@/components/admin/UsersTab';
+import CronManager from '@/components/admin/CronManager';
+import AuditLog from '@/components/admin/AuditLog';
+import SystemHealth from '@/components/admin/SystemHealth';
+import NotificationCenter from '@/components/admin/NotificationCenter';
 import { toast } from 'react-hot-toast';
 import AdminLogin from '@/components/admin/AdminLogin';
 
@@ -253,6 +257,7 @@ export default function AdminDashboard() {
                             runQueueItem={runQueueItem}
                             deleteQueueItem={deleteQueueItem}
                             clearQueue={clearQueue}
+                            refreshQueue={fetchData}
                         />
                     )}
 
@@ -274,6 +279,22 @@ export default function AdminDashboard() {
 
                     {activeTab === 'settings' && (
                         <SettingsTab refreshData={fetchData} />
+                    )}
+
+                    {activeTab === 'cron' && (
+                        <CronManager />
+                    )}
+
+                    {activeTab === 'audit' && (
+                        <AuditLog />
+                    )}
+
+                    {activeTab === 'health' && (
+                        <SystemHealth />
+                    )}
+
+                    {activeTab === 'notifications' && (
+                        <NotificationCenter />
                     )}
                 </div>
             </div>

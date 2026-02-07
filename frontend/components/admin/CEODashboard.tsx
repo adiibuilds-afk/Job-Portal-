@@ -6,6 +6,7 @@ import HeroKPIs from './ceo/HeroKPIs';
 import SystemHealth from './ceo/SystemHealth';
 import MaintenanceControl from './ceo/MaintenanceControl';
 import SmartCleanup from './ceo/SmartCleanup';
+import AIUsageCard from './ceo/AIUsageCard';
 
 interface CEODashboardProps {
     stats: any;
@@ -102,9 +103,10 @@ export default function CEODashboard({ stats, loading, onRefresh }: CEODashboard
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <SystemHealth stats={stats} />
                 <MaintenanceControl />
+                <AIUsageCard />
             </div>
 
             <SmartCleanup stats={stats} onRunAnalysis={onRefresh} />

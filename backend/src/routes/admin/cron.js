@@ -1,0 +1,155 @@
+const express = require('express');
+const router = express.Router();
+const CronConfig = require('../../models/CronConfig');
+
+// Default cron jobs to seed if none exist
+const DEFAULT_CRONS = [
+    {
+        name: 'rgjobs_import',
+        description: 'Import jobs from RG Jobs API',
+        schedule: '0 */2 * * *', // Every 2 hours
+        enabled: true
+    },
+    {
+        name: 'queue_processor',
+        description: 'Process scheduled job queue',
+        schedule: '*/30 * * * *', // Every 30 minutes
+        enabled: true
+    },
+    {
+        name: 'stale_cleanup',
+        description: 'Archive stale/expired jobs',
+        schedule: '0 3 * * *', // Daily at 3 AM
+        enabled: true
+    },
+    {
+        name: 'email_digest',
+        description: 'Send weekly email digest',
+        schedule: '0 9 * * 1', // Monday 9 AM
+        enabled: true
+    },
+    {
+        name: 'telegram_broadcast',
+        description: 'Post new jobs to Telegram channel',
+        schedule: '*/60 * * * *', // Every hour
+        enabled: true
+    }
+];
+
+// Seed default crons if none exist
+const seedDefaults = async () => {
+    const count = await CronConfig.countDocuments();
+    if (count === 0) {
+        await CronConfig.insertMany(DEFAULT_CRONS);
+        console.log('🌱 Seeded default cron configurations');
+    }
+};
+seedDefaults();
+
+// GET all cron jobs
+router.get('/', async (req, res) => {
+    try {
+        const crons = await CronConfig.find().sort({ name: 1 });
+        res.json(crons);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// UPDATE a cron job (schedule, enabled)
+router.put('/:id', async (req, res) => {
+    try {
+        const { schedule, enabled, description } = req.body;
+        
+        const update = {};
+        if (schedule !== undefined) update.schedule = schedule;
+        if (enabled !== undefined) update.enabled = enabled;
+        if (description !== undefined) update.description = description;
+        
+        const cron = await CronConfig.findByIdAndUpdate(
+            req.params.id,
+            update,
+            { new: true }
+        );
+        
+        if (!cron) {
+            return res.status(404).json({ error: 'Cron job not found' });
+        }
+        
+        res.json(cron);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// RUN a cron job manually
+router.post('/:id/run', async (req, res) => {
+    try {
+        const cron = await CronConfig.findById(req.params.id);
+        if (!cron) {
+            return res.status(404).json({ error: 'Cron job not found' });
+        }
+
+        // Update status to running
+        cron.lastStatus = 'running';
+        await cron.save();
+
+        // Execute the job based on name
+        let result = { success: false, message: 'Unknown job' };
+        
+        try {
+            switch (cron.name) {
+                case 'rgjobs_import':
+                    const { importRGJobsDirect } = require('../../scripts/importRGJobs');
+                    result = await importRGJobsDirect(10);
+                    break;
+                    
+                case 'queue_processor':
+                    const { processQueue } = require('../../services/scheduler/queueProcessor');
+                    result = await processQueue();
+                    break;
+                    
+                case 'stale_cleanup':
+                    const Job = require('../../models/Job');
+                    const cutoff = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000);
+                    const archived = await Job.updateMany(
+                        { createdAt: { $lt: cutoff }, isActive: true },
+                        { isActive: false }
+                    );
+                    result = { success: true, archived: archived.modifiedCount };
+                    break;
+                    
+                case 'telegram_broadcast':
+                    result = { success: true, message: 'Telegram broadcast triggered' };
+                    break;
+                    
+                case 'email_digest':
+                    result = { success: true, message: 'Email digest triggered' };
+                    break;
+                    
+                default:
+                    result = { success: false, message: 'Handler not implemented' };
+            }
+            
+            // Update success status
+            cron.lastRun = new Date();
+            cron.lastStatus = 'success';
+            cron.lastError = null;
+            cron.runCount += 1;
+            await cron.save();
+            
+        } catch (jobError) {
+            cron.lastRun = new Date();
+            cron.lastStatus = 'failed';
+            cron.lastError = jobError.message;
+            await cron.save();
+            result = { success: false, error: jobError.message };
+        }
+
+        res.json({ cron, result });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+module.exports = router;

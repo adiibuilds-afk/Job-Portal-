@@ -75,6 +75,7 @@ const UserSchema = new mongoose.Schema({
     skills: { type: [String], default: [] },
     portfolioUrl: { type: String },
     tier: { type: String, enum: ['Bronze', 'Silver', 'Gold', 'Diamond'], default: 'Bronze' },
+    isBanned: { type: Boolean, default: false },
     profileRewardsClaimed: { type: [String], default: [] }, // e.g. ['skills', 'portfolio']
     
     // Activity Logging for Heatmap & Analytics

@@ -15,6 +15,11 @@ const ScheduledJob = require('../models/ScheduledJob');
 const Settings = require('../models/Settings');
 const { generateSEOContent } = require('../services/groq');
 
+// RG Jobs API Configuration
+const RG_JOBS_API = 'https://api.rgjobs.in/api/getAllJobs';
+const RG_JOBS_IMAGE_BASE = 'https://api.rgjobs.in/';
+const MAX_JOBS_PER_RUN = 20;
+
 
 // Map RG Jobs data to JobGrid schema
 const mapToJobSchema = async (rgJob) => {
@@ -24,11 +29,14 @@ const mapToJobSchema = async (rgJob) => {
         company = atMatch[1].trim();
     }
 
-    // Download and process the logo with company name
+    // Upload logo to Cloudinary for persistent CDN hosting
+    const { uploadToCloudinary } = require('../utils/cloudinaryUploader');
     let companyLogo = null;
     if (rgJob.image) {
-        const fullUrl = `${RG_JOBS_IMAGE_BASE}${rgJob.image}`;
-        companyLogo = await downloadAndProcessLogo(fullUrl, company);
+        const sourceUrl = rgJob.image.startsWith('http') 
+            ? rgJob.image 
+            : `${RG_JOBS_IMAGE_BASE}${rgJob.image}`;
+        companyLogo = await uploadToCloudinary(sourceUrl, company);
     }
 
     // Default values

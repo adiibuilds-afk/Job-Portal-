@@ -14,6 +14,7 @@ const adminAuthRoutes = require('./adminAuth');
 // Mount routes
 router.use('/user', userRoutes);
 router.use('/admin', adminRoutes);
+router.use('/admin/cron', require('./admin/cron'));
 router.use('/analytics', analyticsRoutes);
 router.use('/admin/auth', adminAuthRoutes);
 router.use('/jobs', jobRoutes);

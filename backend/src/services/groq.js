@@ -65,6 +65,13 @@ Rules:
       model: 'llama-3.3-70b-versatile',
     });
 
+    // Log token usage
+    const tokens = completion.usage?.total_tokens || 0;
+    try {
+      const AIUsage = require('../models/AIUsage');
+      await AIUsage.logUsage(tokens, 'other');
+    } catch (e) { /* silent fail */ }
+
     const content = completion.choices[0]?.message?.content || '{}';
     
     // Robust JSON extraction
@@ -78,6 +85,13 @@ Rules:
 
     return JSON.parse(jsonString);
   } catch (error) {
+    // Log error
+    try {
+      const AIUsage = require('../models/AIUsage');
+      const isRateLimit = error?.error?.code === 'rate_limit_exceeded';
+      await AIUsage.logError(isRateLimit);
+    } catch (e) { /* silent fail */ }
+
     if (error?.error?.code === 'rate_limit_exceeded') {
         console.error('❌ Groq Rate Limit Exceeded!');
         return { error: 'rate_limit_exceeded' };
@@ -127,6 +141,13 @@ Rules:
       model: 'llama-3.3-70b-versatile',
     });
 
+    // Log token usage
+    const tokens = completion.usage?.total_tokens || 0;
+    try {
+      const AIUsage = require('../models/AIUsage');
+      await AIUsage.logUsage(tokens, 'seoGeneration');
+    } catch (e) { /* silent fail */ }
+
     const content = completion.choices[0]?.message?.content || '{}';
     
     // Robust JSON extraction: Find first '{' and last '}'
@@ -140,6 +161,13 @@ Rules:
     
     return JSON.parse(jsonString);
   } catch (error) {
+    // Log error
+    try {
+      const AIUsage = require('../models/AIUsage');
+      const isRateLimit = error?.status === 429 || error?.error?.code === 'rate_limit_exceeded';
+      await AIUsage.logError(isRateLimit);
+    } catch (e) { /* silent fail */ }
+
     if (error?.status === 429 || error?.error?.code === 'rate_limit_exceeded' || error?.error?.error?.code === 'rate_limit_exceeded') {
         console.error('❌ Groq Rate Limit Exceeded! (Stopping)');
         return { error: 'rate_limit_exceeded' };
