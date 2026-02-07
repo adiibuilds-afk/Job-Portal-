@@ -10,6 +10,7 @@ import SmartCleanup from './ceo/SmartCleanup';
 interface CEODashboardProps {
     stats: any;
     loading: boolean;
+    onRefresh: () => void;
 }
 
 function MetricCard({ label, value, icon: Icon, color, loading }: {
@@ -36,7 +37,7 @@ function MetricCard({ label, value, icon: Icon, color, loading }: {
     );
 }
 
-export default function CEODashboard({ stats, loading }: CEODashboardProps) {
+export default function CEODashboard({ stats, loading, onRefresh }: CEODashboardProps) {
     const coinInflation = stats?.coinsEarned > 0 || stats?.coinsSpent > 0
         ? (stats?.coinsEarned - stats?.coinsSpent)
         : 0;
@@ -106,7 +107,7 @@ export default function CEODashboard({ stats, loading }: CEODashboardProps) {
                 <MaintenanceControl />
             </div>
 
-            <SmartCleanup stats={stats} />
+            <SmartCleanup stats={stats} onRunAnalysis={onRefresh} />
         </div>
     );
 }

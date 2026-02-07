@@ -12,7 +12,7 @@ export default function GrowthChart({ data }: GrowthChartProps) {
                 <TrendingUp className="w-5 h-5 text-amber-500" />
                 Job Growth (Last 7 Days)
             </h3>
-            <div className="h-[300px] w-full">
+            <div className="w-full" style={{ height: 300, minHeight: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data}>
                         <defs>

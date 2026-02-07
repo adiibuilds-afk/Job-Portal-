@@ -72,12 +72,23 @@ router.post('/analyze', attachUser, async (req, res) => {
             status: 'pending'
         });
 
-        const { trackEvent } = require('../services/analytics');
         // 3. Update User Limit
         user.resumeScans.count += 1;
         user.resumeScans.lastReset = now; // Ensure date is current
         await user.save();
-        await trackEvent('resumeScans');
+        
+        // Track in Global Analytics
+        const Analytics = require('../models/Analytics');
+        const today = new Date().toISOString().split('T')[0];
+        
+        await Analytics.findOneAndUpdate(
+            { date: today },
+            { 
+                $inc: { 'metrics.resumeScans': 1 },
+                $addToSet: { activeUsers: user._id } // Also counts as activity
+            },
+            { upsert: true, new: true }
+        );
 
         // Estimate wait time (e.g., 30 seconds per job)
         const waitTimeSeconds = (pendingCount + 1) * 30;

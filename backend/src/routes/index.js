@@ -4,6 +4,7 @@ const router = express.Router();
 // Import modular routes
 const userRoutes = require('./user');
 const adminRoutes = require('./admin');
+const analyticsRoutes = require('./analytics');
 const jobRoutes = require('./jobs');
 const statsRoutes = require('./stats');
 const forumRoutes = require('./forum');
@@ -13,6 +14,7 @@ const adminAuthRoutes = require('./adminAuth');
 // Mount routes
 router.use('/user', userRoutes);
 router.use('/admin', adminRoutes);
+router.use('/analytics', analyticsRoutes);
 router.use('/admin/auth', adminAuthRoutes);
 router.use('/jobs', jobRoutes);
 router.use('/stats', statsRoutes);

@@ -30,13 +30,19 @@ export default function AdminDashboard() {
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    const fetchDashboardStats = async () => {
+    const fetchDashboardStats = async (showToast = false) => {
         try {
             const res = await fetch(`${BACKEND_URL}/api/admin/dashboard-stats`);
             const data = await res.json();
             setDashboardStats(data);
+            if (showToast) {
+                toast.success(
+                    `Analysis Complete: Found ${data.expiredJobs || 0} expired, ${data.zeroEngagementJobs || 0} stale, and ${data.reportedJobs || 0} reported jobs.`
+                );
+            }
         } catch (err) {
             console.error('Failed to fetch CEO stats', err);
+            if (showToast) toast.error('Failed to run analysis');
         }
     };
 
@@ -200,7 +206,6 @@ export default function AdminDashboard() {
             </main>
         );
     }
-
     return (
         <main className="min-h-screen bg-black flex overflow-hidden">
             <AdminSidebar
@@ -215,7 +220,14 @@ export default function AdminDashboard() {
                 <div className="max-w-7xl mx-auto p-12">
                     {/* Page Content Mapper */}
                     {activeTab === 'ceo' && (
-                        <CEODashboard stats={dashboardStats} loading={loading} />
+                        <CEODashboard
+                            stats={dashboardStats}
+                            loading={loading}
+                            onRefresh={() => {
+                                fetchDashboardStats(true);
+                                fetchData();
+                            }}
+                        />
                     )}
 
                     {activeTab === 'jobs' && (

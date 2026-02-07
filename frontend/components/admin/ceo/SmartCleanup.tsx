@@ -37,9 +37,11 @@ function CleanupRule({ icon: Icon, title, description, count, action, color, loa
     );
 }
 
-export default function SmartCleanup({ stats }: { stats: any }) {
+export default function SmartCleanup({ stats, onRunAnalysis }: { stats: any, onRunAnalysis: () => void }) {
     const [cleanupLoading, setCleanupLoading] = useState<string | null>(null);
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com';
+
+    // ... (handleCleanup logic remains same)
 
     const handleCleanup = async (type: 'expired' | 'zero-engagement' | 'reported') => {
         if (type === 'reported') {
@@ -55,6 +57,7 @@ export default function SmartCleanup({ stats }: { stats: any }) {
             const data = await res.json();
             if (data.success) {
                 toast.success(data.message);
+                onRunAnalysis(); // Refresh stats after cleanup
             } else {
                 toast.error(data.error || 'Cleanup failed');
             }
@@ -74,7 +77,10 @@ export default function SmartCleanup({ stats }: { stats: any }) {
                     </h3>
                     <p className="text-zinc-500 text-sm mt-1">Safe, controlled, reversible job management.</p>
                 </div>
-                <button className="px-5 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 text-xs font-bold uppercase tracking-widest hover:text-white hover:border-zinc-700 transition-all flex items-center gap-2">
+                <button
+                    onClick={onRunAnalysis}
+                    className="px-5 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 text-xs font-bold uppercase tracking-widest hover:text-white hover:border-zinc-700 transition-all flex items-center gap-2 active:scale-95"
+                >
                     <RefreshCw className="w-3 h-3" /> Run Analysis
                 </button>
             </div>
