@@ -15,6 +15,7 @@ import CronManager from '@/components/admin/CronManager';
 import AuditLog from '@/components/admin/AuditLog';
 import SystemHealth from '@/components/admin/SystemHealth';
 import NotificationCenter from '@/components/admin/NotificationCenter';
+import EmailGenerator from '@/components/admin/EmailGenerator';
 import { toast } from 'react-hot-toast';
 import AdminLogin from '@/components/admin/AdminLogin';
 
@@ -295,6 +296,10 @@ export default function AdminDashboard() {
 
                     {activeTab === 'notifications' && (
                         <NotificationCenter />
+                    )}
+
+                    {activeTab === 'email' && (
+                        <EmailGenerator />
                     )}
                 </div>
             </div>

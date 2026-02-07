@@ -13,7 +13,7 @@ const DEFAULT_CRONS = [
     {
         name: 'queue_processor',
         description: 'Process scheduled job queue',
-        schedule: '*/30 * * * *', // Every 30 minutes
+        schedule: '*/1 * * * *', // Every 1 minute
         enabled: true
     },
     {
@@ -21,23 +21,21 @@ const DEFAULT_CRONS = [
         description: 'Archive stale/expired jobs',
         schedule: '0 3 * * *', // Daily at 3 AM
         enabled: true
-    },
-    {
-        name: 'email_digest',
-        description: 'Send weekly email digest',
-        schedule: '0 9 * * 1', // Monday 9 AM
-        enabled: true
-    },
-    {
-        name: 'telegram_broadcast',
-        description: 'Post new jobs to Telegram channel',
-        schedule: '*/60 * * * *', // Every hour
-        enabled: true
     }
 ];
 
-// Seed default crons if none exist
+// Seed default crons and clean up obsolete ones
 const seedDefaults = async () => {
+    // Delete obsolete cron entries
+    await CronConfig.deleteMany({ name: { $in: ['email_digest', 'telegram_broadcast'] } });
+    
+    // Update queue_processor to 1 minute if it exists
+    await CronConfig.updateOne(
+        { name: 'queue_processor' },
+        { $set: { schedule: '*/1 * * * *' } }
+    );
+    
+    // Seed defaults if empty
     const count = await CronConfig.countDocuments();
     if (count === 0) {
         await CronConfig.insertMany(DEFAULT_CRONS);
@@ -45,6 +43,19 @@ const seedDefaults = async () => {
     }
 };
 seedDefaults();
+
+// DELETE a cron job
+router.delete('/:id', async (req, res) => {
+    try {
+        const cron = await CronConfig.findByIdAndDelete(req.params.id);
+        if (!cron) {
+            return res.status(404).json({ error: 'Cron job not found' });
+        }
+        res.json({ message: 'Cron job deleted' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // GET all cron jobs
 router.get('/', async (req, res) => {
@@ -117,14 +128,6 @@ router.post('/:id/run', async (req, res) => {
                         { isActive: false }
                     );
                     result = { success: true, archived: archived.modifiedCount };
-                    break;
-                    
-                case 'telegram_broadcast':
-                    result = { success: true, message: 'Telegram broadcast triggered' };
-                    break;
-                    
-                case 'email_digest':
-                    result = { success: true, message: 'Email digest triggered' };
                     break;
                     
                 default:

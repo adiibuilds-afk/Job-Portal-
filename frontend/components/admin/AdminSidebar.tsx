@@ -13,11 +13,12 @@ import {
     ChevronLeft,
     ChevronRight,
     LogOut,
-    Sparkles
+    Sparkles,
+    Mail
 } from 'lucide-react';
 import Link from 'next/link';
 
-export type AdminTab = 'ceo' | 'jobs' | 'users' | 'queue' | 'cron' | 'scraper' | 'analytics' | 'alerts' | 'notifications' | 'audit' | 'health' | 'settings';
+export type AdminTab = 'ceo' | 'jobs' | 'users' | 'queue' | 'cron' | 'scraper' | 'analytics' | 'alerts' | 'notifications' | 'audit' | 'health' | 'email' | 'settings';
 
 interface AdminSidebarProps {
     activeTab: AdminTab;
@@ -45,6 +46,7 @@ export default function AdminSidebar({
         { id: 'analytics', label: 'Deep Analytics', icon: BarChart3, color: 'text-cyan-500' },
         { id: 'alerts', label: 'Batch Alerts', icon: Bell, color: 'text-orange-500' },
         { id: 'notifications', label: 'Broadcasts', icon: Bell, color: 'text-purple-500' },
+        { id: 'email', label: 'Email Studio', icon: Mail, color: 'text-violet-500' },
         { id: 'audit', label: 'Audit Log', icon: BarChart3, color: 'text-indigo-500' },
         { id: 'health', label: 'System Health', icon: Settings, color: 'text-green-500' },
         { id: 'settings', label: 'Global Config', icon: Settings, color: 'text-zinc-400' },

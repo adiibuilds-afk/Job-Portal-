@@ -17,6 +17,8 @@ interface CronJob {
 }
 
 const SCHEDULE_PRESETS = [
+    { label: 'Every 1 min', value: '*/1 * * * *' },
+    { label: 'Every 5 min', value: '*/5 * * * *' },
     { label: 'Every 30 min', value: '*/30 * * * *' },
     { label: 'Every hour', value: '0 * * * *' },
     { label: 'Every 2 hours', value: '0 */2 * * *' },
@@ -24,6 +26,7 @@ const SCHEDULE_PRESETS = [
     { label: 'Daily at 3 AM', value: '0 3 * * *' },
     { label: 'Daily at 9 AM', value: '0 9 * * *' },
     { label: 'Weekly (Mon 9 AM)', value: '0 9 * * 1' },
+    { label: 'Custom...', value: 'custom' },
 ];
 
 export default function CronManager() {
@@ -31,6 +34,7 @@ export default function CronManager() {
     const [loading, setLoading] = useState(true);
     const [runningJob, setRunningJob] = useState<string | null>(null);
     const [editingJob, setEditingJob] = useState<string | null>(null);
+    const [customCron, setCustomCron] = useState<string>('');
 
     const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -65,6 +69,10 @@ export default function CronManager() {
     };
 
     const updateSchedule = async (id: string, schedule: string) => {
+        if (schedule === 'custom') {
+            // Don't close, wait for custom input
+            return;
+        }
         try {
             await fetch(`${BACKEND_URL}/api/admin/cron/${id}`, {
                 method: 'PUT',
@@ -73,10 +81,19 @@ export default function CronManager() {
             });
             setCrons(prev => prev.map(c => c._id === id ? { ...c, schedule } : c));
             setEditingJob(null);
+            setCustomCron('');
             toast.success('Schedule updated');
         } catch (err) {
             toast.error('Failed to update schedule');
         }
+    };
+
+    const applyCustomCron = async (id: string) => {
+        if (!customCron.trim()) {
+            toast.error('Enter a valid cron expression');
+            return;
+        }
+        await updateSchedule(id, customCron.trim());
     };
 
     const runNow = async (id: string) => {
@@ -135,8 +152,8 @@ export default function CronManager() {
                     <div
                         key={cron._id}
                         className={`p-4 rounded-xl border transition-all ${cron.enabled
-                                ? 'bg-zinc-900/80 border-zinc-700/50'
-                                : 'bg-zinc-900/40 border-zinc-800/50 opacity-60'
+                            ? 'bg-zinc-900/80 border-zinc-700/50'
+                            : 'bg-zinc-900/40 border-zinc-800/50 opacity-60'
                             }`}
                     >
                         <div className="flex items-center justify-between">
@@ -173,8 +190,8 @@ export default function CronManager() {
                                 <button
                                     onClick={() => toggleCron(cron._id, !cron.enabled)}
                                     className={`p-2 rounded-lg transition-colors ${cron.enabled
-                                            ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                                            : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'
+                                        ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                                        : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'
                                         }`}
                                 >
                                     {cron.enabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -187,15 +204,40 @@ export default function CronManager() {
                             <div className="flex items-center gap-2">
                                 <Clock className="w-3.5 h-3.5 text-zinc-500" />
                                 {editingJob === cron._id ? (
-                                    <select
-                                        defaultValue={cron.schedule}
-                                        onChange={(e) => updateSchedule(cron._id, e.target.value)}
-                                        className="bg-zinc-800 text-white px-2 py-1 rounded text-xs border border-zinc-700"
-                                    >
-                                        {SCHEDULE_PRESETS.map(p => (
-                                            <option key={p.value} value={p.value}>{p.label}</option>
-                                        ))}
-                                    </select>
+                                    <div className="flex items-center gap-2">
+                                        <select
+                                            defaultValue={cron.schedule}
+                                            onChange={(e) => {
+                                                if (e.target.value === 'custom') {
+                                                    setCustomCron(cron.schedule);
+                                                } else {
+                                                    updateSchedule(cron._id, e.target.value);
+                                                }
+                                            }}
+                                            className="bg-zinc-800 text-white px-2 py-1 rounded text-xs border border-zinc-700"
+                                        >
+                                            {SCHEDULE_PRESETS.map(p => (
+                                                <option key={p.value} value={p.value}>{p.label}</option>
+                                            ))}
+                                        </select>
+                                        {customCron !== '' && (
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={customCron}
+                                                    onChange={(e) => setCustomCron(e.target.value)}
+                                                    placeholder="*/5 * * * *"
+                                                    className="bg-zinc-800 text-white px-2 py-1 rounded text-xs border border-zinc-700 w-28 font-mono"
+                                                />
+                                                <button
+                                                    onClick={() => applyCustomCron(cron._id)}
+                                                    className="px-2 py-1 text-xs bg-amber-500 text-black rounded font-semibold"
+                                                >
+                                                    Apply
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 ) : (
                                     <button
                                         onClick={() => setEditingJob(cron._id)}
