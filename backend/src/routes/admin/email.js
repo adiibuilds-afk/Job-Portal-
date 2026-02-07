@@ -126,6 +126,11 @@ router.post('/send', async (req, res) => {
             return res.status(400).json({ error: 'No valid email addresses found' });
         }
 
+        // Check for Brevo API key
+        if (!process.env.BREVO_API_KEY) {
+            return res.status(500).json({ error: 'Email service not configured (BREVO_API_KEY missing)' });
+        }
+
         // Brevo API setup
         const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
         const apiKey = apiInstance.authentications['apiKey'];
