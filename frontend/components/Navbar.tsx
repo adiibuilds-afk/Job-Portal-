@@ -19,6 +19,14 @@ function NavbarContent() {
     const userBatch = (session?.user as any)?.batch;
 
     const handleBatchClick = (e: React.MouseEvent) => {
+        // Check if user is logged in first
+        if (!session) {
+            e.preventDefault();
+            signIn('google');
+            return;
+        }
+
+        // If logged in but no batch, show modal
         if (!userBatch) {
             e.preventDefault();
             setShowBatchModal(true);

@@ -132,9 +132,17 @@ export default function ForumPage() {
         }
     };
 
-    // Check if current user is post author
+    // Check if current user is post author (email-only check for security)
     const isPostAuthor = (post: any) => {
-        return session?.user?.email === post.authorEmail || session?.user?.name === post.author;
+        return session?.user?.email && session.user.email === post.authorEmail;
+    };
+
+    const handleStartDiscussion = () => {
+        if (!session) {
+            toast.error('Please login to start a discussion', { icon: '🔒' });
+            return;
+        }
+        setIsModalOpen(true);
     };
 
     return (
@@ -253,7 +261,7 @@ export default function ForumPage() {
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={handleStartDiscussion}
                             className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
                         >
                             <Plus className="w-5 h-5" />
@@ -367,7 +375,7 @@ export default function ForumPage() {
                             <h3 className="text-2xl font-bold text-white mb-2">No discussions yet</h3>
                             <p className="text-zinc-500 mb-6">Be the first to start a conversation!</p>
                             <button
-                                onClick={() => setIsModalOpen(true)}
+                                onClick={handleStartDiscussion}
                                 className="px-6 py-3 bg-amber-500 text-black font-bold rounded-xl inline-flex items-center gap-2 hover:bg-amber-400 transition-colors"
                             >
                                 <Plus className="w-5 h-5" />

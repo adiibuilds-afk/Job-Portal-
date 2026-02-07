@@ -44,15 +44,9 @@ const processQueue = async (bot) => {
 
     // Ensure apply URL
     if (!jobData.applyUrl || jobData.applyUrl === 'N/A') {
-        if (job.originalUrl && !job.originalUrl.includes('talentd.in')) {
+        if (job.originalUrl) {
             jobData.applyUrl = job.originalUrl;
         }
-    }
-
-    // STRICT FILTER: No Talentd apply links
-    if (jobData.applyUrl && jobData.applyUrl.includes('talentd.in')) {
-        console.log('🚫 Removing Talentd apply link explicitly.');
-        jobData.applyUrl = ''; 
     }
 
     // Assign company logo from scraper if AI missed it

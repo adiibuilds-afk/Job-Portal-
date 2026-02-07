@@ -102,7 +102,7 @@ router.post('/preview', (req, res) => {
     res.json({ html: buildEmailHtml(content) });
 });
 
-// Send bulk email
+// Send bulk email (batched - 50 per request to avoid rate limits)
 router.post('/send', async (req, res) => {
     try {
         const { recipients, subject, content } = req.body;
@@ -136,26 +136,64 @@ router.post('/send', async (req, res) => {
         const apiKey = apiInstance.authentications['apiKey'];
         apiKey.apiKey = process.env.BREVO_API_KEY;
 
-        const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-        sendSmtpEmail.subject = subject;
-        sendSmtpEmail.htmlContent = buildEmailHtml(content);
-        sendSmtpEmail.sender = { name: 'JobGrid', email: 'alerts@jobgrid.in' };
-        sendSmtpEmail.to = validEmails.map(email => ({ email }));
+        const htmlContent = buildEmailHtml(content);
+        const BATCH_SIZE = 50;
+        const batches = [];
+        
+        // Split into batches of 50
+        for (let i = 0; i < validEmails.length; i += BATCH_SIZE) {
+            batches.push(validEmails.slice(i, i + BATCH_SIZE));
+        }
 
-        await apiInstance.sendTransacEmail(sendSmtpEmail);
+        let sent = 0;
+        let failed = 0;
+        const errors = [];
+
+        // Process each batch with delay
+        for (let i = 0; i < batches.length; i++) {
+            const batch = batches[i];
+            
+            try {
+                const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+                sendSmtpEmail.subject = subject;
+                sendSmtpEmail.htmlContent = htmlContent;
+                sendSmtpEmail.sender = { name: 'JobGrid', email: 'alerts@jobgrid.in' };
+                sendSmtpEmail.to = batch.map(email => ({ email }));
+
+                await apiInstance.sendTransacEmail(sendSmtpEmail);
+                sent += batch.length;
+                console.log(`✉️ Batch ${i + 1}/${batches.length}: Sent ${batch.length} emails`);
+                
+                // Add delay between batches (1 second) to avoid rate limiting
+                if (i < batches.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            } catch (batchError) {
+                failed += batch.length;
+                errors.push(`Batch ${i + 1}: ${batchError.message}`);
+                console.error(`❌ Batch ${i + 1} failed:`, batchError.message);
+            }
+        }
 
         // Log to audit
         try {
             const AuditLog = require('../../models/AuditLog');
             await AuditLog.log('EMAIL_BROADCAST', 'admin', { 
                 subject, 
-                recipientCount: validEmails.length 
+                recipientCount: validEmails.length,
+                sent,
+                failed,
+                batches: batches.length
             });
         } catch (e) {}
 
         res.json({ 
-            message: `Email sent to ${validEmails.length} recipients`,
-            sent: validEmails.length
+            message: `Email sent to ${sent} recipients (${batches.length} batches)`,
+            sent,
+            failed,
+            total: validEmails.length,
+            batches: batches.length,
+            errors: errors.length > 0 ? errors : undefined
         });
     } catch (error) {
         console.error('Email Send Error:', error);

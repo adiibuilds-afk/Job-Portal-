@@ -18,7 +18,7 @@ export default function AboutPage() {
                     </p>
                     <h2 className="text-2xl font-bold mt-10 mb-4">Our Mission</h2>
                     <p className="text-zinc-400 mb-6">
-                        We aim to simplify the job search process by curating the best engineering roles from both Government and Private sectors. Our goal is to empower freshers and professionals with the tools they need to launch and grow their careers.
+                        We aim to simplify the job search process by curating the best software engineering, tech, and IT roles from top startups, MNCs, and product companies. Our goal is to empower B.Tech freshers and IT professionals with the tools they need to launch and grow their careers.
                     </p>
                     <h2 className="text-2xl font-bold mt-10 mb-4">Why Choose Us?</h2>
                     <ul className="list-disc list-inside text-zinc-400 space-y-3">

@@ -67,6 +67,10 @@ export default function SinglePostPage() {
     };
 
     const handleComment = async () => {
+        if (!session) {
+            toast.error('Please login to comment', { icon: '🔒' });
+            return;
+        }
         if (!newComment.trim()) return;
         setSubmitting(true);
         try {
@@ -78,9 +82,10 @@ export default function SinglePostPage() {
             setComments([data, ...comments]);
             setNewComment('');
             toast.success('Comment posted!');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to comment', error);
-            toast.error('Failed to post comment');
+            const message = error.response?.data?.message || 'Failed to post comment';
+            toast.error(message, { icon: error.response?.status === 400 ? '🚫' : '❌' });
         } finally {
             setSubmitting(false);
         }
@@ -127,9 +132,9 @@ export default function SinglePostPage() {
         }
     };
 
-    // Check if current user is comment author
+    // Check if current user is comment author (email-only check for security)
     const isCommentAuthor = (comment: any) => {
-        return session?.user?.email === comment.authorEmail || session?.user?.name === comment.author;
+        return session?.user?.email && session.user.email === comment.authorEmail;
     };
 
     const handleReplyToUser = (username: string) => {

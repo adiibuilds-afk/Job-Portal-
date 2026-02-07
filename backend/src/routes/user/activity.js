@@ -43,36 +43,24 @@ router.get('/activity-heatmap', async (req, res) => {
         // Initialize last 365 days with 0
         for (let d = new Date(oneYearAgo); d <= new Date(); d.setDate(d.getDate() + 1)) {
             const dateKey = d.toISOString().split('T')[0];
-            activityMap[dateKey] = 0;
+            activityMap[dateKey] = new Set(); // Use Set to track unique jobIds per day
         }
 
-        // 1. Count actual applications (Highest weight)
+        // Count unique jobs applied per day
         user.appliedJobs.forEach(app => {
-            if (app.appliedAt) {
+            if (app.appliedAt && app.jobId) {
                 const dateKey = new Date(app.appliedAt).toISOString().split('T')[0];
-                if (activityMap[dateKey] !== undefined) activityMap[dateKey] += 5; // Application = 5 points
+                if (activityMap[dateKey] !== undefined) {
+                    activityMap[dateKey].add(app.jobId.toString()); // Add to Set (auto-deduplicates)
+                }
             }
         });
 
-        // 2. Count activity logs (Lower weight)
-        if (user.activityLogs) {
-            user.activityLogs.forEach(log => {
-                const dateKey = new Date(log.timestamp).toISOString().split('T')[0];
-                if (activityMap[dateKey] !== undefined) {
-                    // Cap daily contribution from simple clicks to avoid spam
-                    // User requested 1:1 mapping for clicks
-                    activityMap[dateKey] += 1; 
-                } else {
-                    // If dateKey is not in last 365 days (e.g. today, if loop stopped at yesterday), add it?
-                    // The loop goes up to new Date(), so today should be included.
-                    // However, we need to ensure strings match exactly.
-                    // activityMap is initialized with ISO string split at T.
-                    // log.timestamp is Date object.
-                }
-            });
-        }
-
-        const heatmapData = Object.entries(activityMap).map(([date, count]) => ({ date, count }));
+        // Convert Sets to counts
+        const heatmapData = Object.entries(activityMap).map(([date, jobSet]) => ({ 
+            date, 
+            count: jobSet.size // Unique job count
+        }));
         res.json({ heatmapData });
     } catch (error) {
         console.error('Heatmap Error:', error);

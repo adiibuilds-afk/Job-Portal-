@@ -19,6 +19,13 @@ export default function JobContent({ job }: JobContentProps) {
             return;
         }
 
+        // Track click count (generic)
+        try {
+            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${job._id}/click`);
+        } catch (error) {
+            console.error('Failed to track click:', error);
+        }
+
         // Open window immediately to prevent popup blocker, but we might redirect it later or keep it references
         const newWindow = window.open(job.applyUrl, '_blank');
 

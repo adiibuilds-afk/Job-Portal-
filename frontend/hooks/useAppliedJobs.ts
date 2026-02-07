@@ -49,7 +49,24 @@ export const useAppliedJobs = () => {
         }
     };
 
+    const unmarkAsApplied = async (jobId: string) => {
+        if (!session) return;
+
+        // Optimistic update
+        setAppliedJobIds(prev => prev.filter(id => id !== jobId));
+
+        try {
+            await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/user/applied/${jobId}`, {
+                params: { email: session.user?.email }
+            });
+        } catch (error) {
+            console.error('Error unmarking as applied', error);
+            // Revert on failure
+            setAppliedJobIds(prev => [...prev, jobId]);
+        }
+    };
+
     const isApplied = (jobId: string) => appliedJobIds.includes(jobId);
 
-    return { appliedJobIds, markAsApplied, isApplied, loading };
+    return { appliedJobIds, markAsApplied, unmarkAsApplied, isApplied, loading };
 };

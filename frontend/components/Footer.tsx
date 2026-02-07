@@ -18,7 +18,7 @@ export default function Footer() {
                             <span className="text-xl font-bold text-white">Job<span className="text-amber-400">Grid</span></span>
                         </Link>
                         <p className="text-zinc-500 text-sm leading-relaxed">
-                            India&apos;s premium job discovery platform. AI-powered matching for government and private sectors.
+                            India&apos;s #1 AI-powered job platform for B.Tech freshers &amp; IT professionals. Updated hourly.
                         </p>
                     </div>
 

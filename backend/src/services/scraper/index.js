@@ -134,20 +134,29 @@ const scrapeJobPage = async (url) => {
                     else return;
                 }
                 if (absoluteUrl === url) return;
-                if (url.includes('talentd.in') && absoluteUrl.includes('talentd.in') && !absoluteUrl.includes('/apply')) return;
                 
-                if (!absoluteUrl.includes(new URL(url).hostname)) {
-                    applyUrl = absoluteUrl;
-                    return false;
+                // For Talentd, prefer external links but also accept their apply page
+                if (url.includes('talentd.in')) {
+                    if (!absoluteUrl.includes('talentd.in') || absoluteUrl.includes('/apply')) {
+                        applyUrl = absoluteUrl;
+                        return false;
+                    }
+                } else {
+                    if (!absoluteUrl.includes(new URL(url).hostname)) {
+                        applyUrl = absoluteUrl;
+                        return false;
+                    }
+                    if (!applyUrl) applyUrl = absoluteUrl;
                 }
-                if (!applyUrl) applyUrl = absoluteUrl;
             }
         });
         if (applyUrl && !applyUrl.includes(new URL(url).hostname)) break;
     }
 
-    if (!applyUrl && !url.includes('talentd.in') && !url.includes('naukri.com') && !url.includes('linkedin.com')) {
-        applyUrl = url;
+    // If no external apply URL found, skip this job (don't post it)
+    if (!applyUrl) {
+        console.log(`[Scraper] Skipping ${url} - no external apply link found`);
+        return { success: false, error: 'No external apply link found', skipped: true };
     }
 
     return {

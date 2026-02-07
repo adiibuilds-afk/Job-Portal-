@@ -42,6 +42,10 @@ export default function CreatePostModal({ isOpen, onClose, refresh }: CreatePost
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async () => {
+        if (!session) {
+            toast.error('Please login to start a discussion', { icon: '🔒' });
+            return;
+        }
         if (!title || !content) return;
         setLoading(true);
         try {
@@ -58,9 +62,10 @@ export default function CreatePostModal({ isOpen, onClose, refresh }: CreatePost
             onClose();
             setTitle('');
             setContent('');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to create post', error);
-            toast.error('Failed to post. Please try again.');
+            const message = error.response?.data?.message || 'Failed to post. Please try again.';
+            toast.error(message, { icon: error.response?.status === 400 ? '🚫' : '❌' });
         } finally {
             setLoading(false);
         }

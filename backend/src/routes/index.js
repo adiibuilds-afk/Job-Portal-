@@ -37,19 +37,26 @@ router.post('/recommendations', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Subscription route
+// Subscription route with batch support
 const { sendWelcomeEmail } = require('../services/email');
 const Subscriber = require('../models/Subscriber');
 router.post('/subscribe', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, batch } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
+    if (!batch) return res.status(400).json({ error: 'Batch is required' });
+    
     let sub = await Subscriber.findOne({ email });
     if (sub) {
-      if (!sub.isActive) { sub.isActive = true; await sub.save(); }
+      if (!sub.isActive || sub.batch !== batch) { 
+        sub.isActive = true; 
+        sub.batch = batch;
+        await sub.save(); 
+        return res.json({ success: true, message: 'Subscription updated!' });
+      }
       return res.json({ success: true, message: 'Already subscribed!' });
     }
-    const newSub = new Subscriber({ email });
+    const newSub = new Subscriber({ email, batch });
     await newSub.save();
     sendWelcomeEmail(email).catch(e => console.error(e));
     res.json({ success: true, message: 'Subscribed successfully!' });

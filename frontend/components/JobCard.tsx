@@ -24,7 +24,7 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
     const [reported, setReported] = useState(false);
 
     const { data: session } = useSession();
-    const { isApplied, markAsApplied } = useAppliedJobs();
+    const { isApplied, markAsApplied, unmarkAsApplied } = useAppliedJobs();
     const applied = isApplied(job._id);
 
     const handleReport = async (e: React.MouseEvent) => {
@@ -66,18 +66,25 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
             return;
         }
 
-        // Optimistic UI
-        markAsApplied(job._id);
+        if (applied) {
+            // Un-mark if already applied
+            unmarkAsApplied(job._id);
+            toast.success('Removed from applied jobs');
+        } else {
+            // Mark as applied
+            markAsApplied(job._id);
+            toast.success('Marked as applied!');
 
-        // Track Event for Heatmap
-        try {
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/user/track`, {
-                email: session.user?.email,
-                action: 'apply_click',
-                jobId: job._id
-            });
-        } catch (error) {
-            console.error('Failed to track apply click', error);
+            // Track Event for Heatmap
+            try {
+                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/user/track`, {
+                    email: session.user?.email,
+                    action: 'apply_click',
+                    jobId: job._id
+                });
+            } catch (error) {
+                console.error('Failed to track apply click', error);
+            }
         }
     };
 

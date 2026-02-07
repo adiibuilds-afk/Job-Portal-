@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, Check } from 'lucide-react';
 import axios from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 interface BatchSelectionModalProps {
     isOpen: boolean;
@@ -15,6 +16,7 @@ interface BatchSelectionModalProps {
 
 export default function BatchSelectionModal({ isOpen, onClose, onBatchSelect }: BatchSelectionModalProps) {
     const { data: session, update } = useSession();
+    const router = useRouter();
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -40,6 +42,9 @@ export default function BatchSelectionModal({ isOpen, onClose, onBatchSelect }: 
 
             toast.success("Batch updated successfully!");
             if (onBatchSelect) onBatchSelect(selectedBatch);
+
+            // Redirect to jobs page with batch filter after successful save
+            router.push(`/jobs?batch=${selectedBatch}`);
             onClose();
         } catch (error) {
             console.error(error);

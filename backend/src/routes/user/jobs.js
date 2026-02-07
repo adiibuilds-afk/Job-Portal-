@@ -38,9 +38,34 @@ router.post('/applied', attachUser, async (req, res) => {
         const { trackEvent } = require('../../services/analytics');
         user.appliedJobs.push({ jobId });
         await user.save();
-        await trackEvent('applyClicks');
+        
+        // Tracking click for heatmap/stats
+        try {
+            await trackEvent('applyClicks');
+        } catch(e) {}
 
         res.json({ message: 'Marked as applied', appliedJobs: user.appliedJobs });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Remove Job from Applied List (Un-apply)
+router.delete('/applied/:jobId', attachUser, async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        const user = req.user;
+
+        const initialLength = user.appliedJobs.length;
+        user.appliedJobs = user.appliedJobs.filter(job => job.jobId.toString() !== jobId);
+        
+        if (user.appliedJobs.length === initialLength) {
+            return res.status(404).json({ error: 'Application record not found' });
+        }
+
+        await user.save();
+        res.json({ message: 'Removed from applied list', appliedJobs: user.appliedJobs });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });

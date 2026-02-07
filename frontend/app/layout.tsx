@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from '@/components/Providers';
 import BatchPopup from "@/components/onboarding/BatchPopup";
+import EmailSubscriptionTrigger from '@/components/EmailSubscriptionTrigger';
 import { Analytics } from '@vercel/analytics/next';
 
 const outfit = Outfit({
@@ -13,14 +14,27 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   metadataBase: new URL('https://jobgrid.in'),
   title: {
-    default: "JobPortal - Premium Government & Private Jobs in India",
-    template: "%s | JobPortal"
+    default: "JobGrid - #1 Platform for B.Tech, IT & Software Jobs in India 2025",
+    template: "%s | JobGrid"
   },
-  description: "India's #1 AI-powered job discovery platform. Find the latest government and private sector job openings with competitive salaries. Updated daily.",
-  keywords: ["jobs", "government jobs", "private jobs", "careers", "india jobs", "job portal", "employment", "freshers jobs", "IT jobs", "banking jobs"],
-  authors: [{ name: "JobPortal" }],
-  creator: "JobPortal",
-  publisher: "JobPortal",
+  description: "India's leading AI-powered job portal for B.Tech freshers & IT professionals. Discover 10,000+ software engineering, SDE, full-stack, backend, frontend & data science jobs. Updated hourly. Apply now!",
+  keywords: [
+    // Batch-focused keywords (priority)
+    "2026 batch jobs", "2027 batch jobs", "2028 batch jobs",
+    "2024 batch jobs", "2025 batch jobs", "2029 batch jobs",
+    "fresher jobs 2026", "fresher jobs 2027", "fresher jobs 2028",
+    "btech 2026 batch", "btech 2027 batch", "btech 2028 batch",
+    // Core keywords
+    "btech jobs", "btech fresher jobs", "IT jobs India", "software engineer jobs",
+    "SDE jobs", "full stack developer jobs", "backend developer jobs", "frontend developer jobs",
+    "software jobs India", "tech jobs", "engineering jobs", "computer science jobs",
+    "data scientist jobs", "machine learning jobs", "Python developer jobs", "Java developer jobs",
+    "React developer jobs", "Node.js jobs", "remote IT jobs India", "startup jobs India",
+    "MNC jobs", "product based company jobs", "off campus jobs", "campus placement 2026"
+  ],
+  authors: [{ name: "JobGrid" }],
+  creator: "JobGrid",
+  publisher: "JobGrid",
   robots: {
     index: true,
     follow: true,
@@ -35,30 +49,31 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://jobportal.com",
-    siteName: "JobPortal",
-    title: "JobPortal - Premium Government & Private Jobs in India",
-    description: "India's #1 AI-powered job discovery platform. Find the latest government and private sector job openings.",
+    url: "https://jobgrid.in",
+    siteName: "JobGrid",
+    title: "JobGrid - B.Tech, IT & Software Engineering Jobs in India",
+    description: "Discover 10,000+ tech jobs for B.Tech graduates & IT professionals. SDE, Full-Stack, Data Science & more. AI-powered job matching. Updated hourly.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "JobPortal",
+        alt: "JobGrid - India's #1 Tech Jobs Platform",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "JobPortal - Premium Government & Private Jobs",
-    description: "India's #1 AI-powered job discovery platform",
+    title: "JobGrid - B.Tech & IT Jobs in India 2025",
+    description: "India's AI-powered job portal for software engineers. 10K+ jobs updated hourly.",
     images: ["/og-image.png"],
+    creator: "@jobgridin",
   },
   verification: {
     google: "vZ7c5Hm0Ph_6jXcY0HC8N1UdGazM7_hdp68l8SH-jR0",
   },
   alternates: {
-    canonical: "https://jobportal.com",
+    canonical: "https://jobgrid.in",
   },
   other: {
     'google-adsense-account': 'ca-pub-3356299280733421',
@@ -81,6 +96,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <BatchPopup />
+          <EmailSubscriptionTrigger />
         </Providers>
         <Analytics />
       </body>

@@ -10,11 +10,11 @@ import Filters from '@/components/Filters';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Browse Jobs | JobPortal - Latest Government & Private Jobs',
-    description: 'Explore thousands of job opportunities in government and private sectors. Filter by location, category, and salary. Find your dream career today.',
+    title: 'Browse Jobs | JobGrid - B.Tech, IT & Software Engineering Jobs',
+    description: 'Explore 10,000+ software engineering, SDE, full-stack, backend, frontend & data science jobs. Filter by batch, role type, and location. Apply now!',
     openGraph: {
-        title: 'Browse Jobs | JobPortal',
-        description: 'Explore thousands of job opportunities',
+        title: 'Browse IT & Software Jobs | JobGrid',
+        description: 'Explore 10,000+ tech jobs for B.Tech graduates. Updated hourly.',
         type: 'website',
     },
 };

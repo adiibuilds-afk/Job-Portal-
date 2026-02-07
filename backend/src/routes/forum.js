@@ -2,6 +2,60 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
+const Groq = require('groq-sdk');
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// Middleware: Require authentication (email must be provided)
+const requireAuth = (req, res, next) => {
+    const email = req.body.authorEmail || req.body.email;
+    if (!email) {
+        return res.status(401).json({ 
+            error: 'Authentication required', 
+            message: 'Please login to participate in discussions' 
+        });
+    }
+    next();
+};
+
+// AI Content Moderation - checks for vulgar/abusive content
+const moderateContent = async (text) => {
+    try {
+        if (!text || text.length < 3) return { safe: true };
+        
+        const completion = await groq.chat.completions.create({
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are a content moderator. Analyze the following text and determine if it contains:
+- Vulgar language
+- Abusive words
+- Hate speech
+- Spam or promotional content
+- Personal attacks
+
+Respond with ONLY a JSON object:
+{"safe": true/false, "reason": "brief reason if unsafe"}`
+                },
+                { role: 'user', content: text }
+            ],
+            model: 'llama-3.1-8b-instant',
+            max_tokens: 100
+        });
+
+        const content = completion.choices[0]?.message?.content || '{"safe": true}';
+        const startObj = content.indexOf('{');
+        const endObj = content.lastIndexOf('}');
+        if (startObj !== -1 && endObj !== -1) {
+            return JSON.parse(content.substring(startObj, endObj + 1));
+        }
+        return { safe: true };
+    } catch (error) {
+        console.error('Content moderation error:', error.message);
+        // If moderation fails, allow the content (fail-open)
+        return { safe: true };
+    }
+};
 
 // GET all posts with search, sort, and category filter
 router.get('/posts', async (req, res) => {
@@ -40,10 +94,28 @@ router.get('/posts/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// CREATE post
-router.post('/posts', async (req, res) => {
+// CREATE post (requires auth + content moderation)
+router.post('/posts', requireAuth, async (req, res) => {
   try {
     const { title, content, author, category, tags, authorEmail } = req.body;
+    
+    // Content moderation check
+    const titleCheck = await moderateContent(title);
+    if (!titleCheck.safe) {
+      return res.status(400).json({ 
+        error: 'Content policy violation', 
+        message: `Your title was flagged: ${titleCheck.reason || 'Inappropriate content detected'}` 
+      });
+    }
+    
+    const contentCheck = await moderateContent(content);
+    if (!contentCheck.safe) {
+      return res.status(400).json({ 
+        error: 'Content policy violation', 
+        message: `Your post was flagged: ${contentCheck.reason || 'Inappropriate content detected'}` 
+      });
+    }
+    
     const post = new Post({ title, content, author, category, tags, authorEmail });
     await post.save();
     res.status(201).json(post);
@@ -99,10 +171,20 @@ router.post('/posts/:id/upvote', async (req, res) => {
   }
 });
 
-// CREATE comment
-router.post('/posts/:id/comments', async (req, res) => {
+// CREATE comment (requires auth + content moderation)
+router.post('/posts/:id/comments', requireAuth, async (req, res) => {
   try {
     const { content, author, authorEmail } = req.body;
+    
+    // Content moderation check
+    const contentCheck = await moderateContent(content);
+    if (!contentCheck.safe) {
+      return res.status(400).json({ 
+        error: 'Content policy violation', 
+        message: `Your comment was flagged: ${contentCheck.reason || 'Inappropriate content detected'}` 
+      });
+    }
+    
     const comment = new Comment({ postId: req.params.id, content, author: author || 'Anonymous', authorEmail });
     await comment.save();
     await Post.findByIdAndUpdate(req.params.id, { $inc: { commentCount: 1 } });

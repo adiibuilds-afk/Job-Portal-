@@ -11,6 +11,12 @@ const DEFAULT_CRONS = [
         enabled: true
     },
     {
+        name: 'talentd_import',
+        description: 'Scrape and queue jobs from Talentd',
+        schedule: '0 * * * *', // Every hour
+        enabled: true
+    },
+    {
         name: 'queue_processor',
         description: 'Process scheduled job queue',
         schedule: '*/1 * * * *', // Every 1 minute
@@ -40,6 +46,18 @@ const seedDefaults = async () => {
     if (count === 0) {
         await CronConfig.insertMany(DEFAULT_CRONS);
         console.log('🌱 Seeded default cron configurations');
+    } else {
+        // Ensure talentd_import exists
+        const hasTalentd = await CronConfig.findOne({ name: 'talentd_import' });
+        if (!hasTalentd) {
+            await CronConfig.create({
+                name: 'talentd_import',
+                description: 'Scrape and queue jobs from Talentd',
+                schedule: '0 * * * *',
+                enabled: true
+            });
+            console.log('🌱 Added missing talentd_import configuration');
+        }
     }
 };
 seedDefaults();
@@ -113,6 +131,14 @@ router.post('/:id/run', async (req, res) => {
                 case 'rgjobs_import':
                     const { importRGJobsDirect } = require('../../scripts/importRGJobs');
                     result = await importRGJobsDirect(10);
+                    break;
+                    
+                case 'talentd_import':
+                    const { scrapeTalentdJobs } = require('../../services/scraper');
+                    const { queueLinks } = require('../../services/scheduler/queueProcessor');
+                    const links = await scrapeTalentdJobs();
+                    const queuedCount = await queueLinks(links);
+                    result = { success: true, found: links.length, queued: queuedCount };
                     break;
                     
                 case 'queue_processor':
