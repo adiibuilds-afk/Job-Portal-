@@ -8,126 +8,13 @@
  */
 
 const axios = require('axios');
-const sharp = require('sharp');
-const fs = require('fs');
-const path = require('path');
+const { downloadAndProcessLogo } = require('../utils/imageProcessor');
+const { cleanTitle, mapJobType, parseMinSalary, parseBatches } = require('../utils/jobHelpers');
 const Job = require('../models/Job');
 const ScheduledJob = require('../models/ScheduledJob');
 const Settings = require('../models/Settings');
 const { generateSEOContent } = require('../services/groq');
 
-const RG_JOBS_API = 'https://api.rgjobs.in/api/getAllJobs';
-const RG_JOBS_IMAGE_BASE = 'https://api.rgjobs.in/';
-const MAX_JOBS_PER_RUN = 20;
-const LOGO_SIZE = 80; // Square size for logos
-
-/**
- * Download logo, resize to square (with padding), compress to WebP
- */
-const downloadAndProcessLogo = async (imageUrl, companyName = 'company') => {
-    try {
-        if (!imageUrl || !imageUrl.startsWith('http')) return null;
-
-        console.log(`   📥 Downloading logo: ${imageUrl}`);
-        
-        const response = await axios({
-            url: imageUrl,
-            responseType: 'arraybuffer',
-            timeout: 10000
-        });
-
-        // Ensure upload directory exists
-        const uploadDir = path.join(__dirname, '../../public/uploads/logos');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-
-        // Slugify company name for filename
-        const slugifiedName = companyName
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, '')
-            .substring(0, 30);
-
-        // Generate unique filename with company name
-        const filename = `${slugifiedName}-${Date.now()}.webp`;
-        const filePath = path.join(uploadDir, filename);
-
-        // Process with Sharp:
-        // 1. Resize to fit within LOGO_SIZE x LOGO_SIZE (maintaining aspect ratio)
-        // 2. Extend to square with white background (for better visibility)
-        // 3. Convert to WebP with quality 80
-        await sharp(response.data)
-            .resize(LOGO_SIZE, LOGO_SIZE, {
-                fit: 'contain',
-                background: { r: 255, g: 255, b: 255, alpha: 1 } // White background
-            })
-            .webp({ quality: 80 })
-            .toFile(filePath);
-
-        console.log(`   ✅ Logo saved: ${filename}`);
-        return `/uploads/logos/${filename}`;
-    } catch (error) {
-        console.error(`   ❌ Logo download failed: ${error.message}`);
-        return null;
-    }
-};
-
-// Map RG Jobs jobtype to JobGrid format
-const mapJobType = (jobtype) => {
-    switch (jobtype) {
-        case 1: return 'FullTime';
-        case 2: return 'Internship';
-        case 3: return 'Contract';
-        default: return 'FullTime';
-    }
-};
-
-// Parse salary string to get minimum value
-const parseMinSalary = (payString) => {
-    if (!payString) return 0;
-    const match = payString.match(/(\d+)/);
-    return match ? parseInt(match[1]) : 0;
-};
-
-// Parse batches string to array
-const parseBatches = (batchString) => {
-    if (!batchString) return [];
-    return batchString.split(',').map(b => b.trim()).filter(Boolean);
-};
-
-/**
- * Clean up RG Jobs titles by removing unnecessary suffixes
- */
-const cleanTitle = (title) => {
-    if (!title) return '';
-    
-    // Patterns to remove from end of title
-    const patternsToRemove = [
-        /\s*\|\s*Role,?\s*Responsibilities\s*&\s*Skills\s*$/i,
-        /\s*–\s*Roles?,?\s*Skills?\s*&\s*Eligibility\s*$/i,
-        /\s*–\s*Backend\s*Role,?\s*Responsibilities\s*&\s*Required\s*Skills\s*$/i,
-        /\s*\|\s*Hybrid\s*Internship\s*Opportunity\s*$/i,
-        /\s*\|\s*Remote\s*Internship\s*Opportunity\s*$/i,
-        /\s*–\s*Role,?\s*Responsibilities\s*&\s*Required\s*Skills\s*$/i,
-        /\s*\|\s*Full\s*Stack\s*Role\s*$/i,
-        /\s*\|\s*Backend\s*Role\s*$/i,
-        /\s*\|\s*Frontend\s*Role\s*$/i,
-        /\s*–\s*Responsibilities\s*&\s*Skills\s*$/i,
-        /\s*\|\s*Responsibilities\s*&\s*Skills\s*$/i,
-        /\s*–\s*Required\s*Skills\s*$/i,
-        /\s*\|\s*Required\s*Skills\s*$/i,
-        /\s*–\s*Skills\s*&\s*Eligibility\s*$/i,
-        /\s*\|\s*Skills\s*&\s*Eligibility\s*$/i,
-    ];
-    
-    let cleanedTitle = title;
-    for (const pattern of patternsToRemove) {
-        cleanedTitle = cleanedTitle.replace(pattern, '');
-    }
-    
-    return cleanedTitle.trim();
-};
 
 // Map RG Jobs data to JobGrid schema
 const mapToJobSchema = async (rgJob) => {

@@ -1,7 +1,7 @@
 const ResumeQueue = require('../models/ResumeQueue');
+const User = require('../models/User');
 const Job = require('../models/Job');
-const Settings = require('../models/Settings'); // Import Settings
-const { parseJobWithAI } = require('./groq'); // We'll adapt Groq client
+const Settings = require('../models/Settings');
 const Groq = require('groq-sdk');
 require('dotenv').config();
 
@@ -34,7 +34,21 @@ const processQueue = async () => {
         task.processingStartedAt = new Date();
         await task.save();
 
+        // Fetch User to get history
+        const user = await User.findById(task.userId);
+        const lastScan = user.resumeCheckHistory?.[user.resumeCheckHistory.length - 1];
+        const lastScore = lastScan ? lastScan.score : null;
+
         let prompt = "";
+        const commonInstructions = `
+        CRITICAL INSTRUCTION: STRICTLY IGNORE ALL FORMATTING, LAYOUT, FONT, AND VISUAL ELEMENTS.
+        The resume text is parsed from a PDF and loses all original formatting.
+        - DO NOT mention "bullet points", "font styles", "layout", "white space", or "margins".
+        - DO NOT suggest using standard fonts or formatting improvements.
+        - Assume the original PDF is perfectly formatted.
+        - Focus 100% on the TEXT CONTENT: keywords, impact, metrics, and clarity of expression.
+        - Improvement suggestions must ONLY be about adding better keywords, quantifying achievements, or clarifying descriptions.
+        `;
 
         if (task.jobId) {
             const job = await Job.findById(task.jobId);
@@ -50,6 +64,9 @@ const processQueue = async () => {
             prompt = `
             You are an expert ATS (Applicant Tracking System) and Hiring Manager.
             Analyze the following Resume against the Job Description.
+            ${commonInstructions}
+
+            ${lastScore !== null ? `Previous Score: ${lastScore}. Highlight if they have improved.` : ''}
 
             Job Title: ${job.title}
             Job Description: ${job.description.substring(0, 1000)}...
@@ -77,6 +94,9 @@ const processQueue = async () => {
             prompt = `
             You are an elite Career Coach and Senior Technical Recruiter.
             Analyze the following Resume for overall quality, ATS compatibility, and professional impact.
+            ${commonInstructions}
+
+            ${lastScore !== null ? `Previous Score: ${lastScore}. Highlight if they have improved.` : ''}
 
             Target Direction: ${customTitle} ${task.customJob?.company ? `at ${customCompany}` : '(General)'}
 
@@ -84,10 +104,9 @@ const processQueue = async () => {
             ${task.resumeText.substring(0, 3000)}
 
             Analyze for:
-            1. Formatting and Scanability.
-            2. Content Impact and Quantified Achievements.
-            3. ATS Compatibility for ${customTitle} roles.
-            4. General Industry Standards.
+            1. Content Impact and Quantified Achievements.
+            2. ATS Compatibility for ${customTitle} roles.
+            3. General Industry Standards.
 
             Output strictly in JSON format:
             {
@@ -95,7 +114,7 @@ const processQueue = async () => {
                 "matchLevel": "Low" | "Medium" | "High",
                 "strengths": ["string", "string"],
                 "missingKeywords": ["Missing general industry keywords/skills if applicable"],
-                "improvements": ["Specific formatting or content advice"],
+                "improvements": ["Specific content advice (ignoring parsing issues)"],
                 "summary": "Full overview of resume health and potential impact for ${customTitle} roles."
             }
             Do not include markdown formatting. Just raw JSON.
@@ -108,25 +127,40 @@ const processQueue = async () => {
         });
 
         const content = completion.choices[0]?.message?.content || '{}';
-        const cleanJson = content.replace(/^```json/, '').replace(/```$/, '');
+        // Cleanup JSON
+        const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
         const analysis = JSON.parse(cleanJson);
 
-        // Success
+        // Add Score Difference
+        if (lastScore !== null) {
+            analysis.scoreDiff = analysis.score - lastScore;
+        }
+
+        // Save Analysis to Queue
         task.result = analysis;
         task.status = 'completed';
         task.completedAt = new Date();
         await task.save();
 
+        // Save to User History
+        if (user) {
+            user.resumeCheckHistory.push({
+                score: analysis.score,
+                feedback: analysis.summary,
+                date: new Date()
+            });
+            await user.save();
+        }
+
     } catch (error) {
         console.error('Queue Processing Error:', error);
-        if (task) { // task might be undefined if error in query
+        if (task) { 
             task.status = 'failed';
             task.error = error.message;
             await task.save();
         }
     } finally {
         isProcessing = false;
-        // Check for more jobs immediately if we just finished one
         if (await ResumeQueue.exists({ status: 'pending' })) {
             setImmediate(processQueue);
         }

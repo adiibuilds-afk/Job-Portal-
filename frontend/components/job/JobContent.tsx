@@ -2,12 +2,39 @@
 
 import { CheckCircle2, ExternalLink, FileText, Target, Lightbulb, Award, ChevronRight } from 'lucide-react';
 import { Job } from '@/types';
+import { useSession } from 'next-auth/react';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 interface JobContentProps {
     job: Job;
 }
 
 export default function JobContent({ job }: JobContentProps) {
+    const { data: session } = useSession();
+
+    const handleApply = async () => {
+        if (!job.applyUrl) {
+            toast.error('Application URL not found');
+            return;
+        }
+
+        // Open window immediately to prevent popup blocker, but we might redirect it later or keep it references
+        const newWindow = window.open(job.applyUrl, '_blank');
+
+        if (session?.user?.email) {
+            try {
+                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/user/applied`, {
+                    email: session.user.email,
+                    jobId: job._id
+                });
+                toast.success('Application tracked successfully!');
+            } catch (error) {
+                console.error('Failed to track application:', error);
+                // Don't show error to user as the application page is already opened
+            }
+        }
+    };
     return (
         <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-[2rem] overflow-hidden">
             <div className="p-8 space-y-8">
@@ -99,15 +126,13 @@ export default function JobContent({ job }: JobContentProps) {
                     <h3 className="text-2xl font-black text-white mb-2">Ready to Apply?</h3>
                     <p className="text-zinc-500 mb-6">Click below to visit the official application page and submit your application</p>
 
-                    <a
-                        href={job.applyUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <button
+                        onClick={handleApply}
                         className="inline-flex items-center justify-center gap-3 w-full max-w-md px-8 py-5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-2xl shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all group"
                     >
                         Apply Now
                         <ExternalLink className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                    </a>
+                    </button>
 
                     <p className="text-zinc-600 text-xs mt-4">You'll be redirected to the company's official careers page</p>
                 </div>

@@ -10,18 +10,39 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async session({ session, token }) {
-            // Add custom logic here if needed, e.g., adding user ID from database
+            if (session?.user?.email) {
+                try {
+                    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                    const res = await fetch(`${API_URL}/api/user/profile?email=${session.user.email}`);
+                    const data = await res.json();
+                    if (data.user) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (session.user as any).batch = data.user.batch;
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (session.user as any).id = data.user._id;
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (session.user as any).role = data.user.role;
+                    }
+                } catch (error) {
+                    console.error("Error fetching user session data", error);
+                }
+            }
             return session;
         },
         async signIn({ user, account, profile }) {
-            // Hook to sync user with backend DB could go here
-            // For now, we'll return true to allow sign in
             try {
                 if (account?.provider === "google") {
                     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-                    // Optimistically sync user to backend
-                    // We use fetch here to send data to our backend
-                    // verifyUser(user) - to be implemented
+                    await fetch(`${API_URL}/api/auth/google`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: user.email,
+                            name: user.name,
+                            image: user.image,
+                            googleId: user.id
+                        })
+                    });
                 }
                 return true;
             } catch (error) {

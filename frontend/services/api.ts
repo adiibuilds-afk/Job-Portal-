@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Job } from '@/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 
 export async function getJobs(params?: {
     q?: string;

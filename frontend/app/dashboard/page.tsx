@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import axios from "axios";
 import { getPublicStats } from '@/services/api';
-import { TrendingUp, Briefcase, Building2, Code, Users, Globe, Laptop, BookmarkCheck, LayoutDashboard, Sparkles, LogOut, ArrowRight } from 'lucide-react';
+import { TrendingUp, Briefcase, Building2, Code, Users, Globe, Laptop, BookmarkCheck, LayoutDashboard, Sparkles, LogOut, ArrowRight, Coins, LayoutList, KanbanSquare, CheckSquare, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HiringHeatmap from "@/components/home/HiringHeatmap";
 import { toast } from 'react-hot-toast';
@@ -15,7 +15,7 @@ import ResumeScorerTab from "@/components/dashboard/ResumeScorerTab";
 import ActivityHeatmap from "@/components/dashboard/ActivityHeatmap";
 import GridCoinsWidget from "@/components/dashboard/GridCoinsWidget";
 import GridCoinsTab from "@/components/dashboard/GridCoinsTab";
-import { Coins } from 'lucide-react';
+import JobKanbanBoard from "@/components/dashboard/JobKanbanBoard";
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -25,6 +25,9 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'tracker' | 'insights' | 'ai-scorer' | 'coins'>('tracker');
     const [activeTrackerTab, setActiveTrackerTab] = useState<'applied' | 'saved'>('applied');
+    const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
+    const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
+    const [isBulkMode, setIsBulkMode] = useState(false);
     const toastShown = useRef(false);
 
     useEffect(() => {
@@ -154,7 +157,7 @@ export default function DashboardPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <ActivityCard title="Applied" value={userData?.appliedJobs?.length || 0} icon={<Briefcase className="w-5 h-5" />} color="text-blue-400" />
                                 <ActivityCard title="Saved" value={userData?.savedJobs?.length || 0} icon={<StarIcon className="w-5 h-5" />} color="text-amber-400" />
-                                <ActivityCard title="Profile Rank" value="Top 15%" icon={<Sparkles className="w-5 h-5" />} color="text-purple-400" />
+                                <ActivityCard title="Profile Rank" value={userData?.profileRank || 'Top 50%'} icon={<Sparkles className="w-5 h-5" />} color="text-purple-400" />
                                 <ActivityCard title="Batch" value={userData?.batch || '2025'} icon={<Users className="w-5 h-5" />} color="text-green-400" />
                             </div>
 
@@ -178,29 +181,148 @@ export default function DashboardPage() {
                                             Saved Jobs
                                         </button>
                                     </div>
-                                    <button
-                                        onClick={() => router.push('/jobs')}
-                                        className="text-amber-400 text-sm font-bold flex items-center gap-1 hover:underline"
-                                    >
-                                        Find more <ArrowRight className="w-4 h-4" />
-                                    </button>
+
+                                    <div className="flex items-center gap-4">
+                                        {activeTrackerTab === 'applied' && (
+                                            <div className="flex bg-black/40 p-1 rounded-lg border border-zinc-800">
+                                                <button
+                                                    onClick={() => setViewMode('list')}
+                                                    className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-zinc-800 text-white shadow' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                                    title="List View"
+                                                >
+                                                    <LayoutList className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setViewMode('board')}
+                                                    className={`p-2 rounded-md transition-all ${viewMode === 'board' ? 'bg-zinc-800 text-white shadow' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                                    title="Board View"
+                                                >
+                                                    <KanbanSquare className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={() => router.push('/jobs')}
+                                            className="text-amber-400 text-sm font-bold flex items-center gap-1 hover:underline"
+                                        >
+                                            Find more <ArrowRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {activeTrackerTab === 'applied' && userData?.appliedJobs?.map((item: any) => (
-                                        <DashboardJobCard key={item._id} job={item.jobId} appliedAt={item.appliedAt} type="applied" />
-                                    ))}
-                                    {activeTrackerTab === 'saved' && userData?.savedJobs?.map((job: any) => (
-                                        <DashboardJobCard key={job._id} job={job} type="saved" />
-                                    ))}
 
-                                    {activeTrackerTab === 'applied' && (!userData?.appliedJobs || userData.appliedJobs.length === 0) && (
-                                        <EmptyState message="You haven't applied to any jobs yet." cta="Browse Jobs" />
-                                    )}
-                                    {activeTrackerTab === 'saved' && (!userData?.savedJobs || userData.savedJobs.length === 0) && (
-                                        <EmptyState message="Your wishlist is empty." cta="Add Jobs" />
-                                    )}
-                                </div>
+                                {/* Bulk Actions Toolbar for List View */}
+                                {activeTrackerTab === 'applied' && viewMode === 'list' && (
+                                    <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-4 rounded-xl mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <button
+                                                onClick={() => {
+                                                    setIsBulkMode(!isBulkMode);
+                                                    setSelectedJobs([]);
+                                                }}
+                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${isBulkMode ? 'bg-amber-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                                            >
+                                                {isBulkMode ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                                                {isBulkMode ? 'Exit Selection' : 'Select Jobs'}
+                                            </button>
+                                            {isBulkMode && (
+                                                <>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (selectedJobs.length === (userData?.appliedJobs?.length || 0)) {
+                                                                setSelectedJobs([]);
+                                                            } else {
+                                                                setSelectedJobs(userData?.appliedJobs?.map((j: any) => j.jobId._id) || []);
+                                                            }
+                                                        }}
+                                                        className="text-xs font-bold text-zinc-400 hover:text-white px-2 py-1 bg-zinc-800 rounded-lg transition-colors"
+                                                    >
+                                                        {selectedJobs.length === (userData?.appliedJobs?.length || 0) ? 'Deselect All' : 'Select All'}
+                                                    </button>
+                                                    <span className="text-zinc-400 text-sm font-mono">
+                                                        {selectedJobs.length} selected
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {isBulkMode && selectedJobs.length > 0 && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-zinc-500 uppercase font-black mr-2">Move to:</span>
+                                                {['applied', 'interviewing', 'offered', 'rejected'].map(status => (
+                                                    <button
+                                                        key={status}
+                                                        onClick={async () => {
+                                                            try {
+                                                                await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/user/applied/status/bulk`, {
+                                                                    status,
+                                                                    jobIds: selectedJobs,
+                                                                    email: session?.user?.email
+                                                                });
+                                                                toast.success(`Updated ${selectedJobs.length} jobs to ${status}`);
+                                                                setSelectedJobs([]);
+                                                                setIsBulkMode(false);
+                                                                fetchUserData();
+                                                            } catch (error) {
+                                                                toast.error('Failed to update jobs');
+                                                            }
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border capitalize hover:brightness-110 transition-all 
+                                                            ${status === 'applied' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : ''}
+                                                            ${status === 'interviewing' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : ''}
+                                                            ${status === 'offered' ? 'bg-green-500/10 text-green-400 border-green-500/20' : ''}
+                                                            ${status === 'rejected' ? 'bg-red-500/10 text-red-400 border-red-500/20' : ''}
+                                                        `}
+                                                    >
+                                                        {status}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {activeTrackerTab === 'applied' && viewMode === 'board' ? (
+                                    <JobKanbanBoard
+                                        jobs={userData?.appliedJobs || []}
+                                        onUpdate={fetchUserData}
+                                        email={session?.user?.email || ''}
+                                    />
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {activeTrackerTab === 'applied' && userData?.appliedJobs?.map((item: any) => (
+                                            <DashboardJobCard
+                                                key={item._id}
+                                                job={item.jobId}
+                                                appliedAt={item.appliedAt}
+                                                notes={item.notes}
+                                                type="applied"
+                                                status={item.status}
+                                                email={session?.user?.email || ''}
+                                                onStatusChange={fetchUserData}
+                                                isBulkMode={isBulkMode}
+                                                isSelected={selectedJobs.includes(item.jobId._id)}
+                                                onToggleSelect={() => {
+                                                    setSelectedJobs(prev =>
+                                                        prev.includes(item.jobId._id)
+                                                            ? prev.filter(id => id !== item.jobId._id)
+                                                            : [...prev, item.jobId._id]
+                                                    );
+                                                }}
+                                            />
+                                        ))}
+                                        {activeTrackerTab === 'saved' && userData?.savedJobs?.map((job: any) => (
+                                            <DashboardJobCard key={job._id} job={job} type="saved" />
+                                        ))}
+
+                                        {activeTrackerTab === 'applied' && (!userData?.appliedJobs || userData.appliedJobs.length === 0) && (
+                                            <EmptyState message="You haven't applied to any jobs yet." cta="Browse Jobs" />
+                                        )}
+                                        {activeTrackerTab === 'saved' && (!userData?.savedJobs || userData.savedJobs.length === 0) && (
+                                            <EmptyState message="Your wishlist is empty." cta="Add Jobs" />
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     ) : activeTab === 'insights' ? (
@@ -251,21 +373,78 @@ export default function DashboardPage() {
             </div>
 
             <Footer />
-        </main>
+        </main >
     );
 }
 
-function DashboardJobCard({ job, appliedAt, type }: { job: any, appliedAt?: string, type: 'applied' | 'saved' }) {
+function DashboardJobCard({ job, appliedAt, type, status, notes, email, onStatusChange, isBulkMode, isSelected, onToggleSelect }: { job: any, appliedAt?: string, type: 'applied' | 'saved', status?: string, notes?: string, email?: string, onStatusChange?: () => void, isBulkMode?: boolean, isSelected?: boolean, onToggleSelect?: () => void }) {
+    const [currentStatus, setCurrentStatus] = useState(status || 'applied');
+    const [updating, setUpdating] = useState(false);
+
+    const statusConfig: Record<string, { bg: string, text: string, border: string, label: string }> = {
+        applied: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', label: 'Applied' },
+        interviewing: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20', label: 'Interviewing' },
+        offered: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/20', label: 'Offered' },
+        rejected: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20', label: 'Rejected' }
+    };
+
+    const handleStatusChange = async (newStatus: string) => {
+        if (!email || newStatus === currentStatus) return;
+        setUpdating(true);
+        try {
+            await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/user/applied/status`, {
+                email,
+                jobId: job._id,
+                status: newStatus
+            });
+            setCurrentStatus(newStatus);
+            toast.success(`Status updated to ${statusConfig[newStatus].label}`);
+            if (onStatusChange) onStatusChange();
+        } catch (error) {
+            console.error('Failed to update status', error);
+            toast.error('Failed to update status');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
     if (!job) return null;
+    const config = statusConfig[currentStatus] || statusConfig.applied;
+
     return (
-        <div className="group bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-amber-500/30 transition-all hover:bg-zinc-800/50 flex flex-col">
+        <div className={`group bg-zinc-900 border rounded-2xl p-6 transition-all hover:bg-zinc-800/50 flex flex-col relative ${isSelected ? 'border-amber-500 bg-zinc-800/80' : 'border-zinc-800 hover:border-amber-500/30'}`}>
+            {isBulkMode && type === 'applied' && (
+                <button
+                    onClick={(e) => { e.preventDefault(); onToggleSelect && onToggleSelect(); }}
+                    className="absolute top-6 right-6 z-10 text-zinc-400 hover:text-white"
+                >
+                    {isSelected ? <CheckSquare className="w-6 h-6 text-amber-500" /> : <Square className="w-6 h-6" />}
+                </button>
+            )}
             <div className="flex justify-between items-start mb-4">
-                <div>
+                <div className="pr-8">
                     <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-1">{job.title}</h3>
                     <p className="text-zinc-400 text-sm uppercase font-mono tracking-tighter">{job.company}</p>
                 </div>
-                {type === 'applied' && (
-                    <span className="px-3 py-1 bg-green-500/10 text-green-400 text-[10px] font-bold uppercase rounded-lg border border-green-500/20">Applied</span>
+                {type === 'applied' && !isBulkMode && (
+                    <div className="relative">
+                        <select
+                            value={currentStatus}
+                            onChange={(e) => handleStatusChange(e.target.value)}
+                            disabled={updating}
+                            className={`appearance-none cursor-pointer px-3 py-1 ${config.bg} ${config.text} text-[10px] font-bold uppercase rounded-lg border ${config.border} focus:outline-none focus:ring-2 focus:ring-amber-500/50 pr-6 ${updating ? 'opacity-50' : ''}`}
+                        >
+                            <option value="applied">Applied</option>
+                            <option value="interviewing">Interviewing</option>
+                            <option value="offered">Offered</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg className={`w-3 h-3 ${config.text}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                    </div>
                 )}
             </div>
             <div className="flex flex-wrap gap-2 mb-6">

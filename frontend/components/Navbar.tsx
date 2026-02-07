@@ -6,6 +6,7 @@ import { Menu, Search, Crown, X, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, Suspense } from 'react';
 import { useSession, signIn, signOut } from "next-auth/react";
+import BatchSelectionModal from './BatchSelectionModal';
 
 function NavbarContent() {
     const { data: session } = useSession();
@@ -13,15 +14,40 @@ function NavbarContent() {
     const searchParams = useSearchParams();
     const q = searchParams.get('q') || '';
 
+    // Batch Logic
+    const [showBatchModal, setShowBatchModal] = useState(false);
+    const userBatch = (session?.user as any)?.batch;
+
+    const handleBatchClick = (e: React.MouseEvent) => {
+        if (!userBatch) {
+            e.preventDefault();
+            setShowBatchModal(true);
+        }
+    };
+
     const navLinks = [
         { name: 'Home', href: '/' },
         { name: 'All Jobs', href: '/jobs' },
         { name: 'Dashboard', href: '/dashboard' },
-        { name: 'Internships', href: '/jobs?jobType=Internship' },
+        { name: 'Forum', href: '/forum' },
+        // Dynamic Batch Link
+        {
+            name: userBatch ? `Jobs for ${userBatch}` : 'Jobs for your Batch',
+            href: userBatch ? `/jobs?batch=${userBatch}` : '#',
+            onClick: handleBatchClick
+        },
     ];
 
     return (
         <>
+            <BatchSelectionModal
+                isOpen={showBatchModal}
+                onClose={() => setShowBatchModal(false)}
+                onBatchSelect={(batch) => {
+                    // Optional: Redirect immediately after selection
+                    // window.location.href = `/jobs?batch=${batch}`;
+                }}
+            />
             <motion.nav
                 initial={{ y: -100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -50,6 +76,7 @@ function NavbarContent() {
                                 <Link
                                     key={item.name}
                                     href={item.href}
+                                    onClick={item.onClick}
                                     className="px-5 py-2.5 text-sm font-medium text-zinc-400 hover:text-amber-400 rounded-xl hover:bg-amber-500/5 transition-all"
                                 >
                                     {item.name}

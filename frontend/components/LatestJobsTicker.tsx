@@ -27,7 +27,7 @@ export default function LatestJobsTicker() {
 
     return (
         <div className="bg-amber-500/10 border-y border-amber-500/20 py-2 relative overflow-hidden group">
-            <div className="max-w-7xl mx-auto px-6 flex items-center gap-4">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-center gap-4">
 
                 {/* Label */}
                 <div className="flex items-center gap-2 bg-amber-500 text-black px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter z-10">
@@ -42,7 +42,7 @@ export default function LatestJobsTicker() {
                             <Link
                                 key={job._id}
                                 href={`/job/${job.slug}`}
-                                className="inline-block mx-8 text-zinc-300 text-sm font-medium hover:text-amber-500 transition-colors"
+                                className="inline-block mx-4 md:mx-8 text-zinc-300 text-xs md:text-sm font-medium hover:text-amber-500 transition-colors"
                             >
                                 <span className="text-amber-500/50 mr-2">/</span>
                                 {job.title} at <span className="font-bold text-white">{job.company}</span>
@@ -53,7 +53,7 @@ export default function LatestJobsTicker() {
                             <Link
                                 key={`${job._id}-clone`}
                                 href={`/job/${job.slug}`}
-                                className="inline-block mx-8 text-zinc-300 text-sm font-medium hover:text-amber-500 transition-colors"
+                                className="inline-block mx-4 md:mx-8 text-zinc-300 text-xs md:text-sm font-medium hover:text-amber-500 transition-colors"
                             >
                                 <span className="text-amber-500/50 mr-2">/</span>
                                 {job.title} at <span className="font-bold text-white">{job.company}</span>

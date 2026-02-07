@@ -7,6 +7,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useSavedJobs } from '@/hooks/useSavedJobs';
 import { reportJob } from '@/services/api';
+import axios from 'axios';
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useAppliedJobs } from '@/hooks/useAppliedJobs';
@@ -57,14 +58,27 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
         toggleSave(job._id);
     };
 
-    const handleApplyMark = (e: React.MouseEvent) => {
+    const handleApplyMark = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         if (!session) {
             toast.error('Please login to track your applications.', { icon: '🔒' });
             return;
         }
+
+        // Optimistic UI
         markAsApplied(job._id);
+
+        // Track Event for Heatmap
+        try {
+            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/user/track`, {
+                email: session.user?.email,
+                action: 'apply_click',
+                jobId: job._id
+            });
+        } catch (error) {
+            console.error('Failed to track apply click', error);
+        }
     };
 
     // Check if job is fresh (< 4 hours old)

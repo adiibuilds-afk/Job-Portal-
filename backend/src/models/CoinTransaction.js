@@ -18,7 +18,6 @@ const CoinTransactionSchema = new mongoose.Schema({
     },
     reason: {
         type: String,
-        enum: ['signup', 'referral', 'login_streak', 'share_job', 'redeem'],
         required: true
     },
     description: {

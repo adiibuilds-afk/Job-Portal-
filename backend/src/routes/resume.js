@@ -52,8 +52,8 @@ router.post('/analyze', attachUser, async (req, res) => {
                           now.getFullYear() === lastReset.getFullYear();
 
         if (isSameDay) {
-            if (user.resumeScans.count >= 1) { // LIMIT = 1
-                return res.status(429).json({ error: 'Daily limit reached (1 scan/day)' });
+            if (user.resumeScans.count >= 50) { // LIMIT INCREASED FOR TESTING
+                return res.status(429).json({ error: 'Daily limit reached' });
             }
         } else {
             // Reset if new day

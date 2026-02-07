@@ -25,6 +25,19 @@ const UserSchema = new mongoose.Schema({
         appliedAt: {
             type: Date,
             default: Date.now
+        },
+        updatedAt: {
+            type: Date,
+            default: Date.now
+        },
+        status: {
+            type: String,
+            enum: ['applied', 'interviewing', 'offered', 'rejected'],
+            default: 'applied'
+        },
+        notes: {
+            type: String,
+            default: ''
         }
     }],
     batch: {
@@ -62,7 +75,23 @@ const UserSchema = new mongoose.Schema({
     skills: { type: [String], default: [] },
     portfolioUrl: { type: String },
     tier: { type: String, enum: ['Bronze', 'Silver', 'Gold', 'Diamond'], default: 'Bronze' },
-    profileRewardsClaimed: { type: [String], default: [] } // e.g. ['skills', 'portfolio']
+    profileRewardsClaimed: { type: [String], default: [] }, // e.g. ['skills', 'portfolio']
+    
+    // Activity Logging for Heatmap & Analytics
+    // Activity Logging for Heatmap & Analytics
+    activityLogs: [{
+        action: { type: String, required: true }, // e.g. 'apply_click', 'save_click'
+        jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job' },
+        metadata: { type: Object },
+        timestamp: { type: Date, default: Date.now }
+    }],
+    
+    // Resume Score History
+    resumeCheckHistory: [{
+        score: { type: Number },
+        feedback: { type: String },
+        date: { type: Date, default: Date.now }
+    }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);
