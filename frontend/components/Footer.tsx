@@ -87,19 +87,6 @@ export default function Footer() {
                                 Remote, India
                             </li>
                         </ul>
-
-                        <h4 className="text-white font-semibold mt-6 mb-4">Join Our Community</h4>
-                        <div className="flex flex-col gap-2">
-                            <a href="https://t.me/jobgridupdates" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-blue-400 text-sm transition-colors">
-                                <span className="w-2 h-2 rounded-full bg-blue-500"></span> Telegram Channel
-                            </a>
-                            <a href="https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-green-400 text-sm transition-colors">
-                                <span className="w-2 h-2 rounded-full bg-green-500"></span> WhatsApp Channel
-                            </a>
-                            <a href="https://chat.whatsapp.com/CQtsJNDj5KNDuCkciseSIH" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-green-500 text-sm transition-colors">
-                                <span className="w-2 h-2 rounded-full bg-green-600"></span> WhatsApp Group
-                            </a>
-                        </div>
                     </div>
                 </div>
 
