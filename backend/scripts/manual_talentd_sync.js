@@ -207,11 +207,11 @@ const manualSync = async () => {
                         if (newJob.salary && newJob.salary !== 'N/A') message += `\n💰 *Salary:* ${newJob.salary}`;
                         if (newJob.location && newJob.location !== 'N/A') message += `\n📍 *Location:* ${newJob.location}`;
                         
-                        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432`;
+                        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
 
                         await bot.telegram.sendMessage(channelId, message, {
                             parse_mode: 'Markdown',
-                            disable_web_page_preview: false,
+                            disable_web_page_preview: true,
                         });
                         console.log(`📢 Notification sent to Telegram!`);
                     } catch (tgError) {

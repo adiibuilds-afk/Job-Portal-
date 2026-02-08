@@ -38,13 +38,13 @@ const sendDemoMessage = async () => {
     message += `\n📍 *Location:* ${mockJob.location}`;
     
     // The Footer with New Links
-    message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n🔹 Telegram :- https://t.me/jobgridupdates\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n🔹 WhatsApp Group :- https://chat.whatsapp.com/CQtsJNDj5KNDuCkciseSIH`;
+    message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
 
     try {
         console.log('🚀 Sending demo message to:', CHANNEL_ID);
         await bot.telegram.sendMessage(CHANNEL_ID, message, {
             parse_mode: 'Markdown',
-            disable_web_page_preview: false,
+            disable_web_page_preview: true,
         });
         console.log('✅ Demo message sent successfully!');
     } catch (error) {
