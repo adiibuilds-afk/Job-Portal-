@@ -34,7 +34,7 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         isRemote: refinedData.isRemote || (refinedData.location?.toLowerCase().includes('remote')) || (rawData.location?.toLowerCase().includes('remote')) || false,
         rolesResponsibility: formatAiValue(refinedData.rolesResponsibility || rawData.rolesAndResponsibilities),
         requirements: formatAiValue(refinedData.requirements || rawData.requirements),
-        niceToHave: refinedData.niceToHave || rawData.niceToHave || '',
+        niceToHave: formatAiValue(refinedData.niceToHave || rawData.niceToHave),
         isActive: true,
         isFeatured: false
     };

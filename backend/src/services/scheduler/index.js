@@ -22,10 +22,10 @@ const initScheduler = (bot) => {
         processQueue(bot);
     });
 
-    // Run Auto-Scraper every hour
-    cron.schedule('0 * * * *', () => {
-        runAutoScraper(bot);
-    });
+    // Auto-Scraper (Talentd) is DISABLED for manual execution only
+    // cron.schedule('0 * * * *', () => {
+    //     runAutoScraper(bot);
+    // });
 
     // RG Jobs Direct Import (every 2 hours)
     const { importRGJobsDirect } = require('../../scripts/importRGJobs');
@@ -45,7 +45,7 @@ const initScheduler = (bot) => {
         console.warn('⚠️ Could not load Indian Jobs API importer:', e.message);
     }
 
-    console.log('⏰ Job Scheduler initialized (1 min checks + Hourly Scraper + 2hr RG Jobs + 3d Indian API)');
+    console.log('⏰ Job Scheduler initialized (1 min checks + RG Jobs + Indian API) [Talentd Auto-Scrape Disabled]');
 };
 
 module.exports = { initScheduler, runAutoScraper, queueLinks };
