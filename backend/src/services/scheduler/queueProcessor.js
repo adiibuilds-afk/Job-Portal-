@@ -47,12 +47,21 @@ const processQueue = async (bot) => {
     const refinedData = await refineJobWithAI(extractedData);
 
     // 4. Finalize Job Object
-    const jobData = await finalizeJobData(refinedData || {}, extractedData);
+    // Pass captured data (scraped) as fallbacks/base to finalizeJobData
+    const rawData = {
+        ...extractedData,
+        applyUrl: scraped.applyUrl || extractedData.applyUrl,
+        companyLogo: scraped.companyLogo || extractedData.companyLogo,
+        company: scraped.company || extractedData.company
+    };
 
-    // Ensure apply URL
-    if (!jobData.applyUrl || jobData.applyUrl === 'N/A') {
-        if (job.originalUrl) {
-            jobData.applyUrl = job.originalUrl;
+    const jobData = await finalizeJobData(refinedData || {}, rawData);
+
+    // Ensure apply URL is not a Talentd link if we have a better one
+    if (jobData.applyUrl && jobData.applyUrl.includes('talentd.in/jobs/')) {
+        if (scraped.applyUrl && !scraped.applyUrl.includes('talentd.in')) {
+            console.log(`📎 Overriding AI applyUrl with captured link: ${scraped.applyUrl}`);
+            jobData.applyUrl = scraped.applyUrl;
         }
     }
 

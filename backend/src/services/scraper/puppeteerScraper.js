@@ -40,6 +40,9 @@ const scrapeJobPageWithPuppeteer = async (url) => {
             await page.waitForNetworkIdle({ timeout: 5000 }).catch(() => {});
         } catch (e) {}
 
+        // Small extra delay for image/skeleton resolution
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
         // 1. Extract Basic Details
         const data = await page.evaluate(() => {
             const h1 = document.querySelector('h1')?.innerText || '';
