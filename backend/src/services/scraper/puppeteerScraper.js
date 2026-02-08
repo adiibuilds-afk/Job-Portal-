@@ -1,6 +1,17 @@
-const puppeteer = require('puppeteer');
+let puppeteer;
+try {
+    puppeteer = require('puppeteer');
+} catch (e) {
+    console.log('[Puppeteer] Module not found (Production Mode detected). Skipping Puppeteer initialization.');
+    puppeteer = null;
+}
 
 const scrapeJobPageWithPuppeteer = async (url) => {
+    if (!puppeteer) {
+        console.warn('[Puppeteer] Skipping scrape - Puppeteer is not installed in this environment.');
+        return { success: false, error: 'Puppeteer not installed (Production Mode)' };
+    }
+
     console.log(`[Puppeteer] Starting scrape for: ${url}`);
     
     // Launch options optimized for server environment
