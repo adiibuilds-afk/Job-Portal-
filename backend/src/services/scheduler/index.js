@@ -17,8 +17,8 @@ const runAutoScraper = async (bot) => {
  * Initializes all CRON jobs for the application.
  */
 const initScheduler = (bot) => {
-    // Run every minute to check if any scheduled jobs are due
-    cron.schedule('* * * * *', () => {
+    // Run every 10 seconds to ensure second-level precision for queue
+    cron.schedule('*/10 * * * * *', () => {
         processQueue(bot);
     });
 

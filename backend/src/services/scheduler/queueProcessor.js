@@ -157,10 +157,28 @@ const queueLinks = async (links) => {
         const queued = await ScheduledJob.findOne({ originalUrl: link });
         if (queued) continue;
 
-        const intervalSetting = await Settings.findOne({ key: 'schedule_interval_minutes' });
-        const intervalMinutes = intervalSetting ? parseInt(intervalSetting.value) : 60;
+        const intervalValueSetting = await Settings.findOne({ key: 'queue_interval_value' });
+        const intervalUnitSetting = await Settings.findOne({ key: 'queue_interval_unit' }); // 'minutes' or 'seconds'
+        
+        // Fallback for legacy 'schedule_interval_minutes' if new settings not found
+        const legacyInterval = await Settings.findOne({ key: 'schedule_interval_minutes' });
 
-        nextScheduleTime = new Date(nextScheduleTime.getTime() + intervalMinutes * 60000);
+        let intervalMs = 60 * 60000; // Default 60 mins
+
+        if (intervalValueSetting) {
+            const val = parseInt(intervalValueSetting.value);
+            const unit = intervalUnitSetting ? intervalUnitSetting.value : 'minutes';
+            
+            if (unit === 'seconds') {
+                intervalMs = val * 1000;
+            } else {
+                intervalMs = val * 60000;
+            }
+        } else if (legacyInterval) {
+            intervalMs = parseInt(legacyInterval.value) * 60000;
+        }
+
+        nextScheduleTime = new Date(nextScheduleTime.getTime() + intervalMs);
 
         const newQueue = new ScheduledJob({
             originalUrl: link,

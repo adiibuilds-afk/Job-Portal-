@@ -205,8 +205,18 @@ router.get('/queue/stats', async (req, res) => {
 // Get queue interval setting
 router.get('/queue-interval', async (req, res) => {
     try {
-        const setting = await Settings.findOne({ key: 'queue_interval_minutes' });
-        res.json({ interval: setting ? setting.value : 5 });
+        const intervalValue = await Settings.findOne({ key: 'queue_interval_value' });
+    const intervalUnit = await Settings.findOne({ key: 'queue_interval_unit' });
+    const legacyInterval = await Settings.findOne({ key: 'schedule_interval_minutes' });
+
+    let val = 5;
+    if (intervalValue) val = parseInt(intervalValue.value);
+    else if (legacyInterval) val = parseInt(legacyInterval.value);
+
+    res.json({ 
+        interval: val,
+        unit: intervalUnit ? intervalUnit.value : 'minutes'
+    });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

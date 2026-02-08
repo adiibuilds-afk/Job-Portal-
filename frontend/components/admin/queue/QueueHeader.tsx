@@ -7,11 +7,13 @@ interface QueueHeaderProps {
     newInterval: string;
     setNewInterval: (val: string) => void;
     saveInterval: () => void;
+    unit: string;
+    setUnit: (val: string) => void;
 }
 
 export default function QueueHeader({
     interval, editingInterval, setEditingInterval,
-    newInterval, setNewInterval, saveInterval
+    newInterval, setNewInterval, saveInterval, ...props
 }: QueueHeaderProps) {
     return (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -34,7 +36,15 @@ export default function QueueHeader({
                             className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-center text-white font-black text-sm outline-none focus:border-amber-500"
                             min="1"
                         />
-                        <span className="text-zinc-500 text-xs font-bold">MIN</span>
+                        <select
+                            value={props.unit}
+                            onChange={(e) => props.setUnit(e.target.value)}
+                            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-zinc-400 text-xs font-bold outline-none focus:border-amber-500"
+                        >
+                            <option value="minutes">MIN</option>
+                            <option value="seconds">SEC</option>
+                        </select>
+
                         <button onClick={saveInterval} className="p-1 text-green-500 hover:bg-green-500/10 rounded">
                             <CheckCircle2 className="w-4 h-4" />
                         </button>
@@ -49,7 +59,7 @@ export default function QueueHeader({
                     >
                         <Clock className="w-4 h-4 text-zinc-500 group-hover:text-amber-500 transition-colors" />
                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Interval:</span>
-                        <span className="text-amber-500 font-black">{interval} MIN</span>
+                        <span className="text-amber-500 font-black">{interval} {props.unit === 'seconds' ? 'SEC' : 'MIN'}</span>
                         <Settings className="w-3 h-3 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
                     </button>
                 )}

@@ -18,6 +18,7 @@ interface QueueTabProps {
 
 export default function QueueTab({ queue, runQueueItem, deleteQueueItem, clearQueue, refreshQueue }: QueueTabProps) {
     const [interval, setInterval] = useState(5);
+    const [unit, setUnit] = useState('minutes');
     const [editingInterval, setEditingInterval] = useState(false);
     const [newInterval, setNewInterval] = useState('5');
     const [showAddModal, setShowAddModal] = useState(false);
@@ -37,6 +38,7 @@ export default function QueueTab({ queue, runQueueItem, deleteQueueItem, clearQu
             const res = await fetch(`${API_URL}/api/admin/queue-interval`);
             const data = await res.json();
             setInterval(data.interval || 5);
+            setUnit(data.unit || 'minutes');
             setNewInterval(String(data.interval || 5));
         } catch (error) {
             console.error('Failed to fetch queue interval');
@@ -45,11 +47,20 @@ export default function QueueTab({ queue, runQueueItem, deleteQueueItem, clearQu
 
     const saveInterval = async () => {
         try {
+            // Save Value
             await fetch(`${API_URL}/api/admin/settings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'queue_interval_minutes', value: parseInt(newInterval) || 5 })
+                body: JSON.stringify({ key: 'queue_interval_value', value: parseInt(newInterval) || 5 })
             });
+
+            // Save Unit
+            await fetch(`${API_URL}/api/admin/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: 'queue_interval_unit', value: unit })
+            });
+
             setInterval(parseInt(newInterval) || 5);
             setEditingInterval(false);
         } catch (error) {
@@ -72,6 +83,8 @@ export default function QueueTab({ queue, runQueueItem, deleteQueueItem, clearQu
                     newInterval={newInterval}
                     setNewInterval={setNewInterval}
                     saveInterval={saveInterval}
+                    unit={unit}
+                    setUnit={setUnit}
                 />
 
                 <button
