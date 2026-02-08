@@ -15,6 +15,20 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         return String(val);
     };
 
+    // Helper to clean tags (max 3 words, max 25 chars)
+    const cleanTags = (tags) => {
+        if (!Array.isArray(tags)) return [];
+        return tags
+            .map(t => t.trim())
+            .filter(t => t.length > 1 && t.length <= 25 && t.split(' ').length <= 3);
+    };
+
+    // Helper to clean category (fallback if too long)
+    const cleanCategory = (cat) => {
+        if (!cat || cat.length > 30) return 'Engineering';
+        return cat.trim();
+    };
+
     return {
         title: refinedData.title || cleanTitle(rawData.title),
         company: refinedData.company || rawData.company || 'Unknown',
@@ -24,9 +38,9 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         salary: refinedData.salary || rawData.salary || '',
         description: refinedData.description || rawData.description || '',
         applyUrl: refinedData.applyUrl || rawData.applyUrl || '',
-        category: refinedData.category || rawData.category || 'Engineering',
+        category: cleanCategory(refinedData.category || rawData.category),
         batch: parseBatches(rawData.batch && rawData.batch.length > 0 ? rawData.batch : refinedData.batch),
-        tags: (rawData.tags && rawData.tags.length > 0) ? rawData.tags : (refinedData.tags || (rawData.role ? [rawData.role] : [])),
+        tags: cleanTags((rawData.tags && rawData.tags.length > 0) ? rawData.tags : (refinedData.tags || (rawData.role ? [rawData.role] : []))),
         jobType: mapJobType(refinedData.jobType || rawData.jobtype || (rawData.title?.toLowerCase().includes('intern') ? 'Internship' : 'FullTime')),
         roleType: refinedData.roleType || rawData.roleType || rawData.role || 'Engineering',
         seniority: refinedData.seniority || rawData.seniority || 'Entry',

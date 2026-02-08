@@ -128,14 +128,18 @@ const scrapeJobPageWithPuppeteer = async (url) => {
         const newTargetPromise = new Promise(resolve => browser.once('targetcreated', resolve));
 
         const clicked = await page.evaluate(() => {
-            const buttons = Array.from(document.querySelectorAll('button, a'));
-            const applyBtn = buttons.find(b => 
-                b.textContent.trim().toLowerCase() === 'apply now' &&
-                !b.closest('.ad-container') && 
-                !b.href?.includes('vmc') // specific exclusion for known ads
-            );
+            // Helper to get visible text
+            const getText = (el) => el.innerText || el.textContent || '';
+            
+            const allButtons = Array.from(document.querySelectorAll('button, a'));
+            
+            const applyBtn = allButtons.find(b => {
+                const text = getText(b).trim().toLowerCase();
+                return text === 'apply now' && !b.closest('.ad-container');
+            });
 
             if (applyBtn) {
+                console.log('[Puppeteer Browser] Found Apply Button:', applyBtn.outerHTML);
                 applyBtn.click();
                 return true;
             }
@@ -153,7 +157,7 @@ const scrapeJobPageWithPuppeteer = async (url) => {
                 if (newPage) {
                     await newPage.waitForNetworkIdle({ timeout: 10000 }).catch(() => {});
                     finalApplyUrl = newPage.url();
-                    console.log(`[Puppeteer] Captured URL: ${finalApplyUrl}`);
+                    console.log(`🔗 CAPTURED APPLY LINK: ${finalApplyUrl}`);
                 }
             } catch (e) {
                 console.error('[Puppeteer] Error handling new tab:', e.message);

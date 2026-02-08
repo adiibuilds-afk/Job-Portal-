@@ -1,9 +1,9 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const scrapeTalentdJobs = async () => {
+const scrapeTalentdJobs = async (page = 1) => {
     try {
-        const url = 'https://www.talentd.in/jobs';
+        const url = page === 1 ? 'https://www.talentd.in/jobs' : `https://www.talentd.in/jobs?page=${page}`;
         const response = await axios.get(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -33,7 +33,7 @@ const scrapeTalentdJobs = async () => {
         });
 
         // Filter valid unique links
-        const uniqueLinks = [...new Set(jobLinks)].slice(0, 10); // Limit to 10 latest for safety
+        const uniqueLinks = [...new Set(jobLinks)];
         console.log(`[Talentd Scraper] Found ${uniqueLinks.length} potential jobs.`);
         
         return uniqueLinks;
