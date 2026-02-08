@@ -52,7 +52,9 @@ const processQueue = async (bot) => {
         ...extractedData,
         applyUrl: scraped.applyUrl || extractedData.applyUrl,
         companyLogo: scraped.companyLogo || extractedData.companyLogo,
-        company: scraped.company || extractedData.company
+        company: scraped.company || extractedData.company,
+        tags: scraped.tags || extractedData.tags,
+        batch: scraped.batch || extractedData.batch
     };
 
     const jobData = await finalizeJobData(refinedData || {}, rawData);

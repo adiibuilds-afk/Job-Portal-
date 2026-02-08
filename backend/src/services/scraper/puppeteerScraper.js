@@ -84,7 +84,30 @@ const scrapeJobPageWithPuppeteer = async (url) => {
                 }
             }
 
-            return { title: h1, content: description, companyLogo: logo, company };
+            // 3. Extract Tags (Key Skills)
+            let tags = [];
+            const skillsHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.trim() === 'Key Skills');
+            if (skillsHeader) {
+                const skillsContainer = skillsHeader.nextElementSibling;
+                if (skillsContainer) {
+                    tags = Array.from(skillsContainer.querySelectorAll('span'))
+                        .map(s => s.textContent.trim())
+                        .filter(Boolean);
+                }
+            }
+
+            // 4. Extract Batch
+            let batch = [];
+            const batchHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.trim() === 'Eligible Batch Years');
+            if (batchHeader) {
+                const batchContainer = batchHeader.nextElementSibling;
+                if (batchContainer) {
+                    const batchText = batchContainer.textContent.trim();
+                    batch = batchText.split(',').map(b => b.trim()).filter(Boolean);
+                }
+            }
+
+            return { title: h1, content: description, companyLogo: logo, company, tags, batch };
         });
 
         // 2. Find and Click "Apply Now"
@@ -134,6 +157,8 @@ const scrapeJobPageWithPuppeteer = async (url) => {
             content: data.content,
             companyLogo: data.companyLogo,
             company: data.company,
+            tags: data.tags,
+            batch: data.batch,
             applyUrl: finalApplyUrl || url, // Fallback to original if capture fails
             sourceUrl: url,
             isPuppeteer: true
@@ -141,6 +166,10 @@ const scrapeJobPageWithPuppeteer = async (url) => {
 
     } catch (error) {
         console.error('[Puppeteer] Error:', error.message);
+        if (error.message.includes('Could not find Chrome')) {
+            console.error('   💡 TIP: Ensure "npx puppeteer browsers install chrome" is in your build script.');
+            console.error('   💡 TIP: On Render, you may need to set PUPPETEER_CACHE_DIR environment variable.');
+        }
         return { success: false, error: error.message };
     } finally {
         await browser.close();
