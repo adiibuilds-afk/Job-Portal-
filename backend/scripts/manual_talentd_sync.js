@@ -207,7 +207,7 @@ const manualSync = async () => {
                         if (newJob.salary && newJob.salary !== 'N/A') message += `\n💰 *Salary:* ${newJob.salary}`;
                         if (newJob.location && newJob.location !== 'N/A') message += `\n📍 *Location:* ${newJob.location}`;
                         
-                        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n📢 @jobgridupdates`;
+                        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432`;
 
                         await bot.telegram.sendMessage(channelId, message, {
                             parse_mode: 'Markdown',
