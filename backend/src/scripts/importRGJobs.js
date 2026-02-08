@@ -9,8 +9,15 @@
 
 const axios = require('axios');
 const { refineJobWithAI, finalizeJobData } = require('../services/jobProcessor');
+const { cleanTitle } = require('../utils/jobHelpers');
+const Job = require('../models/Job');
+const ScheduledJob = require('../models/ScheduledJob');
+const Settings = require('../models/Settings');
 
-// Map RG Jobs data to JobGrid schema
+// RG Jobs API Configuration
+const RG_JOBS_API = 'https://api.rgjobs.in/api/getAllJobs';
+const RG_JOBS_IMAGE_BASE = 'https://api.rgjobs.in/';
+const MAX_JOBS_PER_RUN = 20;
 const mapToJobSchema = async (rgJob) => {
     let company = 'Unknown';
     const atMatch = rgJob.title?.match(/at\s+([^|]+)/i);
@@ -205,7 +212,7 @@ const importRGJobsDirect = async (limit = 1) => {
     }
 };
 
-module.exports = { queueRGJobs, mapToJobSchema, importRGJobsDirect, downloadAndProcessLogo };
+module.exports = { queueRGJobs, mapToJobSchema, importRGJobsDirect };
 
 // Standalone execution (for manual runs)
 if (require.main === module) {
