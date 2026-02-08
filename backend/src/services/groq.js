@@ -9,53 +9,29 @@ const parseJobWithAI = async (rawText) => {
       messages: [
         {
           role: 'system',
-          content: `You are a job data extractor.
-Convert the following raw job post into clean JSON.
+          content: `You are a job data expert. Extract structured data with high precision.
+Convert the job post into clean JSON.
 
 Fields:
-title
-company
-companyLogo
-location
-eligibility
-salary
-description
-applyUrl
-lastDate
-category
-  
-  // Detailed Content
-  rolesResponsibility (String: "• Item 1\n• Item 2" formatted content)
-  requirements (String: "• Item 1\n• Item 2" formatted content)
-  niceToHave (String: "• Item 1" or empty if none)
+title, company, companyLogo, location, eligibility, salary, description, applyUrl, lastDate, category
 
-  // Engineering Fields
-  batch (Array of strings, e.g. ["2024", "2025"])
-  tags (Array of strings for tech stack, e.g. ["React", "Node.js", "AWS"])
-  jobType (String: "Internship" or "FullTime")
-  roleType (String: "SDE", "Frontend", "Backend", "FullStack", "QA", "Data Science", "DevOps", "Other")
-  seniority (String: "Entry" for 0-2 years, "Mid" for 2-5 years, "Senior" for 5+ years)
-  minSalary (Number: lower bound of salary in LPA, e.g. 5, 0 if unknown)
-  isRemote (Boolean)
+Detailed Content (Formatting: Use bullet points • for strings):
+- rolesResponsibility
+- requirements
+- niceToHave
+
+Engineering & Metadata:
+- batch: Array of strings. Extract specific graduation years (e.g. ["2023", "2024", "2025"]). Look for "2025 batch", "Class of 2024", "Graduating in 2026", etc.
+- tags: Array of strings. Extract SPECIFIC technical skills (e.g., ["Java", "React", "Node.js", "C++", "DSA", "SQL"]). Focus on programming languages, frameworks, and core CS concepts. Avoid generalities like "Software Development" if specific tech is mentioned.
+- jobType: "Internship" or "FullTime".
+- roleType: "SDE", "Frontend", "Backend", "FullStack", "QA", "Data Science", "DevOps", "Other".
+- seniority: "Entry" (0-2y), "Mid" (2-5y), "Senior" (5y+).
+- minSalary: Number (LPA).
+- isRemote: Boolean.
 
 Rules:
-- No markdown
-- No explanation  
-- Only valid JSON
-- output raw json string without code block formatting
-- PRIORITIZE user provided text over scraped content specifically for Eligibility/Batch.
-- If the user text contains year (e.g., 2024, 2025, 2026), keep it exactly as is for eligibility.
-- Only use scraped content for fields that are missing in the user's short text.
-- Merge information intelligently but User Input > Scraped Content.
-- CRITICAL: Split the raw text into 'description' (About), 'rolesResponsibility', and 'requirements' intelligently.
-- 'description' should just be the company intro and opportunity overview. 
-- Use bullet points (•) for list items in roles/requirements strings.
-- CRITICAL: Extract the COMPANY NAME correctly. If the title is "Software Engineer at Google", company is "Google".
-- CRITICAL: If the input text has "Job in [Location] at [Company]", extract Company and Location accurately.
-- Avoid using the full page title as the text for 'company' field.
-- If 'applyUrl' is not found, leave it as null or empty string, do NOT invent one.
-- For 'jobType', look for keywords like "Full Time", "Part Time", "Internship". Default to "FullTime" if unsure but context implies a standard job.
-- Clean up the 'title'. Remove "Job in..." or "Hiring for..." prefixes if possible.`
+- User Input > Scraped Content.
+- Clean Title: Role only, remove all suffixes like "at Company" or "Hiring for".`
         },
         {
           role: 'user',
@@ -120,17 +96,20 @@ ${jobData.description?.substring(0, 800)}
 
 Generate JSON with these fields:
 1. "title": Clean, SEO-friendly title (Examples: "Software Engineer at Google", "Frontend Developer - React"). 
-   - CRITICAL: DO NOT include "Role, Responsibilities & Skills", "Eligibility", "Internship Opportunity", "Required Skills" in the title.
-   - Removing suffixes is MANDATORY.
 2. "description": A compelling 2-3 sentence meta description (max 160 chars).
 3. "rolesResponsibility": A bulleted list (using •) of clear roles and responsibilities.
 4. "requirements": A bulleted list (using •) of technical and soft skill requirements.
 5. "eligibility": A concise eligibility criteria string (e.g., "B.Tech/B.E. 2024/2025 Batch").
+6. "batch": Array of strings (e.g., ["2024", "2025"]).
+7. "tags": Array of strings (Tech Stack, frameworks, soft skills).
+8. "seniority": "Entry", "Mid", or "Senior".
+9. "jobType": "FullTime", "Internship".
 
 Rules:
-- Title must be purely the role and company (e.g., "Java Developer at Amazon").
-- NO "Hiring for", "Job in", or long suffixes in title.
-- Content should be professional, grammatically correct, and formatted with bullet points for lists.
+- Title must be purely the role and company.
+- Content should be professional and formatted with bullet points for lists.
+- For 'batch', only include years (e.g., 2024).
+- For 'tags', include specific tech mentioned in the description (e.g., Java, Python, React, DSA). Prioritize specific languages and frameworks over general skills.
 - Output ONLY valid JSON, no markdown.`;
 
     const completion = await groq.chat.completions.create({
