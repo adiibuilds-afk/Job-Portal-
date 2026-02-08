@@ -42,13 +42,42 @@ const scrapeJobPage = async (url) => {
         }
     }
 
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-      },
-      timeout: 15000,
-    });
+    // Check for shortlinks or known problematic sites that need Puppeteer/JS
+    const needsPuppeteer = url.includes('tinyurl.com') || 
+                          url.includes('bit.ly') || 
+                          url.includes('t.co') || 
+                          url.includes('lnkd.in') ||
+                          url.includes('target.com') ||
+                          url.includes('rubrik.com');
+
+    if (needsPuppeteer) {
+        console.log(`[Scraper] Detected complex/shortlink URL, using Puppeteer: ${url}`);
+        return await scrapeJobPageWithPuppeteer(url);
+    }
+
+    let response;
+    try {
+        response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            },
+            timeout: 15000,
+            maxRedirects: 10,
+            validateStatus: (status) => status < 500 
+        });
+
+        // Explicitly handle 404/403 by trying Puppeteer (some sites return 404/403 to bots)
+        if (response.status === 403 || response.status === 404 || response.status === 401) {
+            console.warn(`[Scraper] Axios received ${response.status} for ${url}. Retrying with Puppeteer...`);
+            return await scrapeJobPageWithPuppeteer(url);
+        }
+
+    } catch (err) {
+        // If Axios fails (Network Error, or 500s), try Puppeteer fallback
+        console.warn(`[Scraper] Axios failed for ${url} (${err.message}). Retrying with Puppeteer...`);
+        return await scrapeJobPageWithPuppeteer(url);
+    }
 
     const $ = cheerio.load(response.data);
 
@@ -128,6 +157,31 @@ const scrapeJobPage = async (url) => {
 
     const title = $('title').text().trim() || '';
     let applyUrl = ''; 
+    // Check for "Job Expired" indicators
+    const expiredKeywords = [
+        'job expired', 
+        'this job is closed', 
+        'job is no longer available', 
+        'position has been filled', 
+        'applications are closed',
+        'no longer accepting applications',
+        'job has expired',
+        'posting is closed',
+        'page not found',
+        '404',
+        'looks like it’s time to explore',
+        'we can\'t find that page'
+    ];
+
+    const lowerTitle = title.toLowerCase();
+    const lowerContent = content.toLowerCase();
+
+    if (expiredKeywords.some(k => lowerTitle.includes(k) || lowerContent.includes(k))) {
+        // Double check it's not a "not expired" phrase (false positive check could be added here if needed)
+        console.log(`[Scraper] Skipping ${url} - Job appears to be expired/closed.`);
+        return { success: false, error: 'Job is expired or closed', skipped: true };
+    }
+
     const applySelectors = ['a[href*="apply"]', 'a:contains("Apply")', 'a:contains("APPLY")', 'a.wp-block-button__link', '.wp-block-button__link', 'a:contains("Visit")', 'a:contains("Official")'];
 
     for (const selector of applySelectors) {
@@ -159,10 +213,28 @@ const scrapeJobPage = async (url) => {
         if (applyUrl && !applyUrl.includes(new URL(url).hostname)) break;
     }
 
-    // If no external apply URL found, skip this job (don't post it)
+    // If no external apply URL found, fallback to the current URL if it looks like a job page
     if (!applyUrl) {
-        console.log(`[Scraper] Skipping ${url} - no external apply link found`);
-        return { success: false, error: 'No external apply link found', skipped: true };
+        // Known job platforms where the page itself is the apply entry point
+        const isJobPlatform = url.includes('linkedin.com') || 
+                              url.includes('naukri.com') || 
+                              url.includes('indeed.com') ||
+                              url.includes('glassdoor.com') ||
+                              url.includes('wellfound.com');
+
+        // Or if we found a good title and content, assume this is the page
+        if (isJobPlatform || (title.length > 5 && content.length > 200)) {
+            console.log(`[Scraper] No external apply link found, falling back to source URL: ${url}`);
+            applyUrl = url;
+            
+            // Clean up LinkedIn URLs to be cleaner
+            if (url.includes('linkedin.com/jobs/view')) {
+                 applyUrl = url.split('?')[0];
+            }
+        } else {
+            console.log(`[Scraper] Skipping ${url} - no external apply link found and content seems thin`);
+            return { success: false, error: 'No external apply link found', skipped: true };
+        }
     }
 
     return {
@@ -175,6 +247,11 @@ const scrapeJobPage = async (url) => {
     };
   } catch (error) {
     console.error('Scraping error:', error.message);
+    // Final fallback attempt with Puppeteer if seemingly unhandled error
+    if (!url.includes('talentd.in')) {
+        console.warn('[Scraper] Unexpected error, trying Puppeteer as last resort...');
+        return await scrapeJobPageWithPuppeteer(url);
+    }
     return { success: false, error: error.message };
   }
 };

@@ -1,7 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const scrapeTelegramChannel = async (channelUrl) => {
+const scrapeTelegramChannel = async (channelUrl, customExclusions = []) => {
     try {
         console.log(`[Telegram Scraper] Fetching channel: ${channelUrl}`);
         const response = await axios.get(channelUrl, {
@@ -14,39 +14,40 @@ const scrapeTelegramChannel = async (channelUrl) => {
 
         const $ = cheerio.load(response.data);
         const jobLinks = [];
-        const exclusions = ['mercor', 'challenge', 'hackathon'];
+        const baseExclusions = ['mercor', 'challenge', 'hackathon'];
+        const allExclusions = [...new Set([...baseExclusions, ...customExclusions.map(e => e.toLowerCase())])];
 
         $('.tgme_widget_message').each((i, el) => {
             const messageText = $(el).find('.tgme_widget_message_text').text().toLowerCase();
             
-            if (exclusions.some(excluded => messageText.includes(excluded))) {
+            if (allExclusions.some(excluded => messageText.includes(excluded))) {
                 return;
             }
 
             $(el).find('.tgme_widget_message_text a').each((j, link) => {
                 const href = $(link).attr('href');
                 if (href) {
+                    const lowHref = href.toLowerCase();
                     if (
                         href.startsWith('http') && 
-                        !href.includes('t.me/') && 
-                        !href.includes('telegram.org/') &&
-                        !href.includes('linkedin.com/in/') &&
-                        !href.includes('linktr.ee/jobs_and_internships_updates')
+                        !lowHref.includes('t.me/') && 
+                        !lowHref.includes('telegram.org/') &&
+                        !lowHref.includes('linkedin.com/in/') &&
+                        !lowHref.includes('linktr.ee/jobs_and_internships_updates') &&
+                        !allExclusions.some(excluded => lowHref.includes(excluded))
                     ) {
-                        if (!exclusions.some(excluded => href.toLowerCase().includes(excluded))) {
-                            jobLinks.push(href);
-                        }
+                        jobLinks.push(href);
                     }
                 }
             });
         });
 
         const uniqueLinks = [...new Set(jobLinks)];
-        console.log(`[Telegram Scraper] Found ${uniqueLinks.length} unique potential job links.`);
+        console.log(`[Telegram Scraper] Found ${uniqueLinks.length} unique potential job links from ${channelUrl}.`);
         
         return uniqueLinks;
     } catch (error) {
-        console.error('[Telegram Scraper] Failed to fetch channel:', error.message);
+        console.error(`[Telegram Scraper] Failed to fetch channel ${channelUrl}:`, error.message);
         return [];
     }
 };

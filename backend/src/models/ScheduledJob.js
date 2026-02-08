@@ -38,7 +38,6 @@ const scheduledJobSchema = new mongoose.Schema({
   // RG Jobs specific fields
   source: {
     type: String,
-    enum: ['default', 'rgjobs', 'telegram_jobs', 'manual'],
     default: 'default'
   },
   rgJobData: {

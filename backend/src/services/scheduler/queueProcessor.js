@@ -78,9 +78,12 @@ const processQueue = async (bot) => {
         jobData.companyLogo = ''; 
     }
 
-    // Localize/Proxy specific external logos
-    if (jobData.companyLogo && jobData.companyLogo.includes('brain.talentd.in')) {
-        console.log(`📥 Downloading logo: ${jobData.companyLogo}`);
+    // Localize/Proxy ALL external logos to ensure consistency (Square, Resized)
+    if (jobData.companyLogo && 
+        jobData.companyLogo.startsWith('http') && 
+        !jobData.companyLogo.includes('res.cloudinary.com')) {
+        
+        console.log(`📥 Downloading and resizing logo: ${jobData.companyLogo}`);
         const localLogo = await downloadAndSaveLogo(jobData.companyLogo, jobData.company);
         if (localLogo) {
             jobData.companyLogo = localLogo; 
@@ -120,7 +123,7 @@ const processQueue = async (bot) => {
         if (jobData.salary && jobData.salary !== 'N/A') message += `\n💰 *Salary:* ${jobData.salary}`;
         if (jobData.location && jobData.location !== 'N/A') message += `\n📍 *Location:* ${jobData.location}`;
         
-        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n📢 @jobgridupdates`;
+        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 WhatsApp Group :- https://chat.whatsapp.com/CQtsJNDj5KNDuCkciseSIH`;
 
         await bot.telegram.sendMessage(CHANNEL_ID, message, {
             parse_mode: 'Markdown',

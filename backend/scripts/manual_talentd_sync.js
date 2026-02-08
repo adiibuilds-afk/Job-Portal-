@@ -25,6 +25,7 @@ const manualSync = async () => {
     let errorCount = 0;
     let page = 1;
     let stopSync = false;
+    let consecutiveDuplicates = 0;
 
     while (!stopSync && page <= 10) { // Safety limit of 10 pages
         console.log(`\n📄 Scraping Page ${page}...`);
@@ -54,9 +55,24 @@ const manualSync = async () => {
 
                 if (exists) {
                     console.log(`🛑 Found existing job: ${link}`);
-                    console.log('✅ Sync is caught up with latest jobs. Stopping.');
-                    stopSync = true;
-                    break;
+                    consecutiveDuplicates++;
+                    if (consecutiveDuplicates >= 5) {
+                        console.log('✅ Sync is caught up (5 consecutive duplicates). Stopping.');
+                        stopSync = true;
+                        break;
+                    }
+                    skippedCount++;
+                    continue;
+                }
+
+                // Reset counter if new job found (or at least not a direct URL match)
+                consecutiveDuplicates = 0;
+                
+                // Global Clean Stop
+                if (processedCount >= 40) {
+                     console.log('🛑 limit of 40 new jobs reached. Stopping.');
+                     stopSync = true;
+                     break;
                 }
 
 
@@ -191,7 +207,7 @@ const manualSync = async () => {
                         if (newJob.salary && newJob.salary !== 'N/A') message += `\n💰 *Salary:* ${newJob.salary}`;
                         if (newJob.location && newJob.location !== 'N/A') message += `\n📍 *Location:* ${newJob.location}`;
                         
-                        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n📢 @jobgridupdates`;
+                        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 WhatsApp Group :- https://chat.whatsapp.com/CQtsJNDj5KNDuCkciseSIH`;
 
                         await bot.telegram.sendMessage(channelId, message, {
                             parse_mode: 'Markdown',

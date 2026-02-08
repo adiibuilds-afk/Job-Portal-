@@ -1,15 +1,64 @@
 const Groq = require('groq-sdk');
 require('dotenv').config();
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Load multiple keys from env (comma separated)
+const apiKeys = (process.env.GROQ_API_KEY || '').split(',').map(k => k.trim()).filter(k => k);
+if (apiKeys.length === 0) {
+    console.error('❌ No GROQ_API_KEY found in environment variables!');
+}
+
+// Create a client for each key
+const clients = apiKeys.map(key => new Groq({ apiKey: key }));
+let currentKeyIndex = 0;
+
+const getClient = () => {
+    const client = clients[currentKeyIndex];
+    // console.log(`🔑 Using Groq Key Index: ${currentKeyIndex}`);
+    return client;
+};
+
+const rotateKey = () => {
+    currentKeyIndex = (currentKeyIndex + 1) % clients.length;
+    console.log(`🔄 Switching to Groq Key Index: ${currentKeyIndex}`);
+};
+
+const executeWithFallback = async (operation, maxRetries = clients.length) => {
+    let attempts = 0;
+    while (attempts < maxRetries) {
+        try {
+            const client = getClient();
+            return await operation(client);
+        } catch (error) {
+            const isRateLimit = error?.status === 429 || 
+                                error?.error?.code === 'rate_limit_exceeded' || 
+                                error?.error?.error?.code === 'rate_limit_exceeded';
+
+            if (isRateLimit) {
+                console.warn(`⚠️ Groq Rate Limit (Key ${currentKeyIndex}). Rotating key...`);
+                rotateKey();
+                attempts++;
+                // If we've tried all keys, we might need a small delay or just fail
+                if (attempts >= maxRetries) {
+                    console.error('❌ All Groq keys rate limited!');
+                    const AIUsage = require('../models/AIUsage');
+                    await AIUsage.logError(true).catch(() => {});
+                    throw new Error('rate_limit_exceeded_all_keys');
+                }
+            } else {
+                throw error; // Rethrow non-rate-limit errors
+            }
+        }
+    }
+};
 
 const parseJobWithAI = async (rawText) => {
   try {
-    const completion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: 'system',
-          content: `You are a job data expert. Extract structured data with high precision.
+     const completion = await executeWithFallback(async (client) => {
+        return await client.chat.completions.create({
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are a job data expert. Extract structured data with high precision.
 Convert the job post into clean JSON.
 
 Fields:
@@ -32,20 +81,21 @@ Engineering & Metadata:
 Rules:
 - User Input > Scraped Content.
 - Clean Title: Role only, remove all suffixes like "at Company" or "Hiring for".`
-        },
-        {
-          role: 'user',
-          content: rawText
-        }
-      ],
-      model: 'llama-3.3-70b-versatile',
+                },
+                {
+                    role: 'user',
+                    content: rawText
+                }
+            ],
+            model: 'llama-3.3-70b-versatile',
+        });
     });
 
     // Log token usage
     const tokens = completion.usage?.total_tokens || 0;
     try {
       const AIUsage = require('../models/AIUsage');
-      await AIUsage.logUsage(tokens, 'other');
+      await AIUsage.logUsage(tokens, 'job_parsing');
     } catch (e) { /* silent fail */ }
 
     const content = completion.choices[0]?.message?.content || '{}';
@@ -61,18 +111,10 @@ Rules:
 
     return JSON.parse(jsonString);
   } catch (error) {
-    // Log error
-    try {
-      const AIUsage = require('../models/AIUsage');
-      const isRateLimit = error?.error?.code === 'rate_limit_exceeded';
-      await AIUsage.logError(isRateLimit);
-    } catch (e) { /* silent fail */ }
-
-    if (error?.error?.code === 'rate_limit_exceeded') {
-        console.error('❌ Groq Rate Limit Exceeded!');
+    if (error.message === 'rate_limit_exceeded_all_keys') {
         return { error: 'rate_limit_exceeded' };
     }
-    console.error('AI Parsing Error:', error);
+    console.error('AI Parsing Error:', error.message);
     return null;
   }
 };
@@ -112,12 +154,14 @@ Rules:
 - For 'tags', include specific tech mentioned in the description (e.g., Java, Python, React, DSA). Prioritize specific languages and frameworks over general skills.
 - Output ONLY valid JSON, no markdown.`;
 
-    const completion = await groq.chat.completions.create({
-      messages: [
-        { role: 'system', content: 'You are an SEO content generator. Output only valid JSON.' },
-        { role: 'user', content: prompt }
-      ],
-      model: 'llama-3.3-70b-versatile',
+    const completion = await executeWithFallback(async (client) => {
+        return await client.chat.completions.create({
+            messages: [
+                { role: 'system', content: 'You are an SEO content generator. Output only valid JSON.' },
+                { role: 'user', content: prompt }
+            ],
+            model: 'llama-3.3-70b-versatile',
+        });
     });
 
     // Log token usage
@@ -129,7 +173,7 @@ Rules:
 
     const content = completion.choices[0]?.message?.content || '{}';
     
-    // Robust JSON extraction: Find first '{' and last '}'
+    // Robust JSON extraction
     const startObj = content.indexOf('{');
     const endObj = content.lastIndexOf('}');
     
@@ -140,18 +184,10 @@ Rules:
     
     return JSON.parse(jsonString);
   } catch (error) {
-    // Log error
-    try {
-      const AIUsage = require('../models/AIUsage');
-      const isRateLimit = error?.status === 429 || error?.error?.code === 'rate_limit_exceeded';
-      await AIUsage.logError(isRateLimit);
-    } catch (e) { /* silent fail */ }
-
-    if (error?.status === 429 || error?.error?.code === 'rate_limit_exceeded' || error?.error?.error?.code === 'rate_limit_exceeded') {
-        console.error('❌ Groq Rate Limit Exceeded! (Stopping)');
+    if (error.message === 'rate_limit_exceeded_all_keys') {
         return { error: 'rate_limit_exceeded' };
     }
-    console.error('SEO Generation Error:', error.message || error);
+    console.error('SEO Generation Error:', error.message);
     return null;
   }
 };

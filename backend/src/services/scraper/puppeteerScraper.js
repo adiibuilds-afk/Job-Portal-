@@ -166,6 +166,29 @@ const scrapeJobPageWithPuppeteer = async (url) => {
             console.log('[Puppeteer] No "Apply Now" button found to click.');
         }
 
+        // Check for expiry keywords in Puppeteer content too
+        const expiredKeywords = [
+            'job expired', 
+            'this job is closed', 
+            'job is no longer available', 
+            'position has been filled', 
+            'applications are closed',
+            'no longer accepting applications',
+            'posting is closed',
+            'page not found',
+            '404',
+            'looks like it’s time to explore',
+            'we can\'t find that page'
+        ];
+        
+        const lowerTitle = data.title.toLowerCase();
+        const lowerContent = data.content.toLowerCase();
+        
+        if (expiredKeywords.some(k => lowerTitle.includes(k) || lowerContent.includes(k))) {
+             console.log(`[Puppeteer] Skipping ${url} - Job appears to be expired/closed.`);
+             return { success: false, error: 'Job is expired or closed', skipped: true };
+        }
+
         return {
             success: true,
             title: data.title,
