@@ -1,20 +1,16 @@
 const cron = require('node-cron');
 const { processQueue, queueLinks } = require('./queueProcessor');
-const { scrapeTalentdJobs, scrapeRgJobs } = require('../scraper');
+const { scrapeTalentdJobs } = require('../scraper');
 
 /**
  * Periodically searches for new jobs from known sources and adds them to the queue.
  */
 const runAutoScraper = async (bot) => {
-    console.log('🕷️ Running Auto-Scraper for Talentd & RG Jobs...');
+    console.log('🕷️ Running Auto-Scraper for Talentd...');
     
     // 1. Talentd
     const talentdLinks = await scrapeTalentdJobs();
     await queueLinks(talentdLinks);
-
-    // 2. RG Jobs
-    const rgLinks = await scrapeRgJobs();
-    await queueLinks(rgLinks);
 };
 
 /**

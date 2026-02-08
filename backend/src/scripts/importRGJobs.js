@@ -8,18 +8,7 @@
  */
 
 const axios = require('axios');
-const { downloadAndProcessLogo } = require('../utils/imageProcessor');
-const { cleanTitle, mapJobType, parseMinSalary, parseBatches } = require('../utils/jobHelpers');
-const Job = require('../models/Job');
-const ScheduledJob = require('../models/ScheduledJob');
-const Settings = require('../models/Settings');
-const { generateSEOContent } = require('../services/groq');
-
-// RG Jobs API Configuration
-const RG_JOBS_API = 'https://api.rgjobs.in/api/getAllJobs';
-const RG_JOBS_IMAGE_BASE = 'https://api.rgjobs.in/';
-const MAX_JOBS_PER_RUN = 20;
-
+const { refineJobWithAI, finalizeJobData } = require('../services/jobProcessor');
 
 // Map RG Jobs data to JobGrid schema
 const mapToJobSchema = async (rgJob) => {
@@ -39,74 +28,37 @@ const mapToJobSchema = async (rgJob) => {
         companyLogo = await uploadToCloudinary(sourceUrl, company);
     }
 
-    // Default values
-    let finalTitle = cleanTitle(rgJob.title) || '';
-    let finalDescription = rgJob.description || '';
-    let finalRoles = rgJob.rolesAndResponsibilities || '';
-    let finalRequirements = rgJob.requirements || '';
-    let finalEligibility = rgJob.eligibility || '';
-
-    // Helper to format AI list output
-    const formatAiValue = (val) => {
-        if (!val) return '';
-        if (Array.isArray(val)) return val.join('\n');
-        return String(val);
-    };
-
-    // Generate SEO Content (Title & Description + Details)
-    try {
-        console.log(`   🤖 Generating SEO content for: ${company}`);
-        const seoData = await generateSEOContent({
-            title: finalTitle,
-            company: company,
-            location: rgJob.location || '',
-            salary: rgJob.pay || '',
-            batch: rgJob.batches || '',
-            description: finalDescription
-        });
-
-        if (seoData && seoData.error === 'rate_limit_exceeded') {
-            return { error: 'rate_limit_exceeded' };
-        }
-
-        if (seoData) {
-            if (seoData.title) finalTitle = seoData.title;
-            if (seoData.description) finalDescription = seoData.description;
-            if (seoData.rolesResponsibility) finalRoles = formatAiValue(seoData.rolesResponsibility);
-            if (seoData.requirements) finalRequirements = formatAiValue(seoData.requirements);
-            if (seoData.eligibility) finalEligibility = formatAiValue(seoData.eligibility);
-        }
-    } catch (err) {
-        if (err?.error === 'rate_limit_exceeded' || err?.message === 'rate_limit_exceeded') {
-             // Retain partial data maybe? No, user wants to STOP.
-             return { error: 'rate_limit_exceeded' };
-        }
-        console.error('   ⚠️ SEO Generation failed, using raw data');
-    }
-
-    return {
-        title: finalTitle,
+    // 1. Prepare raw data for refinement
+    const rawData = {
+        title: cleanTitle(rgJob.title),
         company: company,
         companyLogo: companyLogo,
         location: rgJob.location || '',
-        eligibility: finalEligibility,
         salary: rgJob.pay || '',
-        description: finalDescription,
-        applyUrl: rgJob.joblink || '',
-        category: 'Engineering',
-        batch: parseBatches(rgJob.batches),
-        tags: rgJob.role ? [rgJob.role] : [],
-        jobType: mapJobType(rgJob.jobtype),
-        roleType: rgJob.role || 'Engineering',
-        seniority: 'Entry',
-        minSalary: parseMinSalary(rgJob.pay),
-        isRemote: rgJob.location?.toLowerCase().includes('remote') || false,
-        rolesResponsibility: finalRoles,
-        requirements: finalRequirements,
+        batch: rgJob.batches || '',
+        description: rgJob.description || '',
+        joblink: rgJob.joblink || '',
+        rolesAndResponsibilities: rgJob.rolesAndResponsibilities || '',
+        requirements: rgJob.requirements || '',
         niceToHave: rgJob.niceToHave || '',
-        isActive: true,
-        isFeatured: false
+        role: rgJob.role,
+        jobtype: rgJob.jobtype
     };
+
+    // 2. Refine with AI
+    let refinedData = await refineJobWithAI(rawData);
+
+    if (refinedData && refinedData.error === 'rate_limit_exceeded') {
+        return { error: 'rate_limit_exceeded' };
+    }
+
+    // 3. Finalize and map to Schema
+    const finalJob = await finalizeJobData(refinedData || {}, rawData);
+    
+    // Add RG specific fields that finalizeJobData might not handle
+    finalJob.applyUrl = rgJob.joblink || '';
+    
+    return finalJob;
 };
 
 /**

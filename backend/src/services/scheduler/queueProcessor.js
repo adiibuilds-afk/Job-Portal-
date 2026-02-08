@@ -31,16 +31,23 @@ const processQueue = async (bot) => {
         enrichedText += `\n\nTitle: ${scraped.title}\n${scraped.content}`;
     }
 
-    // 2. Parse with AI
-    const jobData = await parseJobWithAI(enrichedText);
+    // 2. Parse with AI (Extraction)
+    const extractedData = await parseJobWithAI(enrichedText);
 
-    if (!jobData || !jobData.title) {
+    if (!extractedData || !extractedData.title) {
         job.status = 'failed';
-        job.error = 'AI Parsing failed';
+        job.error = 'AI Extraction failed';
         await job.save();
-        console.error('AI Parsing failed for scheduled job');
+        console.error('AI Extraction failed for scheduled job');
         return;
     }
+
+    // 3. Refine with AI (SEO Template / Consistency)
+    const { refineJobWithAI, finalizeJobData } = require('../jobProcessor');
+    const refinedData = await refineJobWithAI(extractedData);
+
+    // 4. Finalize Job Object
+    const jobData = await finalizeJobData(refinedData || {}, extractedData);
 
     // Ensure apply URL
     if (!jobData.applyUrl || jobData.applyUrl === 'N/A') {
@@ -63,7 +70,7 @@ const processQueue = async (bot) => {
     // Localize/Proxy specific external logos
     if (jobData.companyLogo && jobData.companyLogo.includes('brain.talentd.in')) {
         console.log(`📥 Downloading logo: ${jobData.companyLogo}`);
-        const localLogo = await downloadAndSaveLogo(jobData.companyLogo);
+        const localLogo = await downloadAndSaveLogo(jobData.companyLogo, jobData.company);
         if (localLogo) {
             jobData.companyLogo = localLogo; 
         }

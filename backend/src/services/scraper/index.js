@@ -3,9 +3,15 @@ const cheerio = require('cheerio');
 const scrapeTalentdJobs = require('./talentdScraper');
 const scrapeRgJobs = require('./rgJobsScraper');
 const scrapeTelegramChannel = require('./telegramScraper');
+const { scrapeJobPageWithPuppeteer } = require('./puppeteerScraper');
 
 const scrapeJobPage = async (url) => {
   try {
+    // Special handling for Talentd (Client-Side Rendered)
+    if (url.includes('talentd.in')) {
+        return await scrapeJobPageWithPuppeteer(url);
+    }
+
     // Special handling for RG Jobs API
     if (url.includes('rgjobs.in/job/')) {
         const match = url.match(/job\/(\d+)/);
