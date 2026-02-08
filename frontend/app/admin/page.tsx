@@ -191,8 +191,17 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         if (isAuthenticated) {
+            // Initial fetch
             fetchData();
             fetchDashboardStats();
+
+            // Poll every 15 seconds
+            const interval = setInterval(() => {
+                fetchData();
+                fetchDashboardStats();
+            }, 15000);
+
+            return () => clearInterval(interval);
         }
     }, [isAuthenticated]);
 
