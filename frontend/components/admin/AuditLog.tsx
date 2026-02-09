@@ -30,12 +30,16 @@ const CATEGORY_COLORS: Record<string, string> = {
     settings: 'text-pink-500 bg-pink-500/10'
 };
 
-export default function AuditLog() {
+interface AuditLogProps {
+    apiUrl?: string;
+}
+
+export default function AuditLog({ apiUrl }: AuditLogProps) {
     const [logs, setLogs] = useState<AuditLogEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<string>('');
 
-    const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const BACKEND_URL = apiUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     useEffect(() => {
         const fetchLogs = async () => {

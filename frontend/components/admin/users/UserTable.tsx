@@ -24,6 +24,7 @@ export default function UserTable(props: UserTableProps) {
                         <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">Identity</th>
                         <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-center">Tier</th>
                         <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-center">Grid Coins</th>
+                        <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-center">Last Active</th>
                         <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
                     </tr>
                 </thead>
@@ -31,7 +32,7 @@ export default function UserTable(props: UserTableProps) {
                     {loading ? (
                         Array(5).fill(0).map((_, i) => (
                             <tr key={i} className="animate-pulse">
-                                <td colSpan={4} className="px-6 py-8"><div className="h-4 bg-zinc-800 rounded w-1/3 mx-auto"></div></td>
+                                <td colSpan={5} className="px-6 py-8"><div className="h-4 bg-zinc-800 rounded w-1/3 mx-auto"></div></td>
                             </tr>
                         ))
                     ) : users.map((user) => (
@@ -92,6 +93,14 @@ export default function UserTable(props: UserTableProps) {
                                         {user.gridCoins?.toFixed(1) || 0}
                                     </div>
                                 )}
+                            </td>
+                            <td className="px-6 py-5 text-center">
+                                <div className="text-xs font-medium text-zinc-300">
+                                    {user.lastVisit ? new Date(user.lastVisit).toLocaleDateString() : (user.lastLoginDate ? new Date(user.lastLoginDate).toLocaleDateString() : 'Never')}
+                                </div>
+                                <div className="text-[10px] text-zinc-600 mt-1">
+                                    Joined: {new Date(user.createdAt).toLocaleDateString()}
+                                </div>
                             </td>
                             <td className="px-6 py-5 text-right">
                                 {editingUserId === user._id ? (

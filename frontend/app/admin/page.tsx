@@ -311,7 +311,7 @@ export default function AdminDashboard() {
                     )}
 
                     {activeTab === 'audit' && (
-                        <AuditLog />
+                        <AuditLog apiUrl={BACKEND_URL} />
                     )}
 
                     {activeTab === 'health' && (

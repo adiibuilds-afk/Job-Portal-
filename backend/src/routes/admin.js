@@ -305,7 +305,9 @@ router.get('/dashboard-stats', async (req, res) => {
         const dau = await User.countDocuments({ $or: [{ lastLoginDate: { $gte: oneDayAgo } }, { lastVisit: { $gte: oneDayAgo } }] });
         const mau = await User.countDocuments({ $or: [{ lastLoginDate: { $gte: monthAgo } }, { lastVisit: { $gte: monthAgo } }] });
 
-        // Resume Scans Today
+        // Resume Scans Today (Fetch today's analytics)
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayAnalytics = await Analytics.findOne({ date: todayStr });
         const scansToday = todayAnalytics ? todayAnalytics.metrics.resumeScans : 0;
 
         // Apply Rate Stats
@@ -351,9 +353,19 @@ router.get('/dashboard-stats', async (req, res) => {
 // Get detailed analytics for charts
 router.get('/analytics/detailed', async (req, res) => {
     try {
-        // Return active analytics data sorted by date
         const data = await Analytics.find().sort({ date: 1 }).limit(30);
-        res.json(data);
+        
+        // Map to format charts expect: { _id: date, count: registrations, views: logins, clicks: jobClicks }
+        const mappedData = data.map(d => ({
+            _id: d.date,
+            count: d.metrics?.registrations || 0,
+            views: d.metrics?.logins || 0,
+            clicks: d.metrics?.jobClicks || 0,
+            applyClicks: d.metrics?.applyClicks || 0,
+            original: d
+        }));
+        
+        res.json(mappedData);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
