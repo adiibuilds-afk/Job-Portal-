@@ -5,6 +5,7 @@ import { Sparkles, Send, Eye, Loader, Mail, Copy, CheckCircle, AlertCircle } fro
 import { toast } from 'react-hot-toast';
 
 export default function EmailGenerator() {
+    const [mode, setMode] = useState<'ai' | 'manual'>('ai');
     const [prompt, setPrompt] = useState('');
     const [tone, setTone] = useState('professional');
     const [subject, setSubject] = useState('');
@@ -68,7 +69,7 @@ export default function EmailGenerator() {
 
     const sendEmail = async () => {
         if (!content || !subject) {
-            toast.error('Generate an email first');
+            toast.error('Generate or write an email first');
             return;
         }
 
@@ -125,48 +126,72 @@ export default function EmailGenerator() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left: Generator */}
                 <div className="space-y-6">
-                    {/* Prompt Input */}
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6">
-                        <label className="flex items-center gap-2 text-sm font-bold text-zinc-400 mb-3">
-                            <Sparkles className="w-4 h-4 text-amber-500" />
-                            What do you want to say?
-                        </label>
-                        <textarea
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="Write a newsletter about our new resume scoring feature..."
-                            className="w-full h-32 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 resize-none"
-                        />
-
-                        <div className="flex items-center gap-4 mt-4">
-                            <select
-                                value={tone}
-                                onChange={(e) => setTone(e.target.value)}
-                                className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
-                            >
-                                <option value="professional">Professional</option>
-                                <option value="friendly">Friendly</option>
-                                <option value="urgent">Urgent</option>
-                                <option value="casual">Casual</option>
-                            </select>
-
-                            <button
-                                onClick={generateEmail}
-                                disabled={generating || !prompt.trim()}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-colors disabled:opacity-50"
-                            >
-                                {generating ? (
-                                    <Loader className="w-4 h-4 animate-spin" />
-                                ) : (
-                                    <Sparkles className="w-4 h-4" />
-                                )}
-                                Generate Email
-                            </button>
-                        </div>
+                    {/* Mode Toggle */}
+                    <div className="flex p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
+                        <button
+                            onClick={() => setMode('ai')}
+                            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${mode === 'ai'
+                                    ? 'bg-zinc-800 text-white shadow-sm'
+                                    : 'text-zinc-500 hover:text-zinc-300'
+                                }`}
+                        >
+                            AI Generator
+                        </button>
+                        <button
+                            onClick={() => setMode('manual')}
+                            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${mode === 'manual'
+                                    ? 'bg-zinc-800 text-white shadow-sm'
+                                    : 'text-zinc-500 hover:text-zinc-300'
+                                }`}
+                        >
+                            Manual Entry
+                        </button>
                     </div>
 
-                    {/* Subject & Content Editor */}
-                    {content && (
+                    {/* AI Prompt Input */}
+                    {mode === 'ai' && (
+                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6">
+                            <label className="flex items-center gap-2 text-sm font-bold text-zinc-400 mb-3">
+                                <Sparkles className="w-4 h-4 text-amber-500" />
+                                What do you want to say?
+                            </label>
+                            <textarea
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                placeholder="Write a newsletter about our new resume scoring feature..."
+                                className="w-full h-32 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 resize-none"
+                            />
+
+                            <div className="flex items-center gap-4 mt-4">
+                                <select
+                                    value={tone}
+                                    onChange={(e) => setTone(e.target.value)}
+                                    className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
+                                >
+                                    <option value="professional">Professional</option>
+                                    <option value="friendly">Friendly</option>
+                                    <option value="urgent">Urgent</option>
+                                    <option value="casual">Casual</option>
+                                </select>
+
+                                <button
+                                    onClick={generateEmail}
+                                    disabled={generating || !prompt.trim()}
+                                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-colors disabled:opacity-50"
+                                >
+                                    {generating ? (
+                                        <Loader className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="w-4 h-4" />
+                                    )}
+                                    Generate Email
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Subject & Content Editor - Show always for manual, or if API generated content */}
+                    {(mode === 'manual' || content) && (
                         <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 space-y-4">
                             <div>
                                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Subject Line</label>
@@ -174,6 +199,7 @@ export default function EmailGenerator() {
                                     type="text"
                                     value={subject}
                                     onChange={(e) => setSubject(e.target.value)}
+                                    placeholder="Enter email subject"
                                     className="w-full mt-2 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500"
                                 />
                             </div>
@@ -182,13 +208,14 @@ export default function EmailGenerator() {
                                 <textarea
                                     value={content}
                                     onChange={(e) => updatePreview(e.target.value)}
+                                    placeholder="<p>Hello world...</p>"
                                     className="w-full mt-2 h-48 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-amber-500 resize-none"
                                 />
                             </div>
                         </div>
                     )}
 
-                    {/* Recipients */}
+                    {/* Recipients - Show if content exists (from AI or manual entry) */}
                     {content && (
                         <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6">
                             <label className="flex items-center gap-2 text-sm font-bold text-zinc-400 mb-3">
@@ -208,7 +235,7 @@ export default function EmailGenerator() {
                                 </span>
                                 <button
                                     onClick={sendEmail}
-                                    disabled={sending || !recipients.trim()}
+                                    disabled={sending || !recipients.trim() || !subject || !content}
                                     className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-400 text-black font-bold rounded-xl transition-colors disabled:opacity-50"
                                 >
                                     {sending ? (
@@ -249,7 +276,7 @@ export default function EmailGenerator() {
                             <div className="h-full flex flex-col items-center justify-center text-zinc-400">
                                 <Mail className="w-12 h-12 text-zinc-600 mb-4" />
                                 <p className="font-medium">No preview yet</p>
-                                <p className="text-sm text-zinc-500">Generate an email to see preview</p>
+                                <p className="text-sm text-zinc-500">Generate an email or type in manual mode to see preview</p>
                             </div>
                         )}
                     </div>

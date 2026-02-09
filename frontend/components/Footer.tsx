@@ -7,7 +7,7 @@ export default function Footer() {
     return (
         <footer className="bg-zinc-950 border-t border-zinc-800 relative z-10">
             <div className="max-w-6xl mx-auto px-6 py-16">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
 
                     {/* Brand */}
                     <div className="md:col-span-1">
@@ -47,12 +47,29 @@ export default function Footer() {
                     <div>
                         <h4 className="text-white font-semibold mb-4">Popular Searches</h4>
                         <ul className="space-y-2">
-                            {['Remote Jobs', 'Bangalore Jobs', 'Frontend Jobs', 'SDE Jobs', 'Freshers 2024'].map((item) => (
+                            {[
+                                'Remote Jobs', 'Bangalore Jobs', 'Frontend Jobs', 'Backend Jobs', 'Fullstack Jobs',
+                                'SDE Jobs',
+                            ].map((item) => (
                                 <li key={item}>
                                     <Link
                                         href={`/jobs/${item.toLowerCase().replace(/ /g, '-')}`}
                                         className="text-zinc-500 hover:text-amber-400 text-sm transition-colors"
                                     >
+                                        {item}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Batches */}
+                    <div>
+                        <h4 className="text-white font-semibold mb-4">Batches</h4>
+                        <ul className="space-y-2">
+                            {['2023 Batch', '2024 Batch', '2025 Batch', '2026 Batch', '2027 Batch', '2028 Batch', '2029 Batch'].map((item) => (
+                                <li key={item}>
+                                    <Link href={`/jobs?batch=${item.split(' ')[0]}`} className="text-zinc-500 hover:text-amber-400 text-sm transition-colors">
                                         {item}
                                     </Link>
                                 </li>

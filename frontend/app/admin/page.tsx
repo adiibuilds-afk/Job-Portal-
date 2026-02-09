@@ -29,7 +29,7 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [cleaning, setCleaning] = useState(false);
     const [activeTab, setActiveTab] = useState<AdminTab>('ceo');
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
     const [jobFilter, setJobFilter] = useState<'all' | 'reported'>('all');
     const [dashboardStats, setDashboardStats] = useState<any>(null);
 
@@ -222,6 +222,12 @@ export default function AdminDashboard() {
     }
     return (
         <main className="min-h-screen bg-black flex overflow-hidden">
+            {/* Mobile Sidebar Overlay */}
+            <div
+                className={`fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity ${!isCollapsed ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                onClick={() => setIsCollapsed(true)}
+            />
+
             <AdminSidebar
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
@@ -230,7 +236,16 @@ export default function AdminDashboard() {
                 pendingCount={queue.filter(q => q.status === 'pending').length}
             />
 
-            <div className={`flex-1 transition-all duration-300 h-screen overflow-y-auto ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
+            <div className={`flex-1 transition-all duration-300 h-screen overflow-y-auto w-full ${isCollapsed ? 'md:ml-20' : 'md:ml-64'} ml-0`}>
+                {/* Mobile Header with Toggle */}
+                <div className="md:hidden p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 sticky top-0 z-30">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-2 text-white">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        </button>
+                        <span className="font-bold text-white">JobGrid Admin</span>
+                    </div>
+                </div>
                 <div className="max-w-7xl mx-auto p-12">
                     {/* Page Content Mapper */}
                     {activeTab === 'ceo' && (

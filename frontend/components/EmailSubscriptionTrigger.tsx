@@ -21,7 +21,10 @@ export default function EmailSubscriptionTrigger() {
             return;
         }
 
-        if (!session && !hasShown) {
+        // AUTO-POPUP DISABLED AS PER USER REQUEST
+        const ENABLE_AUTO_POPUP = false;
+
+        if (ENABLE_AUTO_POPUP && !session && !hasShown) {
             const timer = setTimeout(() => {
                 setShowModal(true);
                 setHasShown(true);

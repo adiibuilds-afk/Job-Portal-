@@ -78,8 +78,10 @@ const buildEmailHtml = (content) => {
                             <p style="margin: 0; font-weight: 700; color: #111827;">The JobGrid Team</p>
                             <p style="margin: 0; font-size: 14px; color: #6b7280;">Your career accelerator.</p>
                             <div style="margin-top: 15px;">
-                                <a href="https://t.me/jobgridupdates" style="display: inline-block; background-color: #0088cc; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600;">Join Telegram</a>
-                                <a href="https://jobgrid.in" style="display: inline-block; margin-left: 10px; color: #f59e0b; text-decoration: none; font-size: 13px; font-weight: 600;">Visit Website</a>
+                                <a href="https://t.me/jobgridupdates" style="display: inline-block; background-color: #0088cc; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; margin-right: 10px; margin-bottom: 10px;">Join Telegram</a>
+                                <a href="https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432" style="display: inline-block; background-color: #25D366; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; margin-right: 10px; margin-bottom: 10px;">Join WhatsApp</a>
+                                <a href="https://www.linkedin.com/company/jobgrid-in" style="display: inline-block; background-color: #0077b5; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; margin-right: 10px; margin-bottom: 10px;">Follow LinkedIn</a>
+                                <a href="https://jobgrid.in" style="display: inline-block; background-color: #f59e0b; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; margin-bottom: 10px;">Visit Website</a>
                             </div>
                         </div>
                     </div>

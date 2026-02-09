@@ -54,7 +54,12 @@ export default function AdminSidebar({
 
     return (
         <aside
-            className={`fixed left-0 top-0 h-screen bg-zinc-950 border-r border-zinc-800 transition-all duration-300 z-50 flex flex-col ${isCollapsed ? 'w-20' : 'w-64'}`}
+            className={`fixed left-0 top-0 h-screen bg-zinc-950 border-r border-zinc-800 transition-transform duration-300 z-50 flex flex-col 
+            ${isCollapsed ? 'w-20' : 'w-64'} 
+            ${/* Desktop: Always visible. Mobile: Toggle based on isCollapsed */ ''}
+            md:translate-x-0 
+            ${!isCollapsed ? 'translate-x-0' : '-translate-x-full'}
+            `}
         >
             {/* Logo Section */}
             <div className="p-6 flex items-center gap-3 border-b border-zinc-900/50">

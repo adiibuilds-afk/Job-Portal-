@@ -8,6 +8,7 @@ import { Job } from '@/types';
 import { Search, Briefcase, TrendingUp, Sparkles, Filter, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import Filters from '@/components/Filters';
 import Link from 'next/link';
+import JobSorter from '@/components/jobs/JobSorter';
 
 export const metadata: Metadata = {
     title: 'Browse Jobs | JobGrid - B.Tech, IT & Software Engineering Jobs',
@@ -33,6 +34,7 @@ interface JobsPageProps {
         roleType?: string;
         minSalary?: string;
         isRemote?: string;
+        sort?: string;
     }>;
 }
 
@@ -53,7 +55,8 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
             roleType: params.roleType,
             page: parseInt(params.page || '1'),
             minSalary: params.minSalary ? parseInt(params.minSalary) : undefined,
-            isRemote: params.isRemote === 'true'
+            isRemote: params.isRemote === 'true',
+            sort: params.sort
         });
 
         if (Array.isArray(res)) {
@@ -174,10 +177,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
                                         Showing <span className="text-white font-bold">{((pagination.page - 1) * pagination.limit) + 1}</span> - <span className="text-white font-bold">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="text-white font-bold">{pagination.total}</span>
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                                    <Zap className="w-3 h-3 text-amber-500" />
-                                    <span>Sorted by: <span className="text-white font-bold">Newest First</span></span>
-                                </div>
+                                <JobSorter />
                             </div>
 
                             {/* Job Cards */}
@@ -268,6 +268,6 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
             </section>
 
             <Footer />
-        </main>
+        </main >
     );
 }

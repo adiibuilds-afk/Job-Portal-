@@ -15,6 +15,7 @@ export async function getJobs(params?: {
     minSalary?: number;
     isRemote?: boolean;
     ids?: string[];
+    sort?: string;
 }) {
     const searchParams = new URLSearchParams();
     if (params?.q) searchParams.set('q', params.q);
@@ -30,6 +31,7 @@ export async function getJobs(params?: {
     if (params?.minSalary) searchParams.set('minSalary', params.minSalary.toString());
     if (params?.isRemote) searchParams.set('isRemote', 'true');
     if (params?.ids && params.ids.length > 0) searchParams.set('ids', params.ids.join(','));
+    if (params?.sort) searchParams.set('sort', params.sort);
 
     const queryString = searchParams.toString();
     const url = `${API_URL}/api/jobs${queryString ? `?${queryString}` : ''}`;

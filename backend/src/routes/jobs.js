@@ -34,8 +34,18 @@ router.get('/', async (req, res) => {
         if (minSalary) query.minSalary = { $gte: parseInt(minSalary) };
         if (isRemote === 'true') query.isRemote = true;
 
+        // Sorting Logic
+        let sortOption = { createdAt: -1 }; // Default: Newest First
+        if (req.query.sort === 'views') {
+            sortOption = { views: -1 };
+        } else if (req.query.sort === 'clicks') {
+            sortOption = { clicks: -1 };
+        } else if (req.query.sort === 'oldest') {
+            sortOption = { createdAt: 1 };
+        }
+
         const skip = (parseInt(page) - 1) * parseInt(limit);
-        const jobs = await Job.find(query).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit));
+        const jobs = await Job.find(query).sort(sortOption).skip(skip).limit(parseInt(limit));
         const total = await Job.countDocuments(query);
         res.json({ jobs, pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) } });
     } catch (err) { res.status(500).json({ error: err.message }); }
