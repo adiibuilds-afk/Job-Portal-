@@ -44,7 +44,7 @@ export default function LivePulse() {
     const current = activities[currentIndex];
 
     return (
-        <div className="w-full bg-black/40 backdrop-blur-md border-y border-amber-500/10 py-1 overflow-hidden shadow-[0_0_20px_rgba(245,158,11,0.03)]">
+        <div className="w-full bg-black/40 backdrop-blur-md border-y border-amber-500/10 pt-0.5 pb-1 overflow-hidden shadow-[0_0_20px_rgba(245,158,11,0.03)]">
             <div className="max-w-7xl mx-auto px-6 flex items-center gap-4">
                 <div className="flex items-center gap-2 shrink-0">
                     <div className="relative">
