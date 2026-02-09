@@ -63,6 +63,9 @@ const runGoCareersManual = async (bot, limit = 20, bundler) => {
                              await deleteTelegramPost(bot, jobToDelete.telegramMessageId);
                              console.log('🗑️ Deleted from Telegram.');
                          }
+                         if (bundler) {
+                             await bundler.removeJob(lastJobId);
+                         }
                          await Job.findByIdAndDelete(lastJobId);
                          console.log('🗑️ Job deleted from database.');
                          processed--;

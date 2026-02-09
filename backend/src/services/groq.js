@@ -89,7 +89,7 @@ Engineering & Metadata:
 
 Rules:
 - User Input > Scraped Content.
-- Clean Title: Role only, remove all suffixes like "at Company" or "Hiring for".`
+- Clean Title: Role only, remove all suffixes like "at Company" or "Hiring for". Preserve specific stack details if they are part of the role (e.g. "QA Automation Engineer", "Python Developer"). Do NOT default to "Software Engineer" if a more specific role is mentioned.`
                 },
                 {
                     role: 'user',
@@ -137,8 +137,8 @@ const generateSEOContent = async (jobData) => {
 
 Company: ${jobData.company}
 Original Title: ${jobData.title}
-Role: ${jobData.role || 'Software Engineer'}
-Location: ${jobData.location}
+Role/Category: ${jobData.role || 'Professional'}
+Location: ${jobData.location || 'Not Specified'}
 Salary: ${jobData.salary || 'Competitive'}
 Batch: ${jobData.batch || 'Not specified'}
 
@@ -146,8 +146,8 @@ Original Description:
 ${jobData.description?.substring(0, 800)}
 
 Generate JSON with these fields:
-1. "title": Clean, SEO-friendly title (Examples: "Software Engineer at Google", "Frontend Developer - React"). 
-2. "description": A compelling 2-3 sentence meta description (max 160 chars).
+1. "title": Clean, SEO-friendly title (Examples: "Software Engineer at Google", "QA Automation Engineer - Python", "Data Scientist at Amazon", "Frontend Developer - React"). 
+2. "description": A compelling 2-3 sentence meta description (max 160 chars) summarizing why this is a great opportunity.
 3. "rolesResponsibility": A bulleted list (using •) of clear roles and responsibilities.
 4. "requirements": A bulleted list (using •) of technical and soft skill requirements.
 5. "eligibility": A concise eligibility criteria string (e.g., "B.Tech/B.E. 2024/2025 Batch").

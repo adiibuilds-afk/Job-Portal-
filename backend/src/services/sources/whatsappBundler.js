@@ -57,6 +57,14 @@ class WhatsAppBundler {
         }
     }
 
+    async removeJob(jobId) {
+        const initialCount = this.jobs.length;
+        this.jobs = this.jobs.filter(j => j._id.toString() !== jobId.toString());
+        if (this.jobs.length < initialCount) {
+            console.log(`   📦 Job removed from WhatsApp bundle (${this.jobs.length}/5)`);
+        }
+    }
+
     async flush() {
         if (this.jobs.length > 0) {
             console.log(`   🧹 Flushing remaining jobs to WhatsApp bundle...`);

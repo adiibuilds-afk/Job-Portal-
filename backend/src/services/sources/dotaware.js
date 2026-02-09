@@ -36,7 +36,9 @@ const runDotAwareManual = async (bot, limit = 20, bundler) => {
         let skipped = 0;
         let consecutiveDuplicates = 0;
 
-        for (const link of jobsToProcess) {
+        for (let i = 0; i < jobsToProcess.length; i++) {
+             const link = jobsToProcess[i];
+             console.log(`\n[${i + 1}/${jobsToProcess.length}] 🔄 Processing...`);
              const success = await processJobUrl(link, bot, { bundler });
              
              if (success && success.error === 'rate_limit') {
@@ -69,6 +71,9 @@ const runDotAwareManual = async (bot, limit = 20, bundler) => {
                          if (jobToDelete && jobToDelete.telegramMessageId) {
                              await deleteTelegramPost(bot, jobToDelete.telegramMessageId);
                              console.log('🗑️ Deleted from Telegram.');
+                         }
+                         if (bundler) {
+                             await bundler.removeJob(lastJobId);
                          }
                          await Job.findByIdAndDelete(lastJobId);
                          console.log('🗑️ Job deleted from database.');

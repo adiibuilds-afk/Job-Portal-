@@ -27,7 +27,15 @@ const runTalentdManual = async (bot, limit = 20, bundler) => {
         let skipped = 0;
         let consecutiveDuplicates = 0;
 
-        for (const link of jobsToProcess) {
+        for (let i = 0; i < jobsToProcess.length; i++) {
+             const link = jobsToProcess[i];
+             console.log(`\n[${i + 1}/${jobsToProcess.length}] 🔄 Processing...`);
+
+             if (consecutiveDuplicates >= 2) {
+                 console.log('🛑 Two consecutive duplicates found. Stopping to prevent rate limiting or endless loops.');
+                 return { processed, skipped, action: 'consecutive_duplicates' };
+             }
+
              // Scrape the job page first to get content and other details
              const scraped = await scrapeJobPage(link);
 
@@ -67,6 +75,9 @@ const runTalentdManual = async (bot, limit = 20, bundler) => {
                          if (jobToDelete && jobToDelete.telegramMessageId) {
                              await deleteTelegramPost(bot, jobToDelete.telegramMessageId);
                              console.log('🗑️ Deleted from Telegram.');
+                         }
+                         if (bundler) {
+                             await bundler.removeJob(lastJobId);
                          }
                          await Job.findByIdAndDelete(lastJobId);
                          console.log('🗑️ Job deleted from database.');

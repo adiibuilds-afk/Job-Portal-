@@ -27,7 +27,9 @@ const runRGJobsManual = async (bot, limit = 20, bundler) => {
         let skipped = 0;
         let consecutiveDuplicates = 0;
 
-        for (const rgJob of rgJobs) {
+        for (let i = 0; i < rgJobs.length; i++) {
+            const rgJob = rgJobs[i];
+            console.log(`\n[${i + 1}/${rgJobs.length}] 🔄 Processing...`);
             try {
                 const applyUrl = rgJob.joblink;
                 if (!applyUrl) {
@@ -101,6 +103,9 @@ const runRGJobsManual = async (bot, limit = 20, bundler) => {
                         if (jobToDelete && jobToDelete.telegramMessageId) {
                             await deleteTelegramPost(bot, jobToDelete.telegramMessageId);
                             console.log('🗑️ Deleted from Telegram.');
+                        }
+                        if (bundler) {
+                            await bundler.removeJob(lastJobId);
                         }
                         await Job.findByIdAndDelete(lastJobId);
                         console.log('🗑️ Job deleted from database.');

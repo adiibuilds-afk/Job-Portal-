@@ -149,9 +149,12 @@ const scrapeJobPageWithPuppeteer = async (url) => {
         let finalApplyUrl = '';
 
         if (clicked) {
-            console.log('[Puppeteer] Clicked "Apply Now", waiting for target...');
+            console.log('[Puppeteer] Clicked "Apply Now", waiting for target (max 10s)...');
             try {
-                const newTarget = await newTargetPromise;
+                // Use a timeout to prevent hanging if no target is created (e.g. opens in same tab or blocked)
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Target timeout')), 10000));
+                
+                const newTarget = await Promise.race([newTargetPromise, timeoutPromise]);
                 const newPage = await newTarget.page();
                 
                 if (newPage) {
@@ -160,7 +163,13 @@ const scrapeJobPageWithPuppeteer = async (url) => {
                     console.log(`🔗 CAPTURED APPLY LINK: ${finalApplyUrl}`);
                 }
             } catch (e) {
-                console.error('[Puppeteer] Error handling new tab:', e.message);
+                if (e.message === 'Target timeout') {
+                    console.log('[Puppeteer] Timeout waiting for new tab. Checking if current page changed...');
+                    // If it opened in same tab, the URL might have changed
+                    finalApplyUrl = page.url();
+                } else {
+                    console.error('[Puppeteer] Error handling new tab:', e.message);
+                }
             }
         } else {
             console.log('[Puppeteer] No "Apply Now" button found to click.');

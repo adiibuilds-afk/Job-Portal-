@@ -69,7 +69,15 @@ const runFreshersJobsAaddaManual = async (bot, limit = 20, bundler) => {
         let skipped = 0;
         let consecutiveDuplicates = 0;
 
-        for (const entry of jobsToProcess) {
+        for (let i = 0; i < jobsToProcess.length; i++) {
+            const entry = jobsToProcess[i];
+            console.log(`\n[${i + 1}/${jobsToProcess.length}] 🔄 Processing...`);
+
+            if (consecutiveDuplicates >= 2) {
+                console.log('🛑 2 consecutive duplicates found. Stopping source.');
+                break;
+            }
+
             const title = entry.title.$t;
             const content = entry.content ? entry.content.$t : '';
             const linkObj = entry.link.find(l => l.rel === 'alternate');
@@ -134,6 +142,9 @@ const runFreshersJobsAaddaManual = async (bot, limit = 20, bundler) => {
                          if (jobToDelete && jobToDelete.telegramMessageId) {
                              await deleteTelegramPost(bot, jobToDelete.telegramMessageId);
                              console.log('🗑️ Deleted from Telegram.');
+                         }
+                         if (bundler) {
+                             await bundler.removeJob(lastJobId);
                          }
                          await Job.findByIdAndDelete(lastJobId);
                          console.log('🗑️ Job deleted from database.');

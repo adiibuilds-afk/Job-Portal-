@@ -66,7 +66,8 @@ const refineJobWithAI = async (jobData) => {
             location: jobData.location,
             salary: jobData.salary,
             batch: jobData.batch,
-            description: jobData.description
+            description: jobData.description,
+            role: jobData.roleType || jobData.role
         });
 
         if (seoData && seoData.error === 'rate_limit_exceeded') {
