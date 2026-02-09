@@ -75,7 +75,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
         <main className="min-h-screen bg-black">
 
             {/* Premium Hero Header */}
-            <section className="pt-28 pb-12 px-6 relative overflow-hidden">
+            <section className="pt-32 pb-12 px-6 relative overflow-hidden">
                 {/* Background Effects */}
                 <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />

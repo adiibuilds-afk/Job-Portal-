@@ -60,7 +60,7 @@ function NavbarContent() {
                 initial={{ y: -100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6 }}
-                className="fixed top-0 left-0 right-0 z-50 px-4 py-6"
+                className="relative px-4 py-3"
             >
                 <div className="max-w-7xl mx-auto">
                     <div className="bg-black/60 backdrop-blur-2xl border border-amber-500/20 rounded-2xl px-6 py-4 flex items-center justify-between shadow-2xl shadow-amber-500/5">

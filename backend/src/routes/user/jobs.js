@@ -136,4 +136,65 @@ router.put('/applied/status/bulk', attachUser, async (req, res) => {
     }
 });
 
+// verify-job route
+router.post('/verify-job', attachUser, async (req, res) => {
+    try {
+        const { jobId, status } = req.body;
+        const user = req.user;
+        const Job = require('../../models/Job');
+        const CoinTransaction = require('../../models/CoinTransaction');
+
+        // Check if user already verified this job in logs
+        const alreadyVerified = user.activityLogs.some(log => 
+            log.action === 'verify_job' && log.jobId?.toString() === jobId
+        );
+
+        if (alreadyVerified) {
+            return res.status(400).json({ message: 'Already verified this job!' });
+        }
+
+        const job = await Job.findById(jobId);
+        if (!job) return res.status(404).json({ error: 'Job not found' });
+
+        // Update Job Verification Stats
+        if (!job.verifications) job.verifications = { stillHiring: 0, notHiring: 0 };
+        
+        if (status === 'still_hiring') {
+            job.verifications.stillHiring += 1;
+        } else if (status === 'not_hiring') {
+            job.verifications.notHiring += 1;
+        }
+        job.lastVerifiedAt = new Date();
+        await job.save();
+
+        // Award Coins
+        const awardAmount = status === 'still_hiring' ? 1 : 1; // Simplified for now
+        user.gridCoins = (user.gridCoins || 0) + awardAmount;
+        
+        // Log Activity
+        user.activityLogs.push({
+            action: 'verify_job',
+            jobId,
+            metadata: { status, coinsAwarded: awardAmount },
+            timestamp: new Date()
+        });
+
+        await user.save();
+
+        // Create Transaction Record
+        await CoinTransaction.create({
+            userId: user._id,
+            type: 'earn',
+            amount: awardAmount,
+            reason: 'verify_job',
+            description: `Verified job status: ${status}`
+        });
+
+        res.json({ success: true, earned: awardAmount, balance: user.gridCoins });
+    } catch (error) {
+        console.error('Verify Job Error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 module.exports = router;

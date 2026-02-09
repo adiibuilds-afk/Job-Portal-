@@ -33,12 +33,12 @@ export default async function Home() {
       {/* Gold grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
 
-      <div className="pt-28 relative z-10">
+      <div className="pt-32 relative z-10">
         <LatestJobsTicker />
       </div>
 
       {/* Hero Section */}
-      <section className="relative pt-12 pb-20 px-4">
+      <section className="relative pb-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-8">

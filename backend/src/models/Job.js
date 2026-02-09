@@ -22,6 +22,11 @@ const JobSchema = new mongoose.Schema({
   seniority: { type: String, default: 'Entry' }, // Entry, Mid, Senior
   minSalary: { type: Number, default: 0 },
   isRemote: { type: Boolean, default: false },
+  verifications: {
+      stillHiring: { type: Number, default: 0 },
+      notHiring: { type: Number, default: 0 }
+  },
+  lastVerifiedAt: { type: Date },
 
   // Detailed Description Fields
   rolesResponsibility: { type: String, default: '' },

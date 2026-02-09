@@ -164,6 +164,30 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                                         <span className="text-[10px] font-bold">{job.views}</span>
                                     </div>
                                 )}
+
+                                {/* Match Score */}
+                                {session?.user && (session.user as any).skills?.length > 0 && job.tags && job.tags.length > 0 && (
+                                    (() => {
+                                        const userSkills = (session.user as any).skills.map((s: string) => s.toLowerCase());
+                                        const jobTags = job.tags!.map(t => t.toLowerCase());
+                                        const matches = jobTags.filter(tag =>
+                                            userSkills.some((skill: string) =>
+                                                skill.includes(tag) || tag.includes(skill)
+                                            )
+                                        );
+                                        const score = Math.round((matches.length / jobTags.length) * 100);
+
+                                        if (score > 10) {
+                                            return (
+                                                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                                                    <Sparkles className="w-3 h-3 text-amber-500" />
+                                                    <span className="text-[10px] font-black text-amber-500">{score}% Match</span>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    })()
+                                )}
                             </div>
                         </div>
 
@@ -259,6 +283,34 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                             <span className="px-3 py-1.5 text-xs font-bold bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20">
                                 {job.category}
                             </span>
+
+                            {/* Verification Action */}
+                            {!applied && !reported && (
+                                <button
+                                    onClick={async (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (!session) {
+                                            toast.error('Login to verify jobs and earn coins!');
+                                            return;
+                                        }
+                                        try {
+                                            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/user/verify-job`, {
+                                                jobId: job._id,
+                                                email: session.user?.email,
+                                                status: 'still_hiring'
+                                            });
+                                            toast.success(`Verified! Earned ${data.earned} coins`, { icon: '💰' });
+                                        } catch (error: any) {
+                                            toast.error(error.response?.data?.message || 'Already verified this job');
+                                        }
+                                    }}
+                                    className="px-3 py-1.5 text-[10px] font-black bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 border border-zinc-700/50 rounded-lg transition-all"
+                                >
+                                    Still Hiring?
+                                </button>
+                            )}
+
                             {job.isRemote && (
                                 <span className="px-2.5 py-1.5 text-[10px] font-bold bg-cyan-500/10 text-cyan-400 rounded-lg border border-cyan-500/20">
                                     🌐 Remote

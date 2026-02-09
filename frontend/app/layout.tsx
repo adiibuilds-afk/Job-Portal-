@@ -94,10 +94,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#000000" />
       </head>
-      <body className={`${outfit.variable} font-sans antialiased pt-28 md:pt-32`}>
+      <body className={`${outfit.variable} font-sans antialiased`}>
         <Providers>
-          <Navbar />
-          <div className="fixed top-[100px] left-0 right-0 z-40">
+          <div className="fixed top-0 left-0 right-0 z-50 flex flex-col">
+            <Navbar />
             <LivePulse />
           </div>
           <main>{children}</main>

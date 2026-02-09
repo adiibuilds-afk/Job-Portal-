@@ -1,5 +1,4 @@
 import { getJobBySlug, getSimilarJobs } from '@/services/api';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import JobCard from '@/components/JobCard';
 import { notFound } from 'next/navigation';
@@ -78,9 +77,8 @@ export default async function JobDetail({ params }: { params: Promise<{ slug: st
             <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] bg-yellow-500/5 rounded-full blur-[150px] pointer-events-none" />
             <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.015)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
 
-            <Navbar />
 
-            <div className="relative pt-28 pb-20 px-4">
+            <div className="relative pt-32 pb-20 px-4">
                 <div className="max-w-6xl mx-auto">
 
                     {/* Breadcrumb & Back */}

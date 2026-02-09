@@ -25,6 +25,7 @@ export const authOptions: NextAuthOptions = {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (session.user as any).referralCode = data.user.referralCode;
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (session.user as any).skills = data.user.skills;
                         (session.user as any).gridCoins = data.user.gridCoins;
                     }
                 } catch (error) {
