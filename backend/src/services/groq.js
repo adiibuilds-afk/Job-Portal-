@@ -1,13 +1,21 @@
 const Groq = require('groq-sdk');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ 
+    path: path.join(__dirname, '../../.env'),
+    override: true 
+});
 
 // Load multiple keys from env (comma separated)
-const apiKeys = (process.env.GROQ_API_KEY || '').split(',').map(k => k.trim()).filter(k => k);
+const rawKey = process.env.GROQ_API_KEY || '';
+console.log(`[Groq Service] Loading keys... (Raw length: ${rawKey.length})`);
+const apiKeys = rawKey.split(',').map(k => k.trim()).filter(k => k);
+console.log(`[Groq Service] Successfully parsed ${apiKeys.length} keys.`);
 if (apiKeys.length === 0) {
     console.error('❌ No GROQ_API_KEY found in environment variables!');
 }
 
 // Create a client for each key
+console.log(`[Groq Service] Found ${apiKeys.length} API keys in environment.`);
 const clients = apiKeys.map(key => new Groq({ apiKey: key }));
 let currentKeyIndex = 0;
 
@@ -18,8 +26,9 @@ const getClient = () => {
 };
 
 const rotateKey = () => {
+    const oldIndex = currentKeyIndex;
     currentKeyIndex = (currentKeyIndex + 1) % clients.length;
-    console.log(`🔄 Switching to Groq Key Index: ${currentKeyIndex}`);
+    console.log(`🔄 Switching Groq Key: Index ${oldIndex} -> ${currentKeyIndex} (Total keys: ${clients.length})`);
 };
 
 const executeWithFallback = async (operation, maxRetries = clients.length) => {

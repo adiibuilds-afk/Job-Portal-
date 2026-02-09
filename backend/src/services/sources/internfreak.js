@@ -4,7 +4,7 @@ const { parseJobWithAI } = require('../groq');
 const { refineJobWithAI, finalizeJobData } = require('../jobProcessor');
 const { downloadAndProcessLogo: downloadAndSaveLogo } = require('../../utils/imageProcessor');
 const Job = require('../../models/Job');
-const { waitWithSkip, postJobToTelegram } = require('./utils');
+const { waitWithSkip, postJobToTelegram, deleteTelegramPost } = require('./utils');
 
 const SOURCE_URL = 'https://telegram.me/s/internfreak'; 
 const EXCLUSIONS = ['mercor', 'hour', 'internfreak.co', 'challenge', 'hackathon'];
@@ -49,11 +49,25 @@ const runInternFreakManual = async (bot, limit = 20) => {
                  continue;
              }
 
-             if (success) {
+             if (success && success.success) {
                  processed++;
                  consecutiveDuplicates = 0; // Reset
+                 const lastJobId = success.jobId;
+
                  if (processed < limit && processed < jobsToProcess.length - skipped) {
                      const waitResult = await waitWithSkip(21000);
+                     
+                     if (waitResult === 'delete' && lastJobId) {
+                         const jobToDelete = await Job.findById(lastJobId);
+                         if (jobToDelete && jobToDelete.telegramMessageId) {
+                             await deleteTelegramPost(bot, jobToDelete.telegramMessageId);
+                             console.log('🗑️ Deleted from Telegram.');
+                         }
+                         await Job.findByIdAndDelete(lastJobId);
+                         console.log('🗑️ Job deleted from database.');
+                         processed--;
+                     }
+
                      if (waitResult === 'quit') return { processed, skipped, action: 'quit' };
                      if (waitResult === 'next_source') return { processed, skipped, action: 'next' };
                  }

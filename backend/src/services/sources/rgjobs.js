@@ -1,7 +1,7 @@
 const axios = require('axios');
 const Job = require('../../models/Job');
 const { mapToJobSchema } = require('../../scripts/importRGJobs'); // Reuse mapping logic
-const { waitWithSkip, postJobToTelegram } = require('./utils');
+const { waitWithSkip, postJobToTelegram, deleteTelegramPost } = require('./utils');
 
 const RG_JOBS_API = 'https://api.rgjobs.in/api/getAllJobs';
 const MAX_JOBS_MANUAL = 20;
@@ -85,10 +85,23 @@ const runRGJobsManual = async (bot, limit = 20) => {
 
                 processed++;
                 consecutiveDuplicates = 0; // Reset
+                const lastJobId = newJob._id;
                 
                 // Delay 21s (skipable) and handle quit signal
                 if (processed < limit && processed < rgJobs.length) {
                     const waitResult = await waitWithSkip(21000);
+                    
+                    if (waitResult === 'delete' && lastJobId) {
+                        const jobToDelete = await Job.findById(lastJobId);
+                        if (jobToDelete && jobToDelete.telegramMessageId) {
+                            await deleteTelegramPost(bot, jobToDelete.telegramMessageId);
+                            console.log('🗑️ Deleted from Telegram.');
+                        }
+                        await Job.findByIdAndDelete(lastJobId);
+                        console.log('🗑️ Job deleted from database.');
+                        processed--;
+                    }
+
                     if (waitResult === 'quit') return { processed, skipped, action: 'quit' };
                     if (waitResult === 'next_source') return { processed, skipped, action: 'next' };
                 }

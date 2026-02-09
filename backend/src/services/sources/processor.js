@@ -84,7 +84,7 @@ const processJobUrl = async (url, bot, options = {}) => {
                     };
                     fallbackUsed = true;
                 } else {
-                    return false; // Not a targeted platform, skip
+                    return { success: false }; // Not a targeted platform, skip
                 }
             }
         }
@@ -124,7 +124,7 @@ const processJobUrl = async (url, bot, options = {}) => {
                     description: scraped.content
                 };
             } else {
-                return false;
+                return { success: false };
             }
         }
 
@@ -161,12 +161,16 @@ const processJobUrl = async (url, bot, options = {}) => {
         console.log(`✅ Saved: ${newJob.title}`);
         console.log(`🔗 Apply Link: ${newJob.applyUrl}`);
 
-        await postJobToTelegram(newJob, bot);
-        return true;
+        const msgId = await postJobToTelegram(newJob, bot);
+        if (msgId) {
+            newJob.telegramMessageId = msgId;
+            await newJob.save();
+        }
+        return { success: true, jobId: newJob._id };
 
     } catch (err) {
         console.error(`   ❌ Error processing URL ${url}: ${err.message}`);
-        return false;
+        return { success: false, error: err.message };
     }
 };
 

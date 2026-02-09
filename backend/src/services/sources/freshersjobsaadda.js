@@ -1,7 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const Job = require('../../models/Job');
-const { waitWithSkip, postJobToTelegram } = require('./utils');
+const { waitWithSkip, postJobToTelegram, deleteTelegramPost } = require('./utils');
 
 const JSON_FEED_URL = 'https://freshersjobsaadda.blogspot.com/feeds/posts/default?alt=json';
 
@@ -89,11 +89,25 @@ const runFreshersJobsAaddaManual = async (bot, limit = 20) => {
                  continue;
              }
 
-             if (success) {
+             if (success && success.success) {
                  processed++;
                  consecutiveDuplicates = 0; // Reset
+                 const lastJobId = success.jobId;
+
                  if (processed < limit && processed < jobsToProcess.length - skipped) {
                      const waitResult = await waitWithSkip(21000);
+                     
+                     if (waitResult === 'delete' && lastJobId) {
+                         const jobToDelete = await Job.findById(lastJobId);
+                         if (jobToDelete && jobToDelete.telegramMessageId) {
+                             await deleteTelegramPost(bot, jobToDelete.telegramMessageId);
+                             console.log('🗑️ Deleted from Telegram.');
+                         }
+                         await Job.findByIdAndDelete(lastJobId);
+                         console.log('🗑️ Job deleted from database.');
+                         processed--;
+                     }
+
                      if (waitResult === 'quit') return { processed, skipped, action: 'quit' };
                      if (waitResult === 'next_source') return { processed, skipped, action: 'next' };
                  }

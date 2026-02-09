@@ -27,13 +27,30 @@ const postJobToTelegram = async (job, bot) => {
 
         message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
         
-        await bot.telegram.sendMessage(CHANNEL_ID, message, {
+        const sent = await bot.telegram.sendMessage(CHANNEL_ID, message, {
             parse_mode: 'Markdown',
             disable_web_page_preview: true,
         });
         console.log(`✅ Posted to channel: ${job.title}`);
+        return sent.message_id;
     } catch (err) {
         console.error('❌ Failed to post to Telegram:', err.message);
+        return null;
+    }
+};
+
+/**
+ * Deletes a message from Telegram
+ */
+const deleteTelegramPost = async (bot, messageId) => {
+    if (!bot || !messageId) return false;
+    try {
+        const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID;
+        await bot.telegram.deleteMessage(CHANNEL_ID, messageId);
+        return true;
+    } catch (err) {
+        console.error('❌ Failed to delete from Telegram:', err.message);
+        return false;
     }
 };
 
@@ -66,6 +83,9 @@ const waitWithSkip = async (ms) => {
             } else if (str === 't') {
                 console.log('\n⏭️ Moving to next source...');
                 finish('next_source');
+            } else if (str === 'd') {
+                console.log('\n🗑️ Deleting last posted job...');
+                finish('delete');
             }
         };
 
@@ -110,7 +130,7 @@ const waitWithSkip = async (ms) => {
             if (finished) return;
             countdown--;
             if (countdown >= 0) {
-                process.stdout.write(`\r⏳ Waiting ${countdown}s... [s: skip, q: quit, t: next source]     `);
+                process.stdout.write(`\r⏳ Waiting ${countdown}s... [s: skip, q: quit, t: next source, d: delete last]     `);
             }
         }, 1000);
 
@@ -125,5 +145,6 @@ const waitWithSkip = async (ms) => {
 
 module.exports = {
     waitWithSkip,
-    postJobToTelegram
+    postJobToTelegram,
+    deleteTelegramPost
 };
