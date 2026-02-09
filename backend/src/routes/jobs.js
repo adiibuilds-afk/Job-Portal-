@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Job = require('../models/Job');
-const { attachUser } = require('./middleware');
+const { attachUser } = require('./user/middleware');
 
 router.get('/', async (req, res) => {
     try {
