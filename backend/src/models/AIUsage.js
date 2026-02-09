@@ -19,7 +19,7 @@ const AIUsageSchema = new mongoose.Schema({
         resumeScoring: { type: Number, default: 0 },
         other: { type: Number, default: 0 }
     },
-    errors: {
+    errorCount: {
         type: Number,
         default: 0
     },
@@ -54,7 +54,7 @@ AIUsageSchema.statics.logError = async function(isRateLimit = false) {
     
     const update = {
         $inc: {
-            errors: 1,
+            errorCount: 1,
             ...(isRateLimit ? { rateLimitHits: 1 } : {})
         }
     };

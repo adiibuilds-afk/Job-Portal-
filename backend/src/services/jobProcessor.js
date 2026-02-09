@@ -45,7 +45,7 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         roleType: refinedData.roleType || rawData.roleType || rawData.role || 'Engineering',
         seniority: refinedData.seniority || rawData.seniority || 'Entry',
         minSalary: refinedData.minSalary || parseMinSalary(refinedData.salary || rawData.pay || rawData.salary),
-        isRemote: refinedData.isRemote || (refinedData.location?.toLowerCase().includes('remote')) || (rawData.location?.toLowerCase().includes('remote')) || false,
+        isRemote: refinedData.isRemote || (String(refinedData.location || '').toLowerCase().includes('remote')) || (String(rawData.location || '').toLowerCase().includes('remote')) || false,
         rolesResponsibility: formatAiValue(refinedData.rolesResponsibility || rawData.rolesAndResponsibilities),
         requirements: formatAiValue(refinedData.requirements || rawData.requirements),
         niceToHave: formatAiValue(refinedData.niceToHave || rawData.niceToHave),

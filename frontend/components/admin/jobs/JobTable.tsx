@@ -17,6 +17,7 @@ export default function JobTable({ jobs, toggleJobStatus, deleteJob, clearAllJob
                 <thead className="bg-zinc-900/50 border-b border-zinc-800">
                     <tr>
                         <th className="px-6 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest">Job Details</th>
+                        <th className="px-6 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest text-center">Apply Link</th>
                         <th className="px-6 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest text-center">Traffic</th>
                         <th className="px-6 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest text-center">Status</th>
                         <th className="px-6 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest text-right">Actions</th>
@@ -25,7 +26,7 @@ export default function JobTable({ jobs, toggleJobStatus, deleteJob, clearAllJob
                 <tbody className="divide-y divide-zinc-800/50">
                     {jobs.length === 0 && (
                         <tr>
-                            <td colSpan={4} className="px-6 py-16 text-center text-zinc-600 font-bold">
+                            <td colSpan={5} className="px-6 py-16 text-center text-zinc-600 font-bold">
                                 No jobs found matching your criteria.
                             </td>
                         </tr>
@@ -62,6 +63,17 @@ export default function JobTable({ jobs, toggleJobStatus, deleteJob, clearAllJob
                                         )}
                                     </div>
                                 </div>
+                            </td>
+                            <td className="px-6 py-5 text-center">
+                                <a
+                                    href={job.applyUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg text-xs font-bold transition-all border border-blue-500/20 max-w-[200px]"
+                                >
+                                    <span className="truncate">{job.applyUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}...</span>
+                                    <ExternalLink className="w-3 h-3 shrink-0" />
+                                </a>
                             </td>
                             <td className="px-6 py-5">
                                 <div className="flex items-center justify-center gap-6">
