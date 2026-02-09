@@ -5,6 +5,7 @@ import { Providers } from '@/components/Providers';
 import BatchPopup from "@/components/onboarding/BatchPopup";
 import EmailSubscriptionTrigger from '@/components/EmailSubscriptionTrigger';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -99,6 +100,7 @@ export default function RootLayout({
           <EmailSubscriptionTrigger />
         </Providers>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
