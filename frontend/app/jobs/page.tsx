@@ -73,7 +73,6 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 
     return (
         <main className="min-h-screen bg-black">
-            <Navbar />
 
             {/* Premium Hero Header */}
             <section className="pt-28 pb-12 px-6 relative overflow-hidden">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SalaryChart from '@/components/analytics/SalaryChart';
 import axios from 'axios';
@@ -36,9 +35,6 @@ export default function SalaryInsightsPage() {
 
     return (
         <main className="min-h-screen bg-black text-white selection:bg-amber-500/30">
-            <Suspense fallback={<div className="h-20 bg-black" />}>
-                <Navbar />
-            </Suspense>
 
             <div className="max-w-6xl mx-auto px-6 pt-32 pb-20">
                 {/* Hero */}

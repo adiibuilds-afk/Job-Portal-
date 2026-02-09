@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Bookmark, Flag, Link2, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
+import { Bookmark, Flag, Link2, CheckCircle, AlertTriangle, FileText, Share2 } from 'lucide-react';
 import { useSavedJobs } from '@/hooks/useSavedJobs';
 import { useAppliedJobs } from '@/hooks/useAppliedJobs';
 import { reportJob } from '@/services/api';
@@ -123,6 +123,32 @@ export default function JobActions({ jobId, jobTitle, jobSlug }: JobActionsProps
                         Copy Job Link
                     </>
                 )}
+            </button>
+
+            {/* Share on WhatsApp */}
+            <button
+                onClick={() => {
+                    const user = session?.user as any;
+                    const url = `${window.location.origin}/job/${jobSlug}${user?.id ? `?ref=${user.referralCode || ''}` : ''}`;
+                    const message = `🚀 *New Job Opening!* \n\n*${jobTitle}*\n🏢 *Company:* ${jobTitle.split('at')[1] || 'Click to see'}\n📍 *Apply here:* ${url}\n\n_Shared via JobGrid - #1 Engineering Job Portal_`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+
+                    // Award coins for sharing
+                    if (session) {
+                        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                        fetch(`${API_URL}/api/user/coins/share`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: session.user?.email })
+                        }).catch(e => console.error('Share reward error:', e));
+                    }
+                }}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 hover:bg-[#25D366]/20 transition-all"
+            >
+                <div className="w-5 h-5 flex items-center justify-center bg-[#25D366] rounded-full">
+                    <Share2 className="w-3 h-3 text-white fill-white" />
+                </div>
+                Share on WhatsApp
             </button>
 
             {/* Report Job */}

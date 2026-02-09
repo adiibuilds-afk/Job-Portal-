@@ -23,6 +23,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
                 title: `${job.title} at ${job.company}`,
                 description: `${job.title} job opening at ${job.company}. Apply now!`,
                 type: 'article',
+                images: [
+                    {
+                        url: `/api/og?title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}&location=${encodeURIComponent(job.location || 'Remote')}&salary=${encodeURIComponent(job.salary || 'Competitive')}&batch=${encodeURIComponent(job.batch?.[0] || '')}`,
+                        width: 1200,
+                        height: 630,
+                        alt: `${job.title} at ${job.company}`,
+                    },
+                ],
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: `${job.title} at ${job.company}`,
+                description: `${job.title} job opening at ${job.company}. Apply now!`,
+                images: [`/api/og?title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}&location=${encodeURIComponent(job.location || 'Remote')}&salary=${encodeURIComponent(job.salary || 'Competitive')}&batch=${encodeURIComponent(job.batch?.[0] || '')}`],
             },
         };
     } catch {

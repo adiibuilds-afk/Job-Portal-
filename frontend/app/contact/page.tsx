@@ -1,14 +1,10 @@
 import { Suspense } from 'react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Mail, MapPin, Globe } from 'lucide-react';
 
 export default function ContactPage() {
     return (
         <main className="min-h-screen bg-black text-white">
-            <Suspense fallback={null}>
-                <Navbar />
-            </Suspense>
             <div className="max-w-4xl mx-auto px-6 pt-32 pb-20 text-center">
                 <h1 className="text-5xl font-black mb-4">Get in Touch</h1>
                 <p className="text-zinc-500 mb-12">Have questions or feedback? We'd love to hear from you.</p>

@@ -106,13 +106,25 @@ function NavbarContent() {
                             </form>
 
                             {session ? (
-                                <div className="hidden md:flex items-center gap-3">
-                                    <Link href="/profile">
+                                <div className="hidden md:flex items-center gap-4">
+                                    {/* Coins Indicator */}
+                                    <Link
+                                        href="/profile"
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full hover:bg-amber-500/20 transition-all group"
+                                    >
+                                        <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.5)]">
+                                            <span className="text-[10px] font-black text-black">G</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-amber-500">{(session.user as any).gridCoins || 0}</span>
+                                        <span className="text-[10px] text-amber-500/60 font-medium group-hover:text-amber-500 transition-colors">Coins</span>
+                                    </Link>
+
+                                    <Link href="/profile" className="flex items-center gap-3">
                                         {session.user?.image ? (
                                             <img
                                                 src={session.user.image}
                                                 alt="Profile"
-                                                className="w-10 h-10 rounded-full border border-zinc-700"
+                                                className="w-10 h-10 rounded-full border border-zinc-700 hover:border-amber-500 transition-colors"
                                             />
                                         ) : (
                                             <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center font-bold text-black border border-amber-400">
@@ -122,7 +134,7 @@ function NavbarContent() {
                                     </Link>
                                     <button
                                         onClick={() => signOut()}
-                                        className="text-zinc-400 hover:text-white text-sm font-medium"
+                                        className="text-zinc-500 hover:text-white text-xs font-medium transition-colors"
                                     >
                                         Log Out
                                     </button>

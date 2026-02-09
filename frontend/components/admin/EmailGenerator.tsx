@@ -131,8 +131,8 @@ export default function EmailGenerator() {
                         <button
                             onClick={() => setMode('ai')}
                             className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${mode === 'ai'
-                                    ? 'bg-zinc-800 text-white shadow-sm'
-                                    : 'text-zinc-500 hover:text-zinc-300'
+                                ? 'bg-zinc-800 text-white shadow-sm'
+                                : 'text-zinc-500 hover:text-zinc-300'
                                 }`}
                         >
                             AI Generator
@@ -140,8 +140,8 @@ export default function EmailGenerator() {
                         <button
                             onClick={() => setMode('manual')}
                             className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${mode === 'manual'
-                                    ? 'bg-zinc-800 text-white shadow-sm'
-                                    : 'text-zinc-500 hover:text-zinc-300'
+                                ? 'bg-zinc-800 text-white shadow-sm'
+                                : 'text-zinc-500 hover:text-zinc-300'
                                 }`}
                         >
                             Manual Entry

@@ -24,6 +24,7 @@ router.use('/jobs', jobRoutes);
 router.use('/stats', statsRoutes);
 router.use('/forum', forumRoutes);
 router.use('/resume', resumeRoutes);
+router.use('/live', require('./live'));
 
 // Shared job recommendation routes
 const Job = require('../models/Job');

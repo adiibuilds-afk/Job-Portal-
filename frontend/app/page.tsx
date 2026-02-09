@@ -33,7 +33,6 @@ export default async function Home() {
       {/* Gold grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
 
-      <Navbar />
       <div className="pt-28 relative z-10">
         <LatestJobsTicker />
       </div>

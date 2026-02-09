@@ -88,9 +88,6 @@ export default function DashboardPage() {
 
     return (
         <main className="min-h-screen bg-black text-white selection:bg-amber-500 selection:text-black">
-            <Suspense fallback={null}>
-                <Navbar />
-            </Suspense>
 
             <div className="max-w-7xl mx-auto px-4 pt-32 pb-20">
                 {/* Dashboard Header */}

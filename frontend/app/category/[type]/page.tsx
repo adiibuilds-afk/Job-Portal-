@@ -44,7 +44,6 @@ export default async function CategoryPage({ params }: PageProps) {
 
     return (
         <main className="min-h-screen bg-black">
-            <Navbar />
 
             {/* Header */}
             <section className="pt-32 pb-10 px-6 border-b border-zinc-800">
@@ -93,8 +92,8 @@ export default async function CategoryPage({ params }: PageProps) {
                                             key={cat}
                                             href={`/category/${cat}`}
                                             className={`block px-4 py-2 rounded-lg text-sm transition-colors ${cat === params.type
-                                                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                                : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                                                 }`}
                                         >
                                             {cat === 'govt' ? 'Government' : cat === 'private' ? 'Private' : cat === 'it' ? 'IT & Software' : 'Banking'}

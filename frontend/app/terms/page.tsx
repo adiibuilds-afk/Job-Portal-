@@ -5,9 +5,6 @@ import Footer from '@/components/Footer';
 export default function TermsPage() {
     return (
         <main className="min-h-screen bg-black text-white">
-            <Suspense fallback={null}>
-                <Navbar />
-            </Suspense>
             <div className="max-w-4xl mx-auto px-6 pt-32 pb-20">
                 <h1 className="text-4xl font-black mb-8">Terms and Conditions</h1>
                 <div className="text-zinc-400 space-y-6 text-sm leading-relaxed">

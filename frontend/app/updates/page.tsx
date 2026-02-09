@@ -1,4 +1,3 @@
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Sparkles, Zap, Shield, Globe, Bot, Layout, Megaphone } from 'lucide-react';
 
@@ -73,7 +72,6 @@ export default function UpdatesPage() {
 
     return (
         <main className="min-h-screen bg-black text-white font-sans selection:bg-amber-500/30">
-            <Navbar />
 
             <section className="relative pt-32 pb-20 px-6 overflow-hidden">
                 {/* Background Effects */}

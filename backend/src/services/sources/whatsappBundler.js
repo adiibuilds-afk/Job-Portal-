@@ -27,7 +27,7 @@ class WhatsAppBundler {
         console.log(`   📡 Sending WhatsApp bundle to Admin...`);
         const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
         
-        let message = `📱 *WhatsApp Bundle (Ready to Copy)*\n\n`;
+        let message = "```\n";
         
         this.jobs.forEach((job, index) => {
             const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;
@@ -43,7 +43,8 @@ class WhatsAppBundler {
         message += `📢 *Join Our Channels:*\n\n`;
         message += `🔹 Telegram: https://t.me/jobgridupdates\n`;
         message += `🔹 WhatsApp: https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n`;
-        message += `🔹 LinkedIn: https://www.linkedin.com/company/jobgrid-in`;
+        message += `🔹 LinkedIn: https://www.linkedin.com/company/jobgrid-in\n`;
+        message += "```";
 
         try {
             await this.bot.telegram.sendMessage(this.adminId, message, {

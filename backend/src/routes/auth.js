@@ -13,23 +13,57 @@ router.post('/google', async (req, res) => {
         let user = await User.findOne({ email });
         let isNewUser = false;
         let coinsAwarded = 0;
+        const { referralCode: appliedReferralCode } = req.body;
 
         if (!user) {
             // New User Signup
             isNewUser = true;
             coinsAwarded = 10;
+            
+            const { generateReferralCode } = require('./user/helpers');
+            
             user = new User({
                 email,
                 name,
                 image,
                 googleId,
                 gridCoins: 10, // 10 coins on signup
+                referralCode: generateReferralCode(),
                 lastVisit: new Date(),
                 lastLoginDate: new Date(),
                 loginStreak: 1
             });
-            console.log(`✨ New User Signup: ${email} (+10 coins)`);
+
+            // Handle Referral
+            if (appliedReferralCode) {
+                const referrer = await User.findOne({ referralCode: appliedReferralCode.toUpperCase() });
+                if (referrer) {
+                    user.referredBy = referrer._id;
+                    user.gridCoins += 5; // Extra 5 coins for being referred
+                    coinsAwarded += 5;
+
+                    referrer.gridCoins = (referrer.gridCoins || 0) + 10;
+                    referrer.referralCount = (referrer.referralCount || 0) + 1;
+                    await referrer.save();
+
+                    const CoinTransaction = require('../models/CoinTransaction');
+                    await CoinTransaction.create({
+                        userId: referrer._id,
+                        type: 'earn',
+                        amount: 10,
+                        reason: 'referral',
+                        description: `Referred ${email}`
+                    });
+                }
+            }
+
+            console.log(`✨ New User Signup: ${email} (+${coinsAwarded} coins)`);
         } else {
+            // Ensure existing user has a referral code
+            if (!user.referralCode) {
+                const { generateReferralCode } = require('./user/helpers');
+                user.referralCode = generateReferralCode();
+            }
             // Existing User - Daily Visit Check
             const now = new Date();
             const lastVisit = user.lastVisit ? new Date(user.lastVisit) : new Date(0);

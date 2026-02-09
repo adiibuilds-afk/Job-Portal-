@@ -61,7 +61,6 @@ export default function ProfilePage() {
 
     return (
         <main className="min-h-screen bg-black text-white selection:bg-amber-500 selection:text-black">
-            <Navbar />
 
             <div className="max-w-5xl mx-auto px-4 pt-32 pb-20">
                 {/* Hero Profile Section */}

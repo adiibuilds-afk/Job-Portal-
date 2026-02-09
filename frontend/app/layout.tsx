@@ -5,7 +5,8 @@ import { Providers } from '@/components/Providers';
 import BatchPopup from "@/components/onboarding/BatchPopup";
 import EmailSubscriptionTrigger from '@/components/EmailSubscriptionTrigger';
 import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
+import Navbar from "@/components/Navbar";
+import LivePulse from "@/components/LivePulse";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -93,14 +94,32 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#000000" />
       </head>
-      <body className={`${outfit.variable} font-sans antialiased`}>
+      <body className={`${outfit.variable} font-sans antialiased pt-28 md:pt-32`}>
         <Providers>
-          {children}
+          <Navbar />
+          <div className="fixed top-[100px] left-0 right-0 z-40">
+            <LivePulse />
+          </div>
+          <main>{children}</main>
           <BatchPopup />
           <EmailSubscriptionTrigger />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function() {
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const ref = urlParams.get('ref');
+                  if (ref) {
+                    localStorage.setItem('referralCode', ref);
+                    document.cookie = "referralCode=" + ref + "; path=/; max-age=" + (30 * 24 * 60 * 60);
+                    console.log('Referral code captured:', ref);
+                  }
+                })();
+              `,
+            }}
+          />
         </Providers>
         <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );
