@@ -8,14 +8,27 @@ interface JobTableProps {
     deleteJob: (id: string) => void;
     clearAllJobs: () => void;
     totalCount: number;
+    selectedJobIds: string[];
+    toggleSelection: (id: string) => void;
+    toggleAll: () => void;
 }
 
-export default function JobTable({ jobs, toggleJobStatus, deleteJob, clearAllJobs, totalCount }: JobTableProps) {
+export default function JobTable({ jobs, toggleJobStatus, deleteJob, clearAllJobs, totalCount, selectedJobIds, toggleSelection, toggleAll }: JobTableProps) {
+    const allSelected = jobs.length > 0 && jobs.every(j => selectedJobIds.includes(j._id));
+
     return (
         <div className="bg-zinc-950 border border-zinc-800 rounded-[2.5rem] overflow-hidden">
             <table className="w-full text-left">
                 <thead className="bg-zinc-900/50 border-b border-zinc-800">
                     <tr>
+                        <th className="px-6 py-5 w-10">
+                            <input
+                                type="checkbox"
+                                checked={allSelected}
+                                onChange={toggleAll}
+                                className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-blue-500 focus:ring-blue-500/20"
+                            />
+                        </th>
                         <th className="px-6 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest">Job Details</th>
                         <th className="px-6 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest text-center">Apply Link</th>
                         <th className="px-6 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest text-center">Traffic</th>
@@ -26,13 +39,21 @@ export default function JobTable({ jobs, toggleJobStatus, deleteJob, clearAllJob
                 <tbody className="divide-y divide-zinc-800/50">
                     {jobs.length === 0 && (
                         <tr>
-                            <td colSpan={5} className="px-6 py-16 text-center text-zinc-600 font-bold">
+                            <td colSpan={6} className="px-6 py-16 text-center text-zinc-600 font-bold">
                                 No jobs found matching your criteria.
                             </td>
                         </tr>
                     )}
                     {jobs.map(job => (
-                        <tr key={job._id} className="hover:bg-zinc-900/30 transition-colors group">
+                        <tr key={job._id} className={`hover:bg-zinc-900/30 transition-colors group ${selectedJobIds.includes(job._id) ? 'bg-blue-500/5' : ''}`}>
+                            <td className="px-6 py-5">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedJobIds.includes(job._id)}
+                                    onChange={() => toggleSelection(job._id)}
+                                    className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-blue-500 focus:ring-blue-500/20"
+                                />
+                            </td>
                             <td className="px-6 py-5">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-sm font-black text-amber-500 overflow-hidden shrink-0">

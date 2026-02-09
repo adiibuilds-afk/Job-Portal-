@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     // SEO Landing Pages (Programmatic)
-    const seoKeywords = ['remote', 'bangalore', 'frontend', 'backend', 'fullstack', 'sde', 'freshers-2024', 'freshers-2025', 'internship', 'mnc', 'startup', 'graduate'];
+    const seoKeywords = ['remote', 'bangalore', 'frontend', 'backend', 'fullstack', 'sde', 'freshers-2023', 'freshers-2024', 'freshers-2025', 'freshers-2026', 'internship', 'mnc', 'startup', 'graduate'];
     const seoPages = seoKeywords.map(keyword => ({
         url: `${baseUrl}/jobs/${keyword}-jobs`,
         lastModified: new Date(),

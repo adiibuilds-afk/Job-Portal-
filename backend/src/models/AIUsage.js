@@ -19,6 +19,12 @@ const AIUsageSchema = new mongoose.Schema({
         resumeScoring: { type: Number, default: 0 },
         other: { type: Number, default: 0 }
     },
+    apiKeys: {
+        apiKey1: { tokens: { type: Number, default: 0 }, requests: { type: Number, default: 0 } },
+        apiKey2: { tokens: { type: Number, default: 0 }, requests: { type: Number, default: 0 } },
+        apiKey3: { tokens: { type: Number, default: 0 }, requests: { type: Number, default: 0 } },
+        apiKey4: { tokens: { type: Number, default: 0 }, requests: { type: Number, default: 0 } }
+    },
     errorCount: {
         type: Number,
         default: 0
@@ -30,14 +36,17 @@ const AIUsageSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Static method to log usage
-AIUsageSchema.statics.logUsage = async function(tokens, type = 'other') {
+AIUsageSchema.statics.logUsage = async function(tokens, type = 'other', keyIndex = 0) {
     const today = new Date().toISOString().split('T')[0];
+    const keyField = `apiKey${(keyIndex % 4) + 1}`;
     
     const update = {
         $inc: {
             tokensUsed: tokens,
             requestCount: 1,
-            [`breakdown.${type}`]: tokens
+            [`breakdown.${type}`]: tokens,
+            [`apiKeys.${keyField}.tokens`]: tokens,
+            [`apiKeys.${keyField}.requests`]: 1
         }
     };
     

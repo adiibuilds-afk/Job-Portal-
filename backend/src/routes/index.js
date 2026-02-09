@@ -10,8 +10,10 @@ const statsRoutes = require('./stats');
 const forumRoutes = require('./forum');
 const resumeRoutes = require('./resume');
 const adminAuthRoutes = require('./adminAuth');
+const authRoutes = require('./auth');
 
 // Mount routes
+router.use('/auth', authRoutes); // Public auth (Google, etc)
 router.use('/user', userRoutes);
 router.use('/admin', adminRoutes);
 router.use('/admin/cron', require('./admin/cron'));

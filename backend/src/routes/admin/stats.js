@@ -37,8 +37,8 @@ router.get('/dashboard-stats', async (req, res) => {
             User.countDocuments({ createdAt: { $gte: todayStart } }),
             User.countDocuments({ createdAt: { $gte: weekAgo } }),
             User.countDocuments({}),
-            User.countDocuments({ lastLoginDate: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }),
-            User.countDocuments({ lastLoginDate: { $gte: monthAgo } }),
+            User.countDocuments({ $or: [{ lastLoginDate: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }, { lastVisit: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }] }),
+            User.countDocuments({ $or: [{ lastLoginDate: { $gte: monthAgo } }, { lastVisit: { $gte: monthAgo } }] }),
             Job.countDocuments({ createdAt: { $gte: todayStart } }),
             Job.countDocuments({ createdAt: { $gte: weekAgo } }),
             User.aggregate([{ $group: { _id: null, total: { $sum: "$gridCoins" } } }]),
@@ -48,7 +48,7 @@ router.get('/dashboard-stats', async (req, res) => {
             ResumeQueue.countDocuments({ status: { $in: ['pending', 'processing'] } }),
             Job.countDocuments({ createdAt: { $lt: fortyFiveDaysAgo } }),
             Job.countDocuments({ clickCount: { $lte: 0 }, saveCount: { $lte: 0 } }),
-            Job.countDocuments({ reported: true })
+            Job.countDocuments({ reportCount: { $gt: 0 } })
         ]);
 
         res.json({

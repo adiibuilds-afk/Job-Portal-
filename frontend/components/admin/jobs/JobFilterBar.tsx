@@ -8,11 +8,15 @@ interface JobFilterBarProps {
     totalCount: number;
     reportedCount: number;
     onClearReported: () => void;
+    selectedCount: number;
+    onBulkDelete: () => void;
+    isDeleting: boolean;
 }
 
 export default function JobFilterBar({
     searchQuery, setSearchQuery, jobFilter, setJobFilter,
-    totalCount, reportedCount, onClearReported
+    totalCount, reportedCount, onClearReported,
+    selectedCount, onBulkDelete, isDeleting
 }: JobFilterBarProps) {
     return (
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-[2rem] p-6">
@@ -44,7 +48,18 @@ export default function JobFilterBar({
                         </button>
                     </div>
 
-                    {reportedCount > 0 && (
+                    {selectedCount > 0 && (
+                        <button
+                            onClick={onBulkDelete}
+                            disabled={isDeleting}
+                            className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-red-500/20 uppercase tracking-wider flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isDeleting ? <span className="animate-spin">⏳</span> : <Trash2 className="w-4 h-4" />}
+                            Delete Selected ({selectedCount})
+                        </button>
+                    )}
+
+                    {reportedCount > 0 && selectedCount === 0 && (
                         <button
                             onClick={onClearReported}
                             className="px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-black rounded-xl transition-all border border-red-500/20 uppercase tracking-wider flex items-center gap-2"

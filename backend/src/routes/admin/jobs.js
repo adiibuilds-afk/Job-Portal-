@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const Job = require('../../models/Job');
 
+router.post('/bulk-delete', async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: 'No IDs provided' });
+        }
+        const result = await Job.deleteMany({ _id: { $in: ids } });
+        res.json({ success: true, message: `Successfully deleted ${result.deletedCount} jobs.` });
+    } catch (error) {
+        console.error('Bulk Delete Error:', error);
+        res.status(500).json({ error: 'Failed to delete jobs' });
+    }
+});
+
 router.delete('/clear', async (req, res) => {
     try {
         const result = await Job.deleteMany({});

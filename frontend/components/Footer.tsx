@@ -67,9 +67,9 @@ export default function Footer() {
                     <div>
                         <h4 className="text-white font-semibold mb-4">Batches</h4>
                         <ul className="space-y-2">
-                            {['2023 Batch', '2024 Batch', '2025 Batch', '2026 Batch', '2027 Batch', '2028 Batch', '2029 Batch'].map((item) => (
+                            {['Fresher 23', 'Fresher 24', 'Fresher 25', '2023 Batch', '2024 Batch', '2025 Batch', '2026 Batch', '2027 Batch', '2028 Batch', '2029 Batch'].map((item) => (
                                 <li key={item}>
-                                    <Link href={`/jobs?batch=${item.split(' ')[0]}`} className="text-zinc-500 hover:text-amber-400 text-sm transition-colors">
+                                    <Link href={`/jobs?batch=${item.split(' ').pop()}`} className="text-zinc-500 hover:text-amber-400 text-sm transition-colors">
                                         {item}
                                     </Link>
                                 </li>

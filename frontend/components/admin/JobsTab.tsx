@@ -22,13 +22,63 @@ export default function JobsTab({
     jobs, analytics, jobFilter, setJobFilter,
     toggleJobStatus, deleteJob, clearAllJobs, clearReportedJobs
 }: JobsTabProps) {
+    const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+
     const reportedJobs = jobs.filter(j => (j.reportCount || 0) > 0);
     const filteredJobs = jobFilter === 'reported' ? reportedJobs : jobs;
     const displayJobs = filteredJobs.filter(j =>
         j.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         j.company.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const toggleSelection = (id: string) => {
+        setSelectedJobIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const toggleAll = () => {
+        if (selectedJobIds.length === displayJobs.length) {
+            setSelectedJobIds([]);
+        } else {
+            setSelectedJobIds(displayJobs.map(j => j._id));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedJobIds.length === 0) return;
+        if (!confirm(`Are you sure you want to delete ${selectedJobIds.length} jobs? This cannot be undone.`)) return;
+
+        setIsDeleting(true);
+        try {
+            const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com';
+            const res = await fetch(`${BACKEND_URL}/api/admin/jobs/bulk-delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedJobIds })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                // Remove deleted jobs from local state (we can't easily update parent 'jobs' prop without a callback, 
+                // but we can force a refresh if the parent passed one, or just wait for the next poll)
+                // For now, let's assume the parent polling will catch it, but we should clear selection
+                setSelectedJobIds([]);
+                // Trigger a refresh would be ideal, but we don't have a refresh prop. 
+                // We'll rely on the parent's polling, but clearing selection is key.
+                alert(data.message);
+            } else {
+                alert(data.error || 'Failed to delete jobs');
+            }
+        } catch (err) {
+            console.error('Bulk delete failed', err);
+            alert('Failed to delete jobs');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -57,6 +107,9 @@ export default function JobsTab({
                 totalCount={jobs.length}
                 reportedCount={reportedJobs.length}
                 onClearReported={clearReportedJobs}
+                selectedCount={selectedJobIds.length}
+                onBulkDelete={handleBulkDelete}
+                isDeleting={isDeleting}
             />
 
             <JobTable
@@ -65,6 +118,9 @@ export default function JobsTab({
                 deleteJob={deleteJob}
                 clearAllJobs={clearAllJobs}
                 totalCount={jobs.length}
+                selectedJobIds={selectedJobIds}
+                toggleSelection={toggleSelection}
+                toggleAll={toggleAll}
             />
         </div>
     );

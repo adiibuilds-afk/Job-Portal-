@@ -154,6 +154,10 @@ router.post('/queue/bulk-delete', async (req, res) => {
         }
         
         const result = await ScheduledJob.deleteMany({ _id: { $in: ids } });
+        
+        const AuditLog = require('../models/AuditLog');
+        await AuditLog.log('QUEUE_BULK_DELETE', 'system', { count: result.deletedCount, ids });
+
         res.json({ message: `Deleted ${result.deletedCount} jobs` });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -295,11 +299,11 @@ router.get('/dashboard-stats', async (req, res) => {
         const usersWeek = await User.countDocuments({ createdAt: { $gte: startOfWeek } });
 
         // DAU/MAU
-        const todayStr = now.toISOString().split('T')[0];
-        const todayAnalytics = await Analytics.findOne({ date: todayStr });
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         
-        const dau = todayAnalytics ? todayAnalytics.activeUsers.length : 0;
-        const mau = await User.countDocuments({}); 
+        const dau = await User.countDocuments({ $or: [{ lastLoginDate: { $gte: oneDayAgo } }, { lastVisit: { $gte: oneDayAgo } }] });
+        const mau = await User.countDocuments({ $or: [{ lastLoginDate: { $gte: monthAgo } }, { lastVisit: { $gte: monthAgo } }] });
 
         // Resume Scans Today
         const scansToday = todayAnalytics ? todayAnalytics.metrics.resumeScans : 0;
@@ -448,6 +452,10 @@ router.put('/jobs/:id/toggle', async (req, res) => {
         
         job.isActive = !job.isActive;
         await job.save();
+
+        const AuditLog = require('../models/AuditLog');
+        await AuditLog.log('JOB_STATUS_TOGGLED', 'job', { targetId: job._id, title: job.title, isActive: job.isActive });
+
         res.json({ success: true, isActive: job.isActive });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -594,10 +602,10 @@ router.get('/ai-usage', async (req, res) => {
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         const usage = await AIUsage.find({ date: { $gte: sevenDaysAgo } }).sort({ date: -1 });
         
-        const todayUsage = usage.find(u => u.date === today) || { tokensUsed: 0, requestCount: 0 };
-        const totalTokens = usage.reduce((acc, u) => acc + u.tokensUsed, 0);
-        const totalRequests = usage.reduce((acc, u) => acc + u.requestCount, 0);
-        const totalErrors = usage.reduce((acc, u) => acc + u.errors, 0);
+        const todayUsage = usage.find(u => u.date === today) || { tokensUsed: 0, requestCount: 0, apiKeys: {} };
+        const totalTokens = usage.reduce((acc, u) => acc + (u.tokensUsed || 0), 0);
+        const totalRequests = usage.reduce((acc, u) => acc + (u.requestCount || 0), 0);
+        const totalErrors = usage.reduce((acc, u) => acc + (u.errorCount || 0), 0);
         
         // Groq free tier: ~14,400 requests/day, ~6000 tokens/minute
         const dailyLimit = 500000; // Rough estimate
@@ -605,6 +613,7 @@ router.get('/ai-usage', async (req, res) => {
         
         res.json({
             today: todayUsage,
+            apiKeys: todayUsage.apiKeys, // Breakdown for the 4 keys
             week: { totalTokens, totalRequests, totalErrors },
             history: usage,
             quota: {

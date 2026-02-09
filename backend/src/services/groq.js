@@ -104,7 +104,7 @@ Rules:
     const tokens = completion.usage?.total_tokens || 0;
     try {
       const AIUsage = require('../models/AIUsage');
-      await AIUsage.logUsage(tokens, 'job_parsing');
+      await AIUsage.logUsage(tokens, 'job_parsing', currentKeyIndex);
     } catch (e) { /* silent fail */ }
 
     const content = completion.choices[0]?.message?.content || '{}';
@@ -177,7 +177,7 @@ Rules:
     const tokens = completion.usage?.total_tokens || 0;
     try {
       const AIUsage = require('../models/AIUsage');
-      await AIUsage.logUsage(tokens, 'seoGeneration');
+      await AIUsage.logUsage(tokens, 'seoGeneration', currentKeyIndex);
     } catch (e) { /* silent fail */ }
 
     const content = completion.choices[0]?.message?.content || '{}';

@@ -65,6 +65,7 @@ const UserSchema = new mongoose.Schema({
     // Login Streak (7-day streak = 10 coins)
     loginStreak: { type: Number, default: 0 },
     lastLoginDate: { type: Date },
+    lastVisit: { type: Date, default: Date.now }, // Track daily visits
     
     // Weekly Share Limit (max 20 coins/week from shares)
     weeklyShares: { type: Number, default: 0 },

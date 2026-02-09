@@ -5,6 +5,18 @@ import { Sparkles, Zap, Shield, Globe, Bot, Layout, Megaphone } from 'lucide-rea
 export default function UpdatesPage() {
     const updates = [
         {
+            date: "February 10, 2026",
+            title: "Rewards, Bulk Actions & Advanced Stats",
+            icon: Zap,
+            features: [
+                "Grid Coin System: Earn 10 coins on signup and 1 coin for every daily visit.",
+                "Admin Bulk Actions: Delete multiple jobs at once for faster management.",
+                "AI Usage Dashboard: Real-time tracking of token usage across 4 API nodes.",
+                "Deeper Analytics: Improved DAU/MAU reporting including daily visits.",
+                "Performance Fixes: Accurate 'New Today' job counts for large hiring cycles."
+            ]
+        },
+        {
             date: "February 9, 2026",
             title: "Enhanced Job Discovery",
             icon: Sparkles,

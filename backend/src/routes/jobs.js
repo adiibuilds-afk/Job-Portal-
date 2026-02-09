@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Job = require('../models/Job');
+const { attachUser } = require('./middleware');
 
 router.get('/', async (req, res) => {
     try {
-        const { q, category, location, batch, tags, jobType, roleType, minSalary, isRemote, ids, page = 1, limit = 20 } = req.query;
+        const { q, category, location, batch, tags, jobType, roleType, minSalary, isRemote, ids, page = 1, limit = 10 } = req.query;
         let query = {};
         if (ids) query._id = { $in: ids.split(',') };
         if (q) {
@@ -51,12 +52,17 @@ router.get('/', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-router.get('/:slug', async (req, res) => {
+router.get('/:slug', attachUser, async (req, res) => {
     try {
         const job = await Job.findOne({ slug: req.params.slug });
         if (!job) return res.status(404).json({ message: 'Job not found' });
         job.views += 1;
         await job.save();
+
+        // Track Analytics
+        const { trackEvent } = require('../services/analytics');
+        await trackEvent('jobViews', req.user?._id).catch(() => {});
+
         res.json(job);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -68,12 +74,17 @@ router.post('/:id/report', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-router.post('/:id/click', async (req, res) => {
+router.post('/:id/click', attachUser, async (req, res) => {
     try {
         const job = await Job.findById(req.params.id);
         if (!job) return res.status(404).json({ message: 'Job not found' });
         job.clicks += 1;
         await job.save();
+
+        // Track Analytics
+        const { trackEvent } = require('../services/analytics');
+        await trackEvent('jobClicks', req.user?._id).catch(() => {});
+
         res.json({ success: true, clicks: job.clicks });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

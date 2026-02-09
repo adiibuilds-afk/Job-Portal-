@@ -7,7 +7,9 @@ interface AIUsageData {
     today: {
         tokensUsed: number;
         requestCount: number;
+        apiKeys: Record<string, { tokens: number; requests: number }>;
     };
+    apiKeys: Record<string, { tokens: number; requests: number }>;
     week: {
         totalTokens: number;
         totalRequests: number;
@@ -70,86 +72,92 @@ export default function AIUsageCard() {
     const strokeColor = percentUsed > 80 ? '#ef4444' : percentUsed > 50 ? '#f59e0b' : '#22c55e';
 
     return (
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-900/50 border border-zinc-800 hover:border-purple-500/30 transition-all">
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-900/50 border border-zinc-800 hover:border-purple-500/30 transition-all flex flex-col h-full">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <div className="p-2 rounded-xl bg-purple-500/10">
                         <Brain className="w-5 h-5 text-purple-500" />
                     </div>
-                    <h3 className="font-bold text-white">AI Usage</h3>
+                    <h3 className="font-bold text-white uppercase tracking-wider text-xs">AI Ecosystem</h3>
                 </div>
-                <div className="flex items-center gap-1 text-xs text-zinc-500">
+                <div className="flex items-center gap-1 text-[10px] text-zinc-500 font-bold">
                     <Clock className="w-3 h-3" />
-                    <span>Resets in {getTimeUntilReset()}</span>
+                    <span>Reset in {getTimeUntilReset()}</span>
                 </div>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 mb-6">
                 {/* Circular Progress */}
-                <div className="relative w-24 h-24">
+                <div className="relative w-20 h-20 shrink-0">
                     <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="40" cy="40" r="36" fill="none" stroke="#27272a" strokeWidth="6" />
                         <circle
-                            cx="48"
-                            cy="48"
-                            r="40"
-                            fill="none"
-                            stroke="#27272a"
-                            strokeWidth="8"
-                        />
-                        <circle
-                            cx="48"
-                            cy="48"
-                            r="40"
-                            fill="none"
-                            stroke={strokeColor}
-                            strokeWidth="8"
-                            strokeLinecap="round"
-                            strokeDasharray={`${percentUsed * 2.51} 251`}
+                            cx="40" cy="40" r="36" fill="none" stroke={strokeColor} strokeWidth="6"
+                            strokeLinecap="round" strokeDasharray={`${percentUsed * 2.26} 226`}
                             className="transition-all duration-500"
                         />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-xl font-bold text-white">{percentUsed}%</span>
-                        <span className="text-[10px] text-zinc-500">used</span>
+                        <span className="text-lg font-black text-white">{percentUsed}%</span>
+                        <span className="text-[8px] text-zinc-500 uppercase font-black">quota</span>
                     </div>
                 </div>
 
-                {/* Stats */}
-                <div className="flex-1 space-y-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-amber-500" />
-                            <span className="text-sm text-zinc-400">Today</span>
-                        </div>
-                        <span className="font-mono text-white">
-                            {formatNumber(data?.today?.tokensUsed || 0)} tokens
-                        </span>
+                <div className="flex-1 grid grid-cols-2 gap-2">
+                    <div className="bg-zinc-950/50 p-2 rounded-xl border border-zinc-800">
+                        <span className="text-[8px] text-zinc-500 block uppercase font-black mb-1">Tokens Today</span>
+                        <span className="text-sm font-black text-white">{formatNumber(data?.today?.tokensUsed || 0)}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-blue-500" />
-                            <span className="text-sm text-zinc-400">This Week</span>
-                        </div>
-                        <span className="font-mono text-white">
-                            {formatNumber(data?.week?.totalTokens || 0)} tokens
-                        </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <AlertTriangle className="w-4 h-4 text-red-500" />
-                            <span className="text-sm text-zinc-400">Errors</span>
-                        </div>
-                        <span className="font-mono text-red-400">
-                            {data?.week?.totalErrors || 0}
-                        </span>
+                    <div className="bg-zinc-950/50 p-2 rounded-xl border border-zinc-800">
+                        <span className="text-[8px] text-zinc-500 block uppercase font-black mb-1">Active Keys</span>
+                        <span className="text-sm font-black text-purple-400">4 / 4</span>
                     </div>
                 </div>
             </div>
 
-            {/* Requests count */}
-            <div className="mt-4 pt-4 border-t border-zinc-800 flex items-center justify-between text-sm">
-                <span className="text-zinc-500">API Requests Today</span>
-                <span className="font-mono text-zinc-300">{data?.today?.requestCount || 0}</span>
+            {/* API Keys Breakdown */}
+            <div className="space-y-2 mb-6">
+                <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-2 px-1">Node Distribution (Tokens)</p>
+                {[1, 2, 3, 4].map((i) => {
+                    const keyData = data?.apiKeys?.[`apiKey${i}`] || { tokens: 0, requests: 0 };
+                    const maxTokensToday = Math.max(...(Object.values(data?.apiKeys || {}) as any[]).map(k => k.tokens), 1);
+                    const width = (keyData.tokens / maxTokensToday) * 100;
+
+                    return (
+                        <div key={i} className="group">
+                            <div className="flex justify-between items-center text-[10px] mb-1 px-1">
+                                <span className="font-bold text-zinc-400">API Key {i}</span>
+                                <span className="font-mono text-zinc-500">{formatNumber(keyData.tokens)} tkn</span>
+                            </div>
+                            <div className="h-1.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
+                                <div
+                                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-1000"
+                                    style={{ width: `${Math.max(2, width)}%` }}
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-auto grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800">
+                <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    <div>
+                        <p className="text-[8px] text-zinc-500 uppercase font-black">History (7d)</p>
+                        <p className="text-xs font-black text-white">{formatNumber(data?.week?.totalTokens || 0)}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 text-right justify-end">
+                    <div className="text-right">
+                        <p className="text-[8px] text-zinc-500 uppercase font-black text-right">Error Buffer</p>
+                        <p className={`text-xs font-black ${data?.week?.totalErrors! > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                            {data?.week?.totalErrors || 0} hits
+                        </p>
+                    </div>
+                    <div className={`w-1.5 h-1.5 rounded-full ${data?.week?.totalErrors! > 0 ? 'bg-red-500' : 'bg-green-500'}`} />
+                </div>
             </div>
         </div>
     );

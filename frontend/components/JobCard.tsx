@@ -158,7 +158,7 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                                     <Building2 className="w-3.5 h-3.5 text-zinc-500" />
                                     <span className="text-sm text-zinc-400 font-medium">{job.company}</span>
                                 </div>
-                                {job.views && job.views > 10 && (
+                                {!!job.views && job.views > 10 && (
                                     <div className="flex items-center gap-1 text-zinc-600">
                                         <Eye className="w-3 h-3" />
                                         <span className="text-[10px] font-bold">{job.views}</span>
