@@ -166,6 +166,12 @@ const processJobUrl = async (url, bot, options = {}) => {
             newJob.telegramMessageId = msgId;
             await newJob.save();
         }
+
+        // Add to WhatsApp Bundle if requested
+        if (options.bundler) {
+            await options.bundler.addJob(newJob);
+        }
+
         return { success: true, jobId: newJob._id };
 
     } catch (err) {

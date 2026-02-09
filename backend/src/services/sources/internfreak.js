@@ -12,7 +12,7 @@ const MAX_JOBS_MANUAL = 20;
 
 const { processJobUrl } = require('./processor');
 
-const runInternFreakManual = async (bot, limit = 20) => {
+const runInternFreakManual = async (bot, limit = 20, bundler) => {
     console.log(`🔄 InternFreak Manual Trigger (Limit ${limit})...`);
 
     try {
@@ -30,7 +30,7 @@ const runInternFreakManual = async (bot, limit = 20) => {
         let consecutiveDuplicates = 0;
 
         for (const link of jobsToProcess) {
-             const success = await processJobUrl(link, bot);
+             const success = await processJobUrl(link, bot, { bundler });
              
              if (success && success.error === 'rate_limit') {
                  console.log('🛑 Rate Limit Exceeded');
@@ -40,10 +40,10 @@ const runInternFreakManual = async (bot, limit = 20) => {
              if (success && success.skipped && success.reason === 'duplicate') {
                  consecutiveDuplicates++;
                  skipped++;
-                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/5`);
+                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/2`);
                  
-                 if (consecutiveDuplicates >= 5) {
-                     console.log('🛑 5 consecutive duplicates found. Stopping source.');
+                 if (consecutiveDuplicates >= 2) {
+                     console.log('🛑 2 consecutive duplicates found. Stopping source.');
                      return { processed, skipped, action: 'complete' };
                  }
                  continue;
@@ -55,7 +55,7 @@ const runInternFreakManual = async (bot, limit = 20) => {
                  const lastJobId = success.jobId;
 
                  if (processed < limit && processed < jobsToProcess.length - skipped) {
-                     const waitResult = await waitWithSkip(21000);
+                     const waitResult = await waitWithSkip(11000);
                      
                      if (waitResult === 'delete' && lastJobId) {
                          const jobToDelete = await Job.findById(lastJobId);

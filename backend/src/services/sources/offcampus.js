@@ -18,7 +18,7 @@ const EXCLUSIONS = [
 
 const { processJobUrl } = require('./processor');
 
-const runOffcampusManual = async (bot, limit = 20) => {
+const runOffcampusManual = async (bot, limit = 20, bundler) => {
     console.log(`🔄 Offcampus Phodenge Manual Trigger (Limit ${limit})...`);
 
     try {
@@ -43,7 +43,7 @@ const runOffcampusManual = async (bot, limit = 20) => {
              //     continue;
              // }
 
-             const success = await processJobUrl(link, bot);
+             const success = await processJobUrl(link, bot, { bundler });
              
              if (success && success.error === 'rate_limit') {
                  console.log('🛑 Rate Limit Exceeded');
@@ -53,11 +53,11 @@ const runOffcampusManual = async (bot, limit = 20) => {
              if (success && success.skipped && success.reason === 'duplicate') {
                  consecutiveDuplicates++;
                  skipped++;
-                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/5`);
+                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/2`);
                  
-                 if (consecutiveDuplicates >= 5) {
-                     console.log('🛑 5 consecutive duplicates found. Stopping source.');
-                     return { processed, skipped, action: 'complete' };
+                 if (consecutiveDuplicates >= 2) {
+                     console.log('🛑 2 consecutive duplicates found. Stopping source.');
+                     // The break is handled by the check at the top of the loop
                  }
                  continue;
              }
@@ -68,7 +68,7 @@ const runOffcampusManual = async (bot, limit = 20) => {
                  const lastJobId = success.jobId;
 
                  if (processed < limit && processed < jobsToProcess.length - skipped) {
-                     const waitResult = await waitWithSkip(21000);
+                     const waitResult = await waitWithSkip(11000);
                      
                      if (waitResult === 'delete' && lastJobId) {
                          const jobToDelete = await Job.findById(lastJobId);

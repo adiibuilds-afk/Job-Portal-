@@ -80,15 +80,21 @@ const run = async () => {
         console.log('✅ Connected.\n');
 
         let bot = null;
+        let bundler = null;
         if (process.env.TELEGRAM_BOT_TOKEN) {
              const { Telegraf } = require('telegraf');
              bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+             
+             if (process.env.ADMIN_ID) {
+                const WhatsAppBundler = require('../services/sources/whatsappBundler');
+                bundler = new WhatsAppBundler(bot, process.env.ADMIN_ID);
+             }
         }
 
         // Process selected sources
         for (const source of selected) {
             console.log(`\n🚀 Starting Source: ${source.name} (${source.url})`);
-            const result = await source.fn(bot, limit); // Assuming 'fn' is the correct property based on SOURCE_LIST
+            const result = await source.fn(bot, limit, bundler); 
 
             if (result && result.action === 'quit') {
                 console.log('\n👋 Exiting manual run.');
@@ -96,6 +102,7 @@ const run = async () => {
             }
             if (result && result.action === 'rate_limit') {
                 console.log('\n🛑 AI Rate Limit Reached for all keys. Exiting process.');
+                if (bundler) await bundler.flush();
                 process.exit(1);
             }
             if (result && result.action === 'next') {
@@ -105,6 +112,7 @@ const run = async () => {
             console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`); // Keep original separator for non-quit/next cases
         }
 
+        if (bundler) await bundler.flush();
         console.log('\n✨ All selected sources processed.');
         process.exit(0);
 

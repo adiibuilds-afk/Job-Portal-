@@ -51,7 +51,7 @@ const processEntry = async (entry, bot) => {
     }
 };
 
-const runFreshersJobsAaddaManual = async (bot, limit = 20) => {
+const runFreshersJobsAaddaManual = async (bot, limit = 20, bundler) => {
     console.log(`🔄 FreshersJobsAadda Manual (JSON) Trigger (Limit ${limit})...`);
 
     try {
@@ -70,7 +70,39 @@ const runFreshersJobsAaddaManual = async (bot, limit = 20) => {
         let consecutiveDuplicates = 0;
 
         for (const entry of jobsToProcess) {
-             const success = await processEntry(entry, bot);
+            const title = entry.title.$t;
+            const content = entry.content ? entry.content.$t : '';
+            const linkObj = entry.link.find(l => l.rel === 'alternate');
+            const url = linkObj ? linkObj.href : '';
+
+            if (!url) {
+                skipped++;
+                continue;
+            }
+
+            console.log(`   🔎 Processing Feed Entry: ${title}`);
+
+            const $ = cheerio.load(content);
+            let applyUrl = '';
+            $('a').each((i, el) => {
+                const text = $(el).text().toLowerCase();
+                const href = $(el).attr('href');
+                if (href && (text.includes('apply') || text.includes('click here') || text.includes('register'))) {
+                    if (!href.includes('freshersjobsaadda') && !href.includes('whatsapp') && !href.includes('telegram')) {
+                        applyUrl = href;
+                        return false; 
+                    }
+                }
+            });
+            const img = $('img').first().attr('src');
+
+            const success = await processJobUrl(url, bot, {
+                content: content,
+                title: title,
+                applyUrl: applyUrl,
+                companyLogo: img,
+                bundler: bundler
+            });
              
              if (success && success.error === 'rate_limit') {
                  console.log('🛑 Rate Limit Exceeded');
@@ -80,11 +112,11 @@ const runFreshersJobsAaddaManual = async (bot, limit = 20) => {
              if (success && success.skipped && success.reason === 'duplicate') {
                  consecutiveDuplicates++;
                  skipped++;
-                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/5`);
+                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/2`);
                  
-                 if (consecutiveDuplicates >= 5) {
-                     console.log('🛑 5 consecutive duplicates found. Stopping source.');
-                     return { processed, skipped, action: 'complete' };
+                 if (consecutiveDuplicates >= 2) {
+                     console.log('🛑 2 consecutive duplicates found. Stopping source.');
+                     // The break at the top of the loop handles stopping.
                  }
                  continue;
              }
@@ -95,7 +127,7 @@ const runFreshersJobsAaddaManual = async (bot, limit = 20) => {
                  const lastJobId = success.jobId;
 
                  if (processed < limit && processed < jobsToProcess.length - skipped) {
-                     const waitResult = await waitWithSkip(21000);
+                     const waitResult = await waitWithSkip(11000);
                      
                      if (waitResult === 'delete' && lastJobId) {
                          const jobToDelete = await Job.findById(lastJobId);

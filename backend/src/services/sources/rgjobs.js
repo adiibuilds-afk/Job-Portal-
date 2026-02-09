@@ -6,7 +6,7 @@ const { waitWithSkip, postJobToTelegram, deleteTelegramPost } = require('./utils
 const RG_JOBS_API = 'https://api.rgjobs.in/api/getAllJobs';
 const MAX_JOBS_MANUAL = 20;
 
-const runRGJobsManual = async (bot, limit = 20) => {
+const runRGJobsManual = async (bot, limit = 20, bundler) => {
     console.log(`🔄 RG Jobs Manual Trigger (Last ${limit} jobs)...`);
 
     try {
@@ -55,10 +55,10 @@ const runRGJobsManual = async (bot, limit = 20) => {
                     consecutiveDuplicates++;
                     skipped++;
                     console.log(`   ⏭️ Skipping Duplicate (Pre-Map): ${rgJob.title} at ${tempCompany}`);
-                    console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/5`);
+                    console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/2`);
                     
-                    if (consecutiveDuplicates >= 5) {
-                        console.log('🛑 5 consecutive duplicates found. Stopping source.');
+                    if (consecutiveDuplicates >= 2) {
+                        console.log('🛑 2 consecutive duplicates found. Stopping source.');
                         return { processed, skipped, action: 'complete' };
                     }
                     continue;
@@ -83,13 +83,18 @@ const runRGJobsManual = async (bot, limit = 20) => {
                 // Post to Telegram
                 await postJobToTelegram(newJob, bot);
 
+                // Add to WhatsApp Bundle
+                if (bundler) {
+                    await bundler.addJob(newJob);
+                }
+
                 processed++;
                 consecutiveDuplicates = 0; // Reset
                 const lastJobId = newJob._id;
                 
                 // Delay 21s (skipable) and handle quit signal
                 if (processed < limit && processed < rgJobs.length) {
-                    const waitResult = await waitWithSkip(21000);
+                    const waitResult = await waitWithSkip(11000);
                     
                     if (waitResult === 'delete' && lastJobId) {
                         const jobToDelete = await Job.findById(lastJobId);

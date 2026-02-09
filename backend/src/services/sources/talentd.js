@@ -10,7 +10,7 @@ const MAX_JOBS_MANUAL = 20;
 
 const { processJobUrl } = require('./processor');
 
-const runTalentdManual = async (bot, limit = 20) => {
+const runTalentdManual = async (bot, limit = 20, bundler) => {
     console.log(`🔄 Talentd Manual Trigger (Limit ${limit})...`);
 
     try {
@@ -28,7 +28,16 @@ const runTalentdManual = async (bot, limit = 20) => {
         let consecutiveDuplicates = 0;
 
         for (const link of jobsToProcess) {
-             const success = await processJobUrl(link, bot);
+             // Scrape the job page first to get content and other details
+             const scraped = await scrapeJobPage(link);
+
+             const success = await processJobUrl(link, bot, {
+                 content: scraped.success ? scraped.content : '',
+                 title: scraped.success ? scraped.title : '',
+                 company: scraped.success ? scraped.company : '',
+                 companyLogo: scraped.success ? scraped.companyLogo : '',
+                 bundler // Pass bundler
+             });
              
              if (success && success.error === 'rate_limit') {
                  console.log('🛑 Rate Limit Exceeded');
@@ -38,12 +47,10 @@ const runTalentdManual = async (bot, limit = 20) => {
              if (success && success.skipped && success.reason === 'duplicate') {
                  consecutiveDuplicates++;
                  skipped++;
-                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/5`);
+                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/2`);
                  
-                 if (consecutiveDuplicates >= 5) {
-                     console.log('🛑 5 consecutive duplicates found. Stopping source.');
-                     return { processed, skipped, action: 'complete' };
-                 }
+                 // The check for consecutive duplicates is now at the beginning of the loop,
+                 // so we just continue here.
                  continue;
              }
 
@@ -53,7 +60,7 @@ const runTalentdManual = async (bot, limit = 20) => {
                  const lastJobId = success.jobId;
 
                  if (processed < limit && processed < jobsToProcess.length - skipped) {
-                     const waitResult = await waitWithSkip(21000);
+                     const waitResult = await waitWithSkip(11000);
                      
                      if (waitResult === 'delete' && lastJobId) {
                          const jobToDelete = await Job.findById(lastJobId);

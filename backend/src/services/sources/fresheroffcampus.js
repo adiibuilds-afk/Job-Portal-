@@ -8,7 +8,7 @@ const RSS_URL = 'https://www.fresheroffcampus.com/feed/';
 
 const { processJobUrl } = require('./processor');
 
-const processFeedItem = async (item, bot) => {
+const processFeedItem = async (item, bot, bundler) => {
     try {
         const url = item.link;
         console.log(`   🔎 Processing Feed Item: ${item.title}`);
@@ -33,16 +33,17 @@ const processFeedItem = async (item, bot) => {
             content: item.content,
             title: item.title,
             applyUrl: applyUrl,
-            companyLogo: img
+            companyLogo: img,
+            bundler // Pass bundler to processJobUrl
         });
 
     } catch (err) {
         console.error(`   ❌ Error processing item ${item.title}: ${err.message}`);
-        return false;
+        return { success: false };
     }
 };
 
-const runFresherOffCampusManual = async (bot, limit = 20) => {
+const runFresherOffCampusManual = async (bot, limit = 20, bundler) => {
     console.log(`🔄 FresherOffCampus Manual (RSS) Trigger (Limit ${limit})...`);
 
     try {
@@ -75,7 +76,7 @@ const runFresherOffCampusManual = async (bot, limit = 20) => {
         let consecutiveDuplicates = 0;
 
         for (const item of jobsToProcess) {
-             const success = await processFeedItem(item, bot);
+             const success = await processFeedItem(item, bot, bundler);
              
              if (success && success.error === 'rate_limit') {
                  console.log('🛑 Rate Limit Exceeded');
@@ -85,10 +86,10 @@ const runFresherOffCampusManual = async (bot, limit = 20) => {
              if (success && success.skipped && success.reason === 'duplicate') {
                  consecutiveDuplicates++;
                  skipped++;
-                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/5`);
+                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/2`);
                  
-                 if (consecutiveDuplicates >= 5) {
-                     console.log('🛑 5 consecutive duplicates found. Stopping source.');
+                 if (consecutiveDuplicates >= 2) {
+                     console.log('🛑 2 consecutive duplicates found. Stopping source.');
                      return { processed, skipped, action: 'complete' };
                  }
                  continue;
@@ -100,7 +101,7 @@ const runFresherOffCampusManual = async (bot, limit = 20) => {
                  const lastJobId = success.jobId;
 
                  if (processed < limit && processed < jobsToProcess.length - skipped) {
-                     const waitResult = await waitWithSkip(21000);
+                     const waitResult = await waitWithSkip(11000);
                      
                      if (waitResult === 'delete' && lastJobId) {
                          const jobToDelete = await Job.findById(lastJobId);
