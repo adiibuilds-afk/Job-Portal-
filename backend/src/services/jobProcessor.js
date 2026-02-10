@@ -23,6 +23,13 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
             .filter(t => t.length > 1 && t.length <= 25 && t.split(' ').length <= 3);
     };
 
+    // Helper to clean location (convert array to string if needed)
+    const cleanLocation = (loc) => {
+        if (!loc) return '';
+        if (Array.isArray(loc)) return loc.join(', ');
+        return String(loc).trim();
+    };
+
     // Helper to clean category (fallback if too long)
     const cleanCategory = (cat) => {
         if (!cat || cat.length > 30) return 'Engineering';
@@ -33,7 +40,7 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         title: refinedData.title || cleanTitle(rawData.title),
         company: refinedData.company || rawData.company || 'Unknown',
         companyLogo: refinedData.companyLogo || rawData.companyLogo,
-        location: refinedData.location || rawData.location || '',
+        location: cleanLocation(refinedData.location || rawData.location),
         eligibility: refinedData.eligibility || rawData.eligibility || '',
         salary: refinedData.salary || rawData.salary || '',
         description: refinedData.description || rawData.description || '',

@@ -131,9 +131,35 @@ const processJobUrl = async (url, bot, options = {}) => {
         const refinedData = await refineJobWithAI(extractedData);
         if (refinedData && refinedData.error === 'rate_limit_exceeded') return { error: 'rate_limit' };
 
+        const isExternalSaaS = (link) => {
+            if (!link) return false;
+            const l = link.toLowerCase();
+            return l.includes('lever.co') || 
+                   l.includes('greenhouse.io') || 
+                   l.includes('workday') || 
+                   l.includes('oraclecloud.com') || 
+                   l.includes('smartrecruiters.com') || 
+                   l.includes('jobs.ashbyhq.com') ||
+                   l.includes('apply');
+        };
+
+        // Determine the best apply URL
+        let finalApplyUrl = url; // Default to original
+        
+        // If we found a scraped link, check if it's "better" or if original is just a hub
+        const scrapedApply = scraped.applyUrl || extractedData.applyUrl;
+        if (scrapedApply) {
+            const isOriginalHub = url.includes('talentd.in') || url.includes('fresher') || url.includes('.blog');
+            const isScrapedExternal = isExternalSaaS(scrapedApply);
+            
+            if (isScrapedExternal || isOriginalHub) {
+                finalApplyUrl = scrapedApply;
+            }
+        }
+
         const rawData = {
             ...extractedData,
-            applyUrl: scraped.applyUrl || extractedData.applyUrl || url,
+            applyUrl: finalApplyUrl,
             companyLogo: scraped.companyLogo || extractedData.companyLogo,
             company: scraped.company || extractedData.company,
             tags: scraped.tags || extractedData.tags,

@@ -48,10 +48,16 @@ const scrapeJobPage = async (url) => {
                           url.includes('t.co') || 
                           url.includes('lnkd.in') ||
                           url.includes('target.com') ||
-                          url.includes('rubrik.com');
+                          url.includes('rubrik.com') ||
+                          url.includes('swiggy.com') ||
+                          url.includes('workdayjobs.com') ||
+                          url.includes('eightfold.ai') ||
+                          url.includes('razorpay.com') ||
+                          url.includes('harman.com') ||
+                          url.includes('ntt');
 
     if (needsPuppeteer) {
-        console.log(`[Scraper] Detected complex/shortlink URL, using Puppeteer: ${url}`);
+        console.log(`[Scraper] Detected complex/JS-heavy URL, using Puppeteer: ${url}`);
         return await scrapeJobPageWithPuppeteer(url);
     }
 
@@ -232,8 +238,8 @@ const scrapeJobPage = async (url) => {
                  applyUrl = url.split('?')[0];
             }
         } else {
-            console.log(`[Scraper] Skipping ${url} - no external apply link found and content seems thin`);
-            return { success: false, error: 'No external apply link found', skipped: true };
+            console.log(`[Scraper] Content thin/no apply link for ${url}, trying Puppeteer fallback...`);
+            return await scrapeJobPageWithPuppeteer(url);
         }
     }
 

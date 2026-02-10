@@ -135,7 +135,8 @@ const scrapeJobPageWithPuppeteer = async (url) => {
             
             const applyBtn = allButtons.find(b => {
                 const text = getText(b).trim().toLowerCase();
-                return text === 'apply now' && !b.closest('.ad-container');
+                const commonTerms = ['apply now', 'apply', 'apply externally', 'apply for this job', 'submit application'];
+                return commonTerms.some(term => text === term) && !b.closest('.ad-container');
             });
 
             if (applyBtn) {

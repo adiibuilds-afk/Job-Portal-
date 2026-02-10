@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { Menu, Search, Crown, X, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, Suspense } from 'react';
@@ -12,7 +12,13 @@ function NavbarContent() {
     const { data: session } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
     const searchParams = useSearchParams();
+    const pathname = usePathname();
     const q = searchParams.get('q') || '';
+
+    // Hide navbar in admin panel
+    if (pathname?.startsWith('/admin')) {
+        return null;
+    }
 
     // Batch Logic
     const [showBatchModal, setShowBatchModal] = useState(false);

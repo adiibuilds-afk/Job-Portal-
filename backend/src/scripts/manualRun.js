@@ -29,8 +29,95 @@ const SOURCE_LIST = [
     { name: 'Offcampus Phodenge (Telegram)', url: 'https://t.me/s/offcampus_phodenge', key: 'offcampus', fn: runOffcampusManual },
     { name: 'DotAware (Telegram)', url: 'https://t.me/s/dot_aware', key: 'dotaware', fn: runDotAwareManual },
     { name: 'FresherOffCampus (RSS)', url: 'https://www.fresheroffcampus.com/', key: 'fresheroffcampus', fn: runFresherOffCampusManual },
-    { name: 'FreshersJobsAadda (JSON)', url: 'https://freshersjobsaadda.blogspot.com/', key: 'freshersjobsaadda', fn: runFreshersJobsAaddaManual }
+    { name: 'FreshersJobsAadda (JSON)', url: 'https://freshersjobsaadda.blogspot.com/', key: 'freshersjobsaadda', fn: runFreshersJobsAaddaManual },
+    { name: '[D] Direct Links / Text Block', url: 'Paste links or message blocks', key: 'direct', fn: null }
 ];
+
+const { processJobUrl } = require('../services/sources/processor');
+
+const runDirectLinks = async (bot, bundler) => {
+    console.log('\n--- 📝 Direct Link / Text Block Importer ---');
+    console.log('Paste your text block (containing one or more https:// links).');
+    console.log('To finish, type "GO" on a new line and press Enter:');
+
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    let input = '';
+    
+    return new Promise(resolve => {
+        rl.on('line', (line) => {
+            if (line.trim().toLowerCase() === 'go') {
+                rl.close();
+            } else {
+                input += line + '\n';
+            }
+        });
+
+        rl.on('close', async () => {
+            // Extract all https URLs
+            const urlRegex = /https?:\/\/[^\s,\])]+/g;
+            const matches = input.match(urlRegex) || [];
+            const urls = [...new Set(matches.map(u => u.replace(/[.,;]$/, '')))]; // Remove trailing punctuation
+
+            if (urls.length === 0) {
+                console.log('❌ No links found in the text.');
+                return resolve({ processed: 0, skipped: 0 });
+            }
+
+            console.log(`\n🔎 Found ${urls.length} unique links. Starting processing...`);
+
+            let processed = 0;
+            let skipped = 0;
+
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i];
+                console.log(`\n[${i + 1}/${urls.length}] 🔄 Processing: ${url}`);
+                
+                try {
+                    const result = await processJobUrl(url, bot, { bundler });
+                    
+                    if (result && result.error === 'rate_limit') {
+                        return resolve({ processed, skipped, action: 'rate_limit' });
+                    }
+
+                    if (result && result.skipped) {
+                        skipped++;
+                    } else if (result && result.success) {
+                        processed++;
+                        
+                        // Wait/Skip/Delete logic
+                        const lastJobId = result.jobId;
+                        const waitResult = await require('../services/sources/utils').waitWithSkip(11000);
+                        
+                        if (waitResult === 'delete' && lastJobId) {
+                            const Job = require('../models/Job');
+                            const { deleteTelegramPost } = require('../services/sources/utils');
+                            const jobToDelete = await Job.findById(lastJobId);
+                            if (jobToDelete && jobToDelete.telegramMessageId) {
+                                await deleteTelegramPost(bot, jobToDelete.telegramMessageId);
+                            }
+                            if (bundler) await bundler.removeJob(lastJobId);
+                            await Job.findByIdAndDelete(lastJobId);
+                            console.log('🗑️ Job deleted.');
+                            processed--;
+                        }
+
+                        if (waitResult === 'quit') return resolve({ processed, skipped, action: 'quit' });
+                        if (waitResult === 'next_source') break;
+                    }
+                } catch (err) {
+                    console.error(`   ❌ Error: ${err.message}`);
+                }
+            }
+
+            console.log(`\n📊 Direct Export Complete: ${processed} new jobs, ${skipped} skipped.`);
+            resolve({ processed, skipped, action: 'complete' });
+        });
+    });
+};
 
 const askQuestion = (query) => {
     const rl = readline.createInterface({
@@ -57,11 +144,14 @@ const run = async () => {
 
         let selected = [];
         if (choice.toLowerCase() === 'all' || choice.toLowerCase() === 'a') {
-            selected = SOURCE_LIST;
+            selected = SOURCE_LIST.filter(s => s.key !== 'direct');
+        } else if (choice.toLowerCase() === 'd') {
+            selected = [SOURCE_LIST.find(s => s.key === 'direct')];
         } else {
             const indexes = choice.split(',').map(x => parseInt(x.trim()) - 1);
             selected = SOURCE_LIST.filter((_, i) => indexes.includes(i));
         }
+    
 
         if (selected.length === 0) {
             console.log('❌ No valid sources selected.');
@@ -94,7 +184,13 @@ const run = async () => {
         // Process selected sources
         for (const source of selected) {
             console.log(`\n🚀 Starting Source: ${source.name} (${source.url})`);
-            const result = await source.fn(bot, limit, bundler); 
+            
+            let result;
+            if (source.key === 'direct') {
+                result = await runDirectLinks(bot, bundler);
+            } else {
+                result = await source.fn(bot, limit, bundler); 
+            }
 
             if (result && result.action === 'quit') {
                 console.log('\n👋 Exiting manual run.');

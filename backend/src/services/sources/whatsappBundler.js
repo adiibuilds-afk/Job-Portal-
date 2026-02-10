@@ -52,6 +52,10 @@ class WhatsAppBundler {
                 disable_web_page_preview: true
             });
             console.log(`   ✅ WhatsApp bundle sent to Admin.`);
+
+            // Send separator for next batch
+            await this.bot.telegram.sendMessage(this.adminId, "n\ne\nx\nT");
+            
             this.jobs = []; // Clear bundle
         } catch (err) {
             console.error('   ❌ Failed to send WhatsApp bundle:', err.message);

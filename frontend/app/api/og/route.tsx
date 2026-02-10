@@ -98,19 +98,17 @@ export async function GET(req: NextRequest) {
 
                         {/* Branding */}
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-                            <div style={{
-                                width: '60px',
-                                height: '60px',
-                                borderRadius: '16px',
-                                background: 'linear-gradient(to bottom right, #f59e0b, #ea580c)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginRight: '16px'
-                            }}>
-                                <span style={{ color: 'white', fontSize: '32px', fontWeight: 'black' }}>J</span>
-                            </div>
-                            <span style={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}>JobGrid</span>
+                            <img
+                                src="https://jobgrid.in/icon.png"
+                                style={{
+                                    width: '60px',
+                                    height: '60px',
+                                    borderRadius: '16px',
+                                    marginRight: '16px',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                }}
+                            />
+                            <span style={{ color: 'white', fontSize: '36px', fontWeight: '900', letterSpacing: '-0.02em' }}>JobGrid</span>
                         </div>
                     </div>
                 </div>

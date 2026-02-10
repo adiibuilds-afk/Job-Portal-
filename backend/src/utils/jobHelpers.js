@@ -51,7 +51,8 @@ const mapJobType = (jobtype) => {
 
 const parseMinSalary = (payString) => {
     if (!payString) return 0;
-    const match = payString.match(/(\d+)/);
+    const str = String(payString);
+    const match = str.match(/(\d+)/);
     return match ? parseInt(match[1]) : 0;
 };
 

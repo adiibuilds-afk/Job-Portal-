@@ -151,29 +151,32 @@ router.post('/send', async (req, res) => {
         let failed = 0;
         const errors = [];
 
-        // Process each batch with delay
-        for (let i = 0; i < batches.length; i++) {
-            const batch = batches[i];
+        // Process each recipient 1-to-1 to ensure privacy
+        for (let i = 0; i < validEmails.length; i++) {
+            const email = validEmails[i];
             
             try {
                 const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
                 sendSmtpEmail.subject = subject;
                 sendSmtpEmail.htmlContent = htmlContent;
                 sendSmtpEmail.sender = { name: 'JobGrid', email: 'alerts@jobgrid.in' };
-                sendSmtpEmail.to = batch.map(email => ({ email }));
+                sendSmtpEmail.to = [{ email }]; // 1-to-1 sending
 
                 await apiInstance.sendTransacEmail(sendSmtpEmail);
-                sent += batch.length;
-                console.log(`✉️ Batch ${i + 1}/${batches.length}: Sent ${batch.length} emails`);
+                sent++;
                 
-                // Add delay between batches (1 second) to avoid rate limiting
-                if (i < batches.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                // Progress logging every 10 emails
+                if (sent % 10 === 0) {
+                    console.log(`✉️ Sending Progress: ${sent}/${validEmails.length}`);
                 }
-            } catch (batchError) {
-                failed += batch.length;
-                errors.push(`Batch ${i + 1}: ${batchError.message}`);
-                console.error(`❌ Batch ${i + 1} failed:`, batchError.message);
+
+                // Small delay to avoid triggering spam filters/rate limits (100ms)
+                // This allows sending 300 emails in ~30-40 seconds
+                await new Promise(resolve => setTimeout(resolve, 100));
+            } catch (err) {
+                failed++;
+                errors.push(`Email ${email} failed: ${err.message}`);
+                console.error(`❌ Failed to send to ${email}:`, err.message);
             }
         }
 
