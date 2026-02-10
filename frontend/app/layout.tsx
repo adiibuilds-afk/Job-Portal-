@@ -77,6 +77,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://jobgrid.in",
   },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/icon.png",
+    apple: "/apple-touch-icon.png",
+  },
   other: {
     'google-adsense-account': 'ca-pub-3356299280733421',
   },
@@ -89,11 +94,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#000000" />
-      </head>
       <body className={`${outfit.variable} font-sans antialiased`}>
         <Providers>
           <div className="fixed top-0 left-0 right-0 z-50 flex flex-col">

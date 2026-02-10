@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useAppliedJobs } from '@/hooks/useAppliedJobs';
 import { toast } from 'react-hot-toast';
+import WhatsAppShareButton from './jobs/WhatsAppShareButton';
 
 interface JobCardProps {
     job: Job;
@@ -158,7 +159,7 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                                     <Building2 className="w-3.5 h-3.5 text-zinc-500" />
                                     <span className="text-sm text-zinc-400 font-medium">{job.company}</span>
                                 </div>
-                                {!!job.views && job.views > 10 && (
+                                {job.views !== undefined && job.views > 10 && (
                                     <div className="flex items-center gap-1 text-zinc-600">
                                         <Eye className="w-3 h-3" />
                                         <span className="text-[10px] font-bold">{job.views}</span>
@@ -177,15 +178,24 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
                                         );
                                         const score = Math.round((matches.length / jobTags.length) * 100);
 
-                                        if (score > 10) {
-                                            return (
-                                                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md">
-                                                    <Sparkles className="w-3 h-3 text-amber-500" />
-                                                    <span className="text-[10px] font-black text-amber-500">{score}% Match</span>
-                                                </div>
-                                            );
-                                        }
-                                        return null;
+                                        return (
+                                            <div className="flex items-center gap-2">
+                                                {score > 10 && (
+                                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                                                        <Sparkles className="w-3 h-3 text-amber-500" />
+                                                        <span className="text-[10px] font-black text-amber-500">{score}% Match</span>
+                                                    </div>
+                                                )}
+                                                {job.verifications?.stillHiring && job.verifications.stillHiring > 0 ? (
+                                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                                                        <Check className="w-3 h-3 text-emerald-500" />
+                                                        <span className="text-[10px] font-black text-emerald-500">
+                                                            {job.verifications.stillHiring === 1 ? 'Verified Active' : `${job.verifications.stillHiring} Verified`}
+                                                        </span>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        );
                                     })()
                                 )}
                             </div>
@@ -193,6 +203,10 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
 
                         {/* Action Buttons */}
                         <div className="flex items-center gap-1.5 shrink-0">
+                            <WhatsAppShareButton
+                                job={job}
+                                referralCode={(session?.user as any)?.referralCode}
+                            />
                             <button
                                 onClick={handleApplyMark}
                                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border ${applied

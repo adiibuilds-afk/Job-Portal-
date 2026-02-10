@@ -13,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: `${baseUrl}/terms`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
         { url: `${baseUrl}/disclaimer`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
         { url: `${baseUrl}/forum`, lastModified: new Date(), changeFrequency: 'hourly' as const, priority: 0.8 },
+        { url: `${baseUrl}/leaderboard`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
         { url: `${baseUrl}/resume-scorer`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.7 },
         { url: `${baseUrl}/salary-insights`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.7 },
         { url: `${baseUrl}/updates`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.6 },
@@ -29,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     // SEO Landing Pages (Programmatic)
-    const seoKeywords = ['remote', 'bangalore', 'frontend', 'backend', 'fullstack', 'sde', 'freshers-2023', 'freshers-2024', 'freshers-2025', 'freshers-2026', 'internship', 'mnc', 'startup', 'graduate'];
+    const seoKeywords = ['remote', 'bangalore', 'frontend', 'backend', 'fullstack', 'sde', 'freshers-2023', 'freshers-2024', 'freshers-2025', 'freshers-2026', 'freshers-2027', 'freshers-2028', 'internship', 'mnc', 'startup', 'graduate'];
     const seoPages = seoKeywords.map(keyword => ({
         url: `${baseUrl}/jobs/${keyword}-jobs`,
         lastModified: new Date(),

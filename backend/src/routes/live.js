@@ -50,9 +50,12 @@ router.get('/activity', async (req, res) => {
 
         recentCoins.forEach(tx => {
             let msg = '';
-            if (tx.type === 'referral_bonus') msg = `${tx.userId?.name || 'Someone'} earned 10 Coins! 🎁`;
-            else if (tx.type === 'job_verification') msg = `${tx.userId?.name || 'Someone'} verified a job status ✅`;
-            else if (tx.type === 'share_reward') msg = `${tx.userId?.name || 'Someone'} shared a job on WhatsApp 🚀`;
+            if (tx.reason === 'referral') msg = `${tx.userId?.name || 'Someone'} referred a new user! 🎁`;
+            else if (tx.reason === 'signup' && tx.description.includes('referral')) msg = `${tx.userId?.name || 'Someone'} joined via referral! ✨`;
+            else if (tx.reason === 'share_reward') msg = `${tx.userId?.name || 'Someone'} shared a job on WhatsApp 🚀`;
+            else if (tx.reason === 'daily_visit') msg = `${tx.userId?.name || 'Someone'} is active on JobGrid 🔥`;
+            else if (tx.reason === 'milestone') msg = `${tx.userId?.name || 'Someone'} reached a referral milestone! 🏆`;
+            else if (tx.reason === 'verify_job') msg = `${tx.userId?.name || 'Someone'} verified a job status! ✅`;
             else return; // Skip other internal types
 
             activities.push({
@@ -74,7 +77,9 @@ router.get('/activity', async (req, res) => {
                 const types = [
                     { t: 'apply', m: `${name} just applied to ${company}` },
                     { t: 'save', m: `${name} saved ${role} at ${company}` },
-                    { t: 'coin', m: `${name} earned referral coins! 🪙` }
+                    { t: 'coin', m: `${name} invited a friend to JobGrid! 🎁` },
+                    { t: 'join', m: `${name} joined JobGrid via referral! 🚀` },
+                    { t: 'share', m: `${name} shared a job with their batch! 📲` }
                 ];
                 const choice = types[Math.floor(Math.random() * types.length)];
                 
