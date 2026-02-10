@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { Job } from '@/types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://jobgrid.in';
@@ -43,9 +44,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com'}/api/jobs?limit=1000`, { next: { revalidate: 3600 } });
         const data = await res.json();
-        const jobs = data.jobs || [];
+        const jobs: Job[] = data.jobs || [];
 
-        jobPages = jobs.map((job: { slug: string; updatedAt?: string; createdAt: string }) => ({
+        jobPages = jobs.map((job: Job) => ({
             url: `${baseUrl}/job/${job.slug}`,
             lastModified: new Date(job.updatedAt || job.createdAt),
             changeFrequency: 'weekly' as const,

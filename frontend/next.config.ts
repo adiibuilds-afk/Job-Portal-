@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Causes Turbopack build panic in current version
   },
   async rewrites() {
     return [

@@ -37,13 +37,17 @@ export async function GET() {
         <changefreq>daily</changefreq>
         <priority>${page === '' ? '1.0' : '0.8'}</priority>
     </url>`).join('')}
-    ${jobs.map(job => `
+    ${jobs.map(job => {
+        const lastMod = new Date(job.updatedAt || job.createdAt);
+        const isValidDate = !isNaN(lastMod.getTime());
+        return `
     <url>
         <loc>${baseUrl}/job/${job.slug}</loc>
-        <lastmod>${new Date(job.updatedAt || job.createdAt).toISOString()}</lastmod>
+        ${isValidDate ? `<lastmod>${lastMod.toISOString()}</lastmod>` : ''}
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
-    </url>`).join('')}
+    </url>`;
+    }).join('')}
 </urlset>`;
 
     return new Response(xml, {
