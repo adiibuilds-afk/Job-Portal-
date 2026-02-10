@@ -6,7 +6,11 @@ const User = require('../../models/User');
 const attachUser = async (req, res, next) => {
     // In production, decode JWT from req.headers.authorization
     const { email } = req.body || req.query; // Check both for flexibility
-    if (!email) return res.status(401).json({ error: 'Unauthorized: Email required' });
+    
+    // If no email, just continue as guest
+    if (!email) {
+        return next();
+    }
     
     try {
         let user = await User.findOne({ email });
@@ -18,7 +22,8 @@ const attachUser = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        res.status(500).json({ error: 'Auth Middleware Error' });
+        console.error('Auth Middleware Error:', error);
+        next(); // Still continue even if DB lookup fails
     }
 };
 
