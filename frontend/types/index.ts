@@ -31,12 +31,6 @@ export interface Job {
     isActive?: boolean;
     reportCount?: number;
     createdAt: string;
-    updatedAt?: string;
-    verifications?: {
-        stillHiring: number;
-        notHiring: number;
-    };
-    lastVerifiedAt?: string;
 }
 
 export interface QueueItem {

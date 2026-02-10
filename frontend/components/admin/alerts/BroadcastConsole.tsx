@@ -1,5 +1,4 @@
-import { Send, TrendingUp, Users, Activity, ChevronDown, CheckCircle2, AlertCircle, MessageCircle } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { Send, TrendingUp, Users, Activity, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Job } from '@/types';
 import { BATCH_OPTIONS } from './types';
 
@@ -119,31 +118,6 @@ export default function BroadcastConsole(props: BroadcastConsoleProps) {
                         placeholder="Message body (supports plain text or markdown)..."
                         className="w-full flex-1 min-h-[200px] bg-zinc-950 border border-zinc-800 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-mono mb-6"
                     />
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                        <button
-                            onClick={() => {
-                                const formatted = `🔥 *New Opportunity: ${subject}*\n\n${message}\n\nApply here: https://jobgrid.in/jobs`;
-                                navigator.clipboard.writeText(formatted);
-                                toast.success('Formatted for WhatsApp!');
-                            }}
-                            className="py-3 bg-green-500/10 text-green-500 border border-green-500/20 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-green-500/20 transition-all flex items-center justify-center gap-2"
-                        >
-                            <MessageCircle className="w-4 h-4" />
-                            WhatsApp
-                        </button>
-                        <button
-                            onClick={() => {
-                                const formatted = `📢 **${subject}**\n\n${message}\n\n🔗 Apply: https://jobgrid.in/jobs`;
-                                navigator.clipboard.writeText(formatted);
-                                toast.success('Formatted for Telegram!');
-                            }}
-                            className="py-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-500/20 transition-all flex items-center justify-center gap-2"
-                        >
-                            <Send className="w-4 h-4" />
-                            Telegram
-                        </button>
-                    </div>
-
                     <button
                         onClick={onSend}
                         disabled={loading || !message || !subject || selectedBatches.length === 0}

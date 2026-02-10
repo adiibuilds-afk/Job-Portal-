@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         const { slug } = await params;
         const job = await getJobBySlug(slug);
         return {
-            title: `${job.title} at ${job.company} | Jobs for 2025, 2026, 2027, 2028 Batches`,
-            description: `Apply to ${job.title} at ${job.company}. Find the latest SDE, Frontend, and Backend jobs for 2024-2029 batch freshers on JobGrid.`,
+            title: `${job.title} at ${job.company} | JobGrid`,
+            description: `${job.title} job opening at ${job.company}. Location: ${job.location}. Salary: ${job.salary}. Apply now!`,
             openGraph: {
                 title: `${job.title} at ${job.company}`,
                 description: `${job.title} job opening at ${job.company}. Apply now!`,

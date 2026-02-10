@@ -1,5 +1,4 @@
 import { MetadataRoute } from 'next';
-import { Job } from '@/types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://jobgrid.in';
@@ -14,7 +13,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: `${baseUrl}/terms`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
         { url: `${baseUrl}/disclaimer`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
         { url: `${baseUrl}/forum`, lastModified: new Date(), changeFrequency: 'hourly' as const, priority: 0.8 },
-        { url: `${baseUrl}/leaderboard`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
         { url: `${baseUrl}/resume-scorer`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.7 },
         { url: `${baseUrl}/salary-insights`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.7 },
         { url: `${baseUrl}/updates`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.6 },
@@ -31,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     // SEO Landing Pages (Programmatic)
-    const seoKeywords = ['remote', 'bangalore', 'frontend', 'backend', 'fullstack', 'sde', 'freshers-2023', 'freshers-2024', 'freshers-2025', 'freshers-2026', 'freshers-2027', 'freshers-2028', 'internship', 'mnc', 'startup', 'graduate'];
+    const seoKeywords = ['remote', 'bangalore', 'frontend', 'backend', 'fullstack', 'sde', 'freshers-2023', 'freshers-2024', 'freshers-2025', 'freshers-2026', 'internship', 'mnc', 'startup', 'graduate'];
     const seoPages = seoKeywords.map(keyword => ({
         url: `${baseUrl}/jobs/${keyword}-jobs`,
         lastModified: new Date(),
@@ -44,9 +42,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://jobgrid-in.onrender.com'}/api/jobs?limit=1000`, { next: { revalidate: 3600 } });
         const data = await res.json();
-        const jobs: Job[] = data.jobs || [];
+        const jobs = data.jobs || [];
 
-        jobPages = jobs.map((job: Job) => ({
+        jobPages = jobs.map((job: { slug: string; updatedAt?: string; createdAt: string }) => ({
             url: `${baseUrl}/job/${job.slug}`,
             lastModified: new Date(job.updatedAt || job.createdAt),
             changeFrequency: 'weekly' as const,

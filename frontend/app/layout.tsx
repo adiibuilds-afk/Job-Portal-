@@ -48,6 +48,10 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
@@ -57,10 +61,10 @@ export const metadata: Metadata = {
     description: "Discover 10,000+ tech jobs for B.Tech graduates & IT professionals. SDE, Full-Stack, Data Science & more. AI-powered job matching. Updated hourly.",
     images: [
       {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "JobGrid - India's #1 Tech Jobs Platform",
+        url: "https://jobgrid.in/icon.png",
+        width: 1024,
+        height: 1024,
+        alt: "JobGrid logo",
       },
     ],
   },
@@ -68,7 +72,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "JobGrid - B.Tech & IT Jobs in India 2025",
     description: "India's AI-powered job portal for software engineers. 10K+ jobs updated hourly.",
-    images: ["/og-image.png"],
+    images: ["https://jobgrid.in/icon.png"],
     creator: "@jobgridin",
   },
   verification: {
@@ -76,11 +80,6 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "https://jobgrid.in",
-  },
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/icon.png",
-    apple: "/apple-touch-icon.png",
   },
   other: {
     'google-adsense-account': 'ca-pub-3356299280733421',
@@ -94,6 +93,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <meta name="theme-color" content="#000000" />
+      </head>
       <body className={`${outfit.variable} font-sans antialiased`}>
         <Providers>
           <div className="fixed top-0 left-0 right-0 z-50 flex flex-col">

@@ -54,8 +54,6 @@ router.get('/activity', async (req, res) => {
             else if (tx.reason === 'signup' && tx.description.includes('referral')) msg = `${tx.userId?.name || 'Someone'} joined via referral! ✨`;
             else if (tx.reason === 'share_reward') msg = `${tx.userId?.name || 'Someone'} shared a job on WhatsApp 🚀`;
             else if (tx.reason === 'daily_visit') msg = `${tx.userId?.name || 'Someone'} is active on JobGrid 🔥`;
-            else if (tx.reason === 'milestone') msg = `${tx.userId?.name || 'Someone'} reached a referral milestone! 🏆`;
-            else if (tx.reason === 'verify_job') msg = `${tx.userId?.name || 'Someone'} verified a job status! ✅`;
             else return; // Skip other internal types
 
             activities.push({

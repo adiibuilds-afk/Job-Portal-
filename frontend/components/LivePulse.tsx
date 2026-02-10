@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Users, Sparkles, TrendingUp, Trophy } from 'lucide-react';
+import { Zap, Users, Sparkles, TrendingUp } from 'lucide-react';
 
 interface Activity {
     id: string;
@@ -74,11 +74,7 @@ export default function LivePulse() {
                             </span>
                             {current.type === 'job_post' && <Sparkles className="w-3 h-3 text-yellow-400" />}
                             {current.type === 'simulation' && <Users className="w-3 h-3 text-zinc-500" />}
-                            {current.type === 'user_action' && (
-                                <span className="flex items-center gap-1">
-                                    {current.message.includes('🏆') ? <Trophy className="w-3 h-3 text-amber-500" /> : <TrendingUp className="w-3 h-3 text-emerald-400" />}
-                                </span>
-                            )}
+                            {current.type === 'user_action' && <TrendingUp className="w-3 h-3 text-emerald-400" />}
                         </motion.div>
                     </AnimatePresence>
                 </div>

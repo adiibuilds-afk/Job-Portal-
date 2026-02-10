@@ -44,24 +44,6 @@ router.post('/google', async (req, res) => {
 
                     referrer.gridCoins = (referrer.gridCoins || 0) + 10;
                     referrer.referralCount = (referrer.referralCount || 0) + 1;
-
-                    // Milestone Checks
-                    const milestones = [5, 10, 25, 50, 100];
-                    if (milestones.includes(referrer.referralCount)) {
-                        const bonus = referrer.referralCount * 2; // Extra bonus for hitting a milestone
-                        referrer.gridCoins += bonus;
-                        
-                        const CoinTransaction = require('../models/CoinTransaction');
-                        await CoinTransaction.create({
-                            userId: referrer._id,
-                            type: 'earn',
-                            amount: bonus,
-                            reason: 'milestone',
-                            description: `Hit ${referrer.referralCount} referrals milestone! 🏆`
-                        });
-                        console.log(`🏆 Milestone: ${referrer.email} hit ${referrer.referralCount} referrals (+${bonus} bonus)`);
-                    }
-
                     await referrer.save();
 
                     const CoinTransaction = require('../models/CoinTransaction');

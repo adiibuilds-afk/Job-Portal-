@@ -16,14 +16,12 @@ export async function getJobs(params?: {
     isRemote?: boolean;
     ids?: string[];
     sort?: string;
-    limit?: number;
 }) {
     const searchParams = new URLSearchParams();
     if (params?.q) searchParams.set('q', params.q);
     if (params?.category) searchParams.set('category', params.category);
     if (params?.location) searchParams.set('location', params.location);
     if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
 
     // New Filters
     if (params?.batch) searchParams.set('batch', params.batch);
