@@ -20,8 +20,7 @@ const runRGJobsManual = async (bot, limit = 20, bundler) => {
         // Get latest jobs (sorted by created_at desc)
         const rgJobs = response.data.JobsData
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, limit)
-            .reverse(); 
+            .slice(0, limit);
 
         let processed = 0;
         let skipped = 0;
@@ -57,10 +56,10 @@ const runRGJobsManual = async (bot, limit = 20, bundler) => {
                     consecutiveDuplicates++;
                     skipped++;
                     console.log(`   ⏭️ Skipping Duplicate (Pre-Map): ${rgJob.title} at ${tempCompany}`);
-                    console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/2`);
+                    console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/3`);
                     
-                    if (consecutiveDuplicates >= 2) {
-                        console.log('🛑 2 consecutive duplicates found. Stopping source.');
+                    if (consecutiveDuplicates >= 3) {
+                        console.log('🛑 3 consecutive duplicates found. Stopping source.');
                         return { processed, skipped, action: 'complete' };
                     }
                     continue;

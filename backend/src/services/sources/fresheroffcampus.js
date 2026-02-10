@@ -68,8 +68,9 @@ const runFresherOffCampusManual = async (bot, limit = 20, bundler) => {
         // RSS is usually Newest First. 
         // We want the LATEST 'limit'. So just slice(0, limit).
         // Then reverse to process Oldest -> Newest? or just iterate.
-        // Let's reverse to process Oldest to Newest of the slice.
-        const jobsToProcess = items.slice(0, limit).reverse();
+        // RSS is usually Newest First. 
+        // We want the LATEST 'limit'. So just slice(0, limit).
+        const jobsToProcess = items.slice(0, limit);
 
         let processed = 0;
         let skipped = 0;
@@ -89,10 +90,10 @@ const runFresherOffCampusManual = async (bot, limit = 20, bundler) => {
              if (success && success.skipped && success.reason === 'duplicate') {
                  consecutiveDuplicates++;
                  skipped++;
-                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/2`);
+                 console.log(`   🔸 Consecutive Duplicates: ${consecutiveDuplicates}/3`);
                  
-                 if (consecutiveDuplicates >= 2) {
-                     console.log('🛑 2 consecutive duplicates found. Stopping source.');
+                 if (consecutiveDuplicates >= 3) {
+                     console.log('🛑 3 consecutive duplicates found. Stopping source.');
                      return { processed, skipped, action: 'complete' };
                  }
                  continue;

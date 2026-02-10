@@ -37,7 +37,8 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         eligibility: refinedData.eligibility || rawData.eligibility || '',
         salary: refinedData.salary || rawData.salary || '',
         description: refinedData.description || rawData.description || '',
-        applyUrl: refinedData.applyUrl || rawData.applyUrl || '',
+        // Prioritize raw captured link as AI often hallucinations hub links
+        applyUrl: rawData.applyUrl || refinedData.applyUrl || '',
         category: cleanCategory(refinedData.category || rawData.category),
         batch: parseBatches(rawData.batch && rawData.batch.length > 0 ? rawData.batch : refinedData.batch),
         tags: cleanTags((rawData.tags && rawData.tags.length > 0) ? rawData.tags : (refinedData.tags || (rawData.role ? [rawData.role] : []))),

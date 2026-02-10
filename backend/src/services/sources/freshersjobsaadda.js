@@ -63,7 +63,7 @@ const runFreshersJobsAaddaManual = async (bot, limit = 20, bundler) => {
         }
 
         const entries = data.feed.entry; // Usually newest first
-        const jobsToProcess = entries.slice(0, limit).reverse();
+        const jobsToProcess = entries.slice(0, limit);
 
         let processed = 0;
         let skipped = 0;
@@ -73,8 +73,8 @@ const runFreshersJobsAaddaManual = async (bot, limit = 20, bundler) => {
             const entry = jobsToProcess[i];
             console.log(`\n[${i + 1}/${jobsToProcess.length}] 🔄 Processing...`);
 
-            if (consecutiveDuplicates >= 2) {
-                console.log('🛑 2 consecutive duplicates found. Stopping source.');
+            if (consecutiveDuplicates >= 3) {
+                console.log('🛑 3 consecutive duplicates found. Stopping source.');
                 break;
             }
 

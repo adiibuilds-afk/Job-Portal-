@@ -142,10 +142,15 @@ const processJobUrl = async (url, bot, options = {}) => {
 
         const jobData = await finalizeJobData(refinedData || {}, rawData);
 
-        // Sanity checks/cleanup
+        // Sanity checks/cleanup: Avoid circular links where the apply button just points back to the listing
         if (jobData.applyUrl && jobData.applyUrl.toLowerCase().includes('talentd.in')) {
-             console.log(`   ⏭️ Skipping Circular Link: ${jobData.title}`);
-             return { skipped: true, reason: 'circular' };
+            // Only skip if it's not a direct apply link or if it matches the current job page
+            const isListingOnly = !jobData.applyUrl.includes('/apply') || jobData.applyUrl.toLowerCase().replace(/\/$/, '') === url.toLowerCase().replace(/\/$/, '');
+            
+            if (isListingOnly) {
+                console.log(`   ⏭️ Skipping Circular Link: ${jobData.title} (${jobData.applyUrl})`);
+                return { skipped: true, reason: 'circular' };
+            }
         }
 
         if (jobData.companyLogo && jobData.companyLogo.includes('talentd-orange-icon.avif')) jobData.companyLogo = '';

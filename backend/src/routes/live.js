@@ -5,9 +5,23 @@ const CoinTransaction = require('../models/CoinTransaction');
 const User = require('../models/User');
 
 // Configuration for "Busy Site" simulation
-const FAKE_NAMES = ['Rahul S.', 'Priya M.', 'Amit K.', 'Sneha R.', 'Vikram D.', 'Anjali P.', 'Karthik V.', 'Neha J.', 'Suresh B.', 'Ishita G.'];
-const FAKE_COMPANIES = ['Google', 'Amazon', 'Microsoft', 'TCS', 'Zomato', 'Swiggy', 'Infosys', 'Cred', 'Paytm', 'PhonePe'];
-const FAKE_ROLES = ['SDE-1', 'Frontend Developer', 'Data Analyst', 'QA Engineer', 'Backend Dev', 'Full Stack Trainee'];
+const FAKE_NAMES = [
+    'Rahul S.', 'Priya M.', 'Amit K.', 'Sneha R.', 'Vikram D.', 'Anjali P.', 'Karthik V.', 'Neha J.', 'Suresh B.', 'Ishita G.',
+    'Arjun M.', 'Divya K.', 'Rohan P.', 'Sanya V.', 'Manish T.', 'Kavita L.', 'Aditya H.', 'Pooja B.', 'Sameer C.', 'Tanvi S.',
+    'Aakash R.', 'Meera N.', 'Vivek G.', 'Shweta A.', 'Deepak Y.', 'Ritu F.', 'Abhishek D.', 'Kiran E.', 'Pranav W.', 'Ananya Q.',
+    'Harish Z.', 'Mansi X.', 'Yash V.', 'Bhavna J.', 'Rajat K.', 'Priti L.', 'Sunny O.', 'Isha P.', 'Varun M.', 'Komal U.',
+    'Abhay T.', 'Nidhi S.', 'Gaurav R.', 'Rashi Q.', 'Pankaj P.', 'Jyoti O.', 'Tushar N.', 'Shilpa M.', 'Mayank L.', 'Ankita K.'
+];
+const FAKE_COMPANIES = [
+    'Google', 'Amazon', 'Microsoft', 'TCS', 'Zomato', 'Swiggy', 'Infosys', 'Cred', 'Paytm', 'PhonePe',
+    'Adobe', 'Uber', 'Ola', 'Flipkart', 'Cisco', 'Intuit', 'Salesforce', 'ServiceNow', 'Oracle', 'IBM',
+    'Morgan Stanley', 'Goldman Sachs', 'JP Morgan', 'DE Shaw', 'Atlassian', 'Twilio', 'Stripe', 'Airbnb', 'Netflix', 'Meta'
+];
+const FAKE_ROLES = [
+    'SDE-1', 'Frontend Developer', 'Data Analyst', 'QA Engineer', 'Backend Dev', 'Full Stack Trainee',
+    'DevOps Intern', 'UI/UX Designer', 'Product Manager', 'Systems Engineer', 'Cloud Architect', 'Security Analyst',
+    'Mobile Dev (React Native)', 'Java Developer', 'Python Dev', 'ML Intern', 'Embedded Engineer', 'Network Admin'
+];
 
 router.get('/activity', async (req, res) => {
     try {
@@ -49,9 +63,9 @@ router.get('/activity', async (req, res) => {
             });
         });
 
-        // 3. Busy Simulation: If less than 10 activities, add fake ones
-        if (activities.length < 10) {
-            const needed = 10 - activities.length;
+        // 3. Busy Simulation: If less than 20 activities, add fake ones
+        if (activities.length < 20) {
+            const needed = 20 - activities.length;
             for (let i = 0; i < needed; i++) {
                 const name = FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
                 const company = FAKE_COMPANIES[Math.floor(Math.random() * FAKE_COMPANIES.length)];
@@ -76,7 +90,7 @@ router.get('/activity', async (req, res) => {
         // Sort by time descending
         activities.sort((a, b) => new Date(b.time) - new Date(a.time));
 
-        res.json(activities.slice(0, 15));
+        res.json(activities.slice(0, 20));
     } catch (err) {
         console.error('Pulse Error:', err);
         res.status(500).json({ error: 'Internal server error' });

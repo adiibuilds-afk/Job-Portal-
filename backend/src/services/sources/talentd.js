@@ -44,6 +44,7 @@ const runTalentdManual = async (bot, limit = 20, bundler) => {
                  title: scraped.success ? scraped.title : '',
                  company: scraped.success ? scraped.company : '',
                  companyLogo: scraped.success ? scraped.companyLogo : '',
+                 applyUrl: scraped.success ? scraped.applyUrl : '',
                  bundler // Pass bundler
              });
              
