@@ -1,24 +1,16 @@
 "use client";
 
-import { useSession } from 'next-auth/react';
-import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Search, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 
 export default function HeroSearch() {
-    const { data: session } = useSession();
     const router = useRouter();
     const [query, setQuery] = useState('');
     const [location, setLocation] = useState('');
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!session) {
-            toast.error("Please login to search for jobs", { icon: '🔒' });
-            return;
-        }
 
         const params = new URLSearchParams();
         if (query) params.append('q', query);

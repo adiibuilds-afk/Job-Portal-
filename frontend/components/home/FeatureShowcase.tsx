@@ -63,12 +63,9 @@ const features = [
     }
 ];
 
-import { useSession } from 'next-auth/react';
-import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
 export default function FeatureShowcase() {
-    const { data: session } = useSession();
     const router = useRouter();
 
     const handleFeatureClick = (title: string) => {
@@ -78,11 +75,6 @@ export default function FeatureShowcase() {
             return;
         }
 
-        if (!session) {
-            toast.error(`Please login to access ${title}`, { icon: '🔒' });
-            return;
-        }
-        // If logged in, they are redirected anyway, but if they click from some other state:
         router.push('/jobs');
     };
 
