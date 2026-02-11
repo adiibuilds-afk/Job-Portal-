@@ -40,7 +40,7 @@ function NavbarContent() {
     };
 
     const navLinks = [
-        { name: 'Home', href: '/' },
+        { name: 'Home', href: '/landing' },
         { name: 'All Jobs', href: '/jobs' },
         { name: 'Dashboard', href: '/dashboard' },
         { name: 'Forum', href: '/forum' },
@@ -72,7 +72,7 @@ function NavbarContent() {
                     <div className="bg-black/60 backdrop-blur-2xl border border-amber-500/20 rounded-2xl px-6 py-3 flex items-center justify-between shadow-2xl shadow-amber-500/5">
 
                         {/* Logo */}
-                        <Link href="/" className="flex items-center space-x-3 group">
+                        <Link href="/jobs" className="flex items-center space-x-3 group">
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-all group-hover:scale-105">
                                 <Crown className="w-6 h-6 text-black" />
                             </div>

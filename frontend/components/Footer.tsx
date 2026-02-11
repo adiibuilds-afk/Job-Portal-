@@ -11,7 +11,7 @@ export default function Footer() {
 
                     {/* Brand */}
                     <div className="md:col-span-1">
-                        <Link href="/" className="flex items-center gap-3 mb-4">
+                        <Link href="/jobs" className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center">
                                 <Crown className="w-5 h-5 text-black" />
                             </div>
