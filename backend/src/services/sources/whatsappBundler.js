@@ -19,11 +19,13 @@ class WhatsAppBundler {
             return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         };
 
+        const jobObj = job.toObject ? job.toObject() : job;
+
         const escapedJob = {
-            ...job,
-            title: escapeHTML(job.title),
-            company: escapeHTML(job.company),
-            eligibility: escapeHTML(job.eligibility)
+            ...jobObj,
+            title: escapeHTML(jobObj.title),
+            company: escapeHTML(jobObj.company),
+            eligibility: escapeHTML(jobObj.eligibility)
         };
 
         this.jobs.push(escapedJob);

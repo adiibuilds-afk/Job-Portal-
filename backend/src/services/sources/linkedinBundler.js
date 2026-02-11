@@ -19,13 +19,15 @@ class LinkedInBundler {
             return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         };
 
+        const jobObj = job.toObject ? job.toObject() : job;
+
         const escapedJob = {
-            ...job,
-            title: escapeHTML(job.title),
-            company: escapeHTML(job.company),
-            location: escapeHTML(job.location),
-            eligibility: escapeHTML(job.eligibility),
-            batch: job.batch?.map(b => escapeHTML(b))
+            ...jobObj,
+            title: escapeHTML(jobObj.title),
+            company: escapeHTML(jobObj.company),
+            location: escapeHTML(jobObj.location),
+            eligibility: escapeHTML(jobObj.eligibility),
+            batch: jobObj.batch?.map(b => escapeHTML(b))
         };
 
         this.jobs.push(escapedJob);
