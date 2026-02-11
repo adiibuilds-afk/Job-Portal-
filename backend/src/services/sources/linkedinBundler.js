@@ -45,28 +45,30 @@ class LinkedInBundler {
         const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
         const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t';
         
-        let message = `🚀 <b>TECH HIRING ALERT: Top 5 Roles for 2025/26/27 Batches!</b> 🚀\n\n`;
+        let message = "<pre><code>";
+        message += `🚀 TECH HIRING ALERT: Top 5 Roles for 2025/26/27 Batches! 🚀\n\n`;
         message += `Stop scrolling! We've curated the best software engineering & IT opportunities for you today. \n\n`;
-        message += `🔥 <b>Featured Jobs Today:</b>\n\n`;
+        message += `🔥 Featured Jobs Today:\n\n`;
         
         this.jobs.forEach((job, index) => {
             const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;
             const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
             const emoji = numberEmojis[index] || '🔹';
             
-            message += `${emoji} <b>${job.title}</b> @ <b>${job.company}</b>\n`;
+            message += `${emoji} ${job.title} @ ${job.company}\n`;
             message += `📍 Location: ${job.location || 'Remote'}\n`;
             message += `🎓 Batch: ${job.batch?.join(', ') || job.eligibility || 'Any'}\n`;
-            message += `🔗 <b>Apply Here:</b> ${jobUrl}\n\n`;
+            message += `🔗 Apply Here: ${jobUrl}\n\n`;
         });
 
         message += `━━━━━━━━━━━━━━━\n`;
-        message += `💡 <b>Pro-Tip:</b> These roles move fast. Apply within the first 24 hours!\n\n`;
-        message += `📢 <b>Join our community for hourly updates:</b>\n`;
+        message += `💡 Pro-Tip: These roles move fast. Apply within the first 24 hours!\n\n`;
+        message += `📢 Join our community for hourly updates:\n`;
         message += `🔹 Telegram: https://t.me/jobgridupdates\n`;
         message += `🔹 WhatsApp: ${WHATSAPP_GROUP_URL}\n`;
         message += `🔹 LinkedIn: https://www.linkedin.com/company/jobgrid-in\n\n`;
         message += `#Hiring #SoftwareEngineering #Freshers #JobSearch #TechJobs #SDE #JobGrid #Careers`;
+        message += "</code></pre>";
 
         try {
             await this.bot.telegram.sendMessage(this.adminId, message, {
