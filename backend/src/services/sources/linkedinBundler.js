@@ -13,7 +13,22 @@ class LinkedInBundler {
     async addJob(job) {
         if (!this.bot || !this.adminId) return;
         
-        this.jobs.push(job);
+        // Simple HTML Escaping
+        const escapeHTML = (str) => {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        };
+
+        const escapedJob = {
+            ...job,
+            title: escapeHTML(job.title),
+            company: escapeHTML(job.company),
+            location: escapeHTML(job.location),
+            eligibility: escapeHTML(job.eligibility),
+            batch: job.batch?.map(b => escapeHTML(b))
+        };
+
+        this.jobs.push(escapedJob);
         console.log(`   📦 Job added to LinkedIn bundle (${this.jobs.length}/5)`);
         
         if (this.jobs.length >= 5) {
@@ -28,24 +43,24 @@ class LinkedInBundler {
         const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
         const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t';
         
-        let message = `🚀 **TECH HIRING ALERT: Top 5 Roles for 2025/26/27 Batches!** 🚀\n\n`;
+        let message = `🚀 <b>TECH HIRING ALERT: Top 5 Roles for 2025/26/27 Batches!</b> 🚀\n\n`;
         message += `Stop scrolling! We've curated the best software engineering & IT opportunities for you today. \n\n`;
-        message += `🔥 **Featured Jobs Today:**\n\n`;
+        message += `🔥 <b>Featured Jobs Today:</b>\n\n`;
         
         this.jobs.forEach((job, index) => {
             const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;
             const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
             const emoji = numberEmojis[index] || '🔹';
             
-            message += `${emoji} **${job.title}** @ **${job.company}**\n`;
+            message += `${emoji} <b>${job.title}</b> @ <b>${job.company}</b>\n`;
             message += `📍 Location: ${job.location || 'Remote'}\n`;
             message += `🎓 Batch: ${job.batch?.join(', ') || job.eligibility || 'Any'}\n`;
-            message += `🔗 **Apply Here:** ${jobUrl}\n\n`;
+            message += `🔗 <b>Apply Here:</b> ${jobUrl}\n\n`;
         });
 
         message += `━━━━━━━━━━━━━━━\n`;
-        message += `💡 **Pro-Tip:** These roles move fast. Apply within the first 24 hours!\n\n`;
-        message += `📢 **Join our community for hourly updates:**\n`;
+        message += `💡 <b>Pro-Tip:</b> These roles move fast. Apply within the first 24 hours!\n\n`;
+        message += `📢 <b>Join our community for hourly updates:</b>\n`;
         message += `🔹 Telegram: https://t.me/jobgridupdates\n`;
         message += `🔹 WhatsApp: ${WHATSAPP_GROUP_URL}\n`;
         message += `🔹 LinkedIn: https://www.linkedin.com/company/jobgrid-in\n\n`;
@@ -53,7 +68,7 @@ class LinkedInBundler {
 
         try {
             await this.bot.telegram.sendMessage(this.adminId, message, {
-                parse_mode: 'Markdown',
+                parse_mode: 'HTML',
                 disable_web_page_preview: true
             });
             console.log(`   ✅ LinkedIn bundle sent to Admin.`);

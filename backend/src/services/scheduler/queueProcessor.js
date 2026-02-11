@@ -116,16 +116,22 @@ const processQueue = async (bot) => {
     if (CHANNEL_ID) {
         const jobUrl = `${WEBSITE_URL}/job/${newJob.slug}`;
         
-        let message = `🎯 *New Job Alert!*\n\n`;
-        if (jobData.company) message += `🏢 *Company:* ${jobData.company}\n`;
-        if (jobData.title) message += `📌 *Role:* ${jobData.title}\n`;
-        if (jobData.eligibility && jobData.eligibility !== 'N/A') message += `\n👥 *Batch/Eligibility:*\n${jobData.eligibility}\n`;
-        if (jobData.salary && jobData.salary !== 'N/A') message += `\n💰 *Salary:* ${jobData.salary}`;
-        if (jobData.location && jobData.location !== 'N/A') message += `\n📍 *Location:* ${jobData.location}`;
+        // Simple HTML Escaping
+        const escapeHTML = (str) => {
+            if (!str) return '';
+            return str.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        };
+
+        let message = `🎯 <b>New Job Alert!</b>\n\n`;
+        if (jobData.company) message += `🏢 <b>Company:</b> ${escapeHTML(jobData.company)}\n`;
+        if (jobData.title) message += `📌 <b>Role:</b> ${escapeHTML(jobData.title)}\n`;
+        if (jobData.eligibility && jobData.eligibility !== 'N/A') message += `\n👥 <b>Batch/Eligibility:</b>\n${escapeHTML(jobData.eligibility)}\n`;
+        if (jobData.salary && jobData.salary !== 'N/A') message += `\n💰 <b>Salary:</b> ${escapeHTML(jobData.salary)}`;
+        if (jobData.location && jobData.location !== 'N/A') message += `\n📍 <b>Location:</b> ${escapeHTML(jobData.location)}`;
         
-        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 WhatsApp Group :- https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
+        message += `\n\n🔗 <b>Apply Now:</b>\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 <b>Join Our Channels:</b>\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 WhatsApp Group :- https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
         await bot.telegram.sendMessage(CHANNEL_ID, message, {
-            parse_mode: 'Markdown',
+            parse_mode: 'HTML',
             disable_web_page_preview: true,
         });
         console.log(`✅ Posted to channel: ${newJob.title}`);

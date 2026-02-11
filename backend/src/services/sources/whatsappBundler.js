@@ -13,7 +13,20 @@ class WhatsAppBundler {
     async addJob(job) {
         if (!this.bot || !this.adminId) return;
         
-        this.jobs.push(job);
+        // Simple HTML Escaping
+        const escapeHTML = (str) => {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        };
+
+        const escapedJob = {
+            ...job,
+            title: escapeHTML(job.title),
+            company: escapeHTML(job.company),
+            eligibility: escapeHTML(job.eligibility)
+        };
+
+        this.jobs.push(escapedJob);
         console.log(`   📦 Job added to WhatsApp bundle (${this.jobs.length}/5)`);
         
         if (this.jobs.length >= 5) {
@@ -27,7 +40,7 @@ class WhatsAppBundler {
         console.log(`   📡 Sending WhatsApp bundle to Admin...`);
         const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
         
-        let message = "```\n";
+        let message = "<pre><code>";
         
         this.jobs.forEach((job, index) => {
             const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;
@@ -44,11 +57,11 @@ class WhatsAppBundler {
         message += `🔹 Telegram: https://t.me/jobgridupdates\n`;
         message += `🔹 WhatsApp: https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t\n`;
         message += `🔹 LinkedIn: https://www.linkedin.com/company/jobgrid-in\n`;
-        message += "```";
+        message += "</code></pre>";
 
         try {
             await this.bot.telegram.sendMessage(this.adminId, message, {
-                parse_mode: 'Markdown',
+                parse_mode: 'HTML',
                 disable_web_page_preview: true
             });
             console.log(`   ✅ WhatsApp bundle sent to Admin.`);

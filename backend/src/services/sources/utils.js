@@ -1,6 +1,14 @@
 const Job = require('../../models/Job');
 const Settings = require('../../models/Settings');
 
+const escapeHTML = (str) => {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+};
+
 const postJobToTelegram = async (job, bot) => {
     if (!bot) {
         console.log('⚠️ Bot instance not provided, skipping Telegram post.');
@@ -18,17 +26,17 @@ const postJobToTelegram = async (job, bot) => {
 
         const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;
 
-        let message = `🎯 *New Job Alert!*\n\n`;
-        if (job.company) message += `🏢 *Company:* ${job.company}\n`;
-        if (job.title) message += `📌 *Role:* ${job.title}\n`;
-        if (job.eligibility && job.eligibility !== 'N/A') message += `\n👥 *Batch/Eligibility:*\n${job.eligibility}\n`;
-        if (job.salary && job.salary !== 'N/A') message += `\n💰 *Salary:* ${job.salary}`;
-        if (job.location && job.location !== 'N/A') message += `\n📍 *Location:* ${job.location}`;
+        let message = `🎯 <b>New Job Alert!</b>\n\n`;
+        if (job.company) message += `🏢 <b>Company:</b> ${escapeHTML(job.company)}\n`;
+        if (job.title) message += `📌 <b>Role:</b> ${escapeHTML(job.title)}\n`;
+        if (job.eligibility && job.eligibility !== 'N/A') message += `\n👥 <b>Batch/Eligibility:</b>\n${escapeHTML(job.eligibility)}\n`;
+        if (job.salary && job.salary !== 'N/A') message += `\n💰 <b>Salary:</b> ${escapeHTML(job.salary)}`;
+        if (job.location && job.location !== 'N/A') message += `\n📍 <b>Location:</b> ${escapeHTML(job.location)}`;
 
-        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 WhatsApp Group :- https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
+        message += `\n\n🔗 <b>Apply Now:</b>\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 <b>Join Our Channels:</b>\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 WhatsApp Group :- https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
         
         const sent = await bot.telegram.sendMessage(CHANNEL_ID, message, {
-            parse_mode: 'Markdown',
+            parse_mode: 'HTML',
             disable_web_page_preview: true,
         });
         console.log(`✅ Posted to channel: ${job.title}`);
@@ -146,5 +154,6 @@ const waitWithSkip = async (ms) => {
 module.exports = {
     waitWithSkip,
     postJobToTelegram,
-    deleteTelegramPost
+    deleteTelegramPost,
+    escapeHTML
 };

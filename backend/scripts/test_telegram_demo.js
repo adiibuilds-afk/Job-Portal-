@@ -29,21 +29,27 @@ const sendDemoMessage = async () => {
     const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
     const jobUrl = `${WEBSITE_URL}/job/${mockJob.slug}`;
 
+    // Simple HTML Escaping
+    const escapeHTML = (str) => {
+        if (!str) return '';
+        return str.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    };
+
     // Message Construction (Exact same as production code)
-    let message = `🎯 *New Job Alert!* (DEMO)\n\n`;
-    message += `🏢 *Company:* ${mockJob.company}\n`;
-    message += `📌 *Role:* ${mockJob.title}\n`;
-    message += `\n👥 *Batch/Eligibility:*\n${mockJob.batch}\n`;
-    message += `\n💰 *Salary:* ${mockJob.salary}`;
-    message += `\n📍 *Location:* ${mockJob.location}`;
+    let message = `🎯 <b>New Job Alert!</b> (DEMO)\n\n`;
+    message += `🏢 <b>Company:</b> ${escapeHTML(mockJob.company)}\n`;
+    message += `📌 <b>Role:</b> ${escapeHTML(mockJob.title)}\n`;
+    message += `\n👥 <b>Batch/Eligibility:</b>\n${escapeHTML(mockJob.batch)}\n`;
+    message += `\n💰 <b>Salary:</b> ${escapeHTML(mockJob.salary)}`;
+    message += `\n📍 <b>Location:</b> ${escapeHTML(mockJob.location)}`;
     
     // The Footer with New Links
-    message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 WhatsApp Group :- https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
+    message += `\n\n🔗 <b>Apply Now:</b>\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 <b>Join Our Channels:</b>\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 WhatsApp Group :- https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
 
     try {
         console.log('🚀 Sending demo message to:', CHANNEL_ID);
         await bot.telegram.sendMessage(CHANNEL_ID, message, {
-            parse_mode: 'Markdown',
+            parse_mode: 'HTML',
             disable_web_page_preview: true,
         });
         console.log('✅ Demo message sent successfully!');
