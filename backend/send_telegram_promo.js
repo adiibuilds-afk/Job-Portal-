@@ -16,7 +16,8 @@ const apiKey = apiInstance.authentications['apiKey'];
 apiKey.apiKey = process.env.BREVO_API_KEY;
 
 // Configuration
-const TELEGRAM_CHANNEL = 'https://t.me/jobgridupdates'; // Update this with your actual channel link
+const TELEGRAM_CHANNEL = 'https://t.me/jobgridupdates'; 
+const WHATSAPP_GROUP = 'https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t';
 const BATCH_SIZE = 20; // Send emails in batches to avoid rate limits
 const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds between batches
 
@@ -63,8 +64,11 @@ const PROMO_EMAIL_TEMPLATE = `
                 <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 0 0 20px 0;">
                     This feature will be <strong>exclusive to our Telegram members</strong>.<br/>Join now to be first in line!
                 </p>
-                <a href="${TELEGRAM_CHANNEL}" style="display: inline-block; background-color: #ffffff; color: #0088cc; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 700;">
-                    📱 Join Telegram Channel
+                <a href="${TELEGRAM_CHANNEL}" style="display: inline-block; background-color: #ffffff; color: #0088cc; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 700; margin-right: 10px; margin-bottom: 15px;">
+                    📱 Join Telegram
+                </a>
+                <a href="${WHATSAPP_GROUP}" style="display: inline-block; background-color: #25D366; color: #ffffff; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 700; margin-bottom: 15px;">
+                    🟢 Join WhatsApp Group
                 </a>
             </div>
             

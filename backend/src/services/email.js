@@ -41,6 +41,7 @@ const sendWelcomeEmail = async (email) => {
                             <p style="margin: 0; font-size: 14px; color: #6b7280;">Curating the best for the best.</p>
                             <div style="margin-top: 15px;">
                                 <a href="https://t.me/jobgridupdates" style="display: inline-block; background-color: #0088cc; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600;">Join Telegram</a>
+                                <a href="https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t" style="display: inline-block; margin-left: 10px; background-color: #25D366; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600;">Join WhatsApp</a>
                                 <a href="https://jobgrid.in" style="display: inline-block; margin-left: 10px; color: #f59e0b; text-decoration: none; font-size: 13px; font-weight: 600;">Visit Website</a>
                             </div>
                         </div>
@@ -92,6 +93,7 @@ const sendBroadcastEmail = async (recipients, subject, message) => {
                             <p style="margin: 0; font-size: 14px; color: #6b7280;">Your career accelerator.</p>
                             <div style="margin-top: 15px;">
                                 <a href="https://t.me/jobgridupdates" style="display: inline-block; background-color: #0088cc; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600;">Join Telegram</a>
+                                <a href="https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t" style="display: inline-block; margin-left: 10px; background-color: #25D366; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600;">Join WhatsApp</a>
                                 <a href="https://jobgrid.in" style="display: inline-block; margin-left: 10px; color: #f59e0b; text-decoration: none; font-size: 13px; font-weight: 600;">Visit Website</a>
                             </div>
                         </div>

@@ -69,9 +69,9 @@ export default function FeatureShowcase() {
     const router = useRouter();
 
     const handleFeatureClick = (title: string) => {
-        // Special handling for Telegram feature
+        // Special handling for Social features
         if (title === "Instant Job Alerts") {
-            window.open('https://t.me/jobgridupdates', '_blank');
+            window.open('https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t', '_blank');
             return;
         }
 

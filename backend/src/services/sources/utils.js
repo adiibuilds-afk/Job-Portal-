@@ -25,7 +25,7 @@ const postJobToTelegram = async (job, bot) => {
         if (job.salary && job.salary !== 'N/A') message += `\n💰 *Salary:* ${job.salary}`;
         if (job.location && job.location !== 'N/A') message += `\n📍 *Location:* ${job.location}`;
 
-        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
+        message += `\n\n🔗 *Apply Now:*\n${jobUrl}\n\n━━━━━━━━━━━━━━━\n\n📢 *Join Our Channels:*\n\n🔹 Telegram :- https://t.me/jobgridupdates\n\n🔹 WhatsApp Channel :- https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n\n🔹 WhatsApp Group :- https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t\n\n🔹 LinkedIn :- https://www.linkedin.com/company/jobgrid-in`;
         
         const sent = await bot.telegram.sendMessage(CHANNEL_ID, message, {
             parse_mode: 'Markdown',

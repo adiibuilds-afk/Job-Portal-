@@ -124,9 +124,9 @@ export default function Footer() {
                             <a href="https://www.linkedin.com/company/jobgrid-in" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-blue-600 text-sm transition-colors">
                                 <span className="w-2 h-2 rounded-full bg-blue-600"></span> LinkedIn Page
                             </a>
-                            {/* <a href="https://chat.whatsapp.com/CQtsJNDj5KNDuCkciseSIH" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-green-500 text-sm transition-colors">
+                            <a href="https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-green-500 text-sm transition-colors">
                                 <span className="w-2 h-2 rounded-full bg-green-600"></span> WhatsApp Group
-                            </a> */}
+                            </a>
                         </div>
                     </div>
                 </div>

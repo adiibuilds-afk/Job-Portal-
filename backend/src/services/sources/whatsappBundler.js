@@ -42,7 +42,7 @@ class WhatsAppBundler {
         message += `━━━━━━━━━━━━━━━\n\n`;
         message += `📢 *Join Our Channels:*\n\n`;
         message += `🔹 Telegram: https://t.me/jobgridupdates\n`;
-        message += `🔹 WhatsApp: https://whatsapp.com/channel/0029Vak74nQ0wajvYa3aA432\n`;
+        message += `🔹 WhatsApp: https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t\n`;
         message += `🔹 LinkedIn: https://www.linkedin.com/company/jobgrid-in\n`;
         message += "```";
 

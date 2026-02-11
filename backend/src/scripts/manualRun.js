@@ -177,7 +177,23 @@ const run = async () => {
              
              if (process.env.ADMIN_ID) {
                 const WhatsAppBundler = require('../services/sources/whatsappBundler');
-                bundler = new WhatsAppBundler(bot, process.env.ADMIN_ID);
+                const LinkedInBundler = require('../services/sources/linkedinBundler');
+                bundler = {
+                    whatsapp: new WhatsAppBundler(bot, process.env.ADMIN_ID),
+                    linkedin: new LinkedInBundler(bot, process.env.ADMIN_ID),
+                    async addJob(job) {
+                        await this.whatsapp.addJob(job);
+                        await this.linkedin.addJob(job);
+                    },
+                    async removeJob(jobId) {
+                        await this.whatsapp.removeJob(jobId);
+                        await this.linkedin.removeJob(jobId);
+                    },
+                    async flush() {
+                        await this.whatsapp.flush();
+                        await this.linkedin.flush();
+                    }
+                };
              }
         }
 
