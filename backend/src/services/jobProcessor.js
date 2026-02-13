@@ -19,21 +19,44 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
     const cleanTags = (tags) => {
         if (!Array.isArray(tags)) return [];
         return tags
-            .map(t => t.trim())
-            .filter(t => t.length > 1 && t.length <= 25 && t.split(' ').length <= 3);
+            .map(t => typeof t === 'string' ? t.trim() : (t?.name || String(t))) // Handle objects/nulls
+            .filter(t => t && t.length > 1 && t.length <= 25 && t.split(' ').length <= 3);
     };
 
     // Helper to clean location (convert array to string if needed)
     const cleanLocation = (loc) => {
         if (!loc) return '';
-        if (Array.isArray(loc)) return loc.join(', ');
+        if (Array.isArray(loc)) return loc.map(l => typeof l === 'object' ? (l.city || l.name || JSON.stringify(l)) : l).join(', ');
+        if (typeof loc === 'object') return loc.city || loc.name || JSON.stringify(loc);
         return String(loc).trim();
     };
 
     // Helper to clean category (fallback if too long)
     const cleanCategory = (cat) => {
-        if (!cat || cat.length > 30) return 'Engineering';
-        return cat.trim();
+        if (!cat) return 'Engineering';
+        const strCat = typeof cat === 'string' ? cat : (cat.name || String(cat));
+        if (strCat.length > 30) return 'Engineering';
+        return strCat.trim();
+    };
+
+    // Helper to clean salary (handle objects from AI)
+    const cleanSalary = (sal) => {
+        if (!sal) return '';
+        if (typeof sal === 'object') {
+            const min = sal.min || sal.minimum || '';
+            const max = sal.max || sal.maximum || '';
+            if (min && max) return `₹${min}-${max} LPA`;
+            if (min) return `₹${min} LPA`;
+            return JSON.stringify(sal);
+        }
+        return String(sal).trim();
+    };
+
+    // Helper to simple string (roleType, etc)
+    const cleanString = (val, defaultVal = '') => {
+        if (!val) return defaultVal;
+        if (typeof val === 'string') return val.trim();
+        return val.name || val.title || val.label || JSON.stringify(val);
     };
 
     return {
@@ -42,7 +65,7 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         companyLogo: refinedData.companyLogo || rawData.companyLogo,
         location: cleanLocation(refinedData.location || rawData.location),
         eligibility: refinedData.eligibility || rawData.eligibility || '',
-        salary: refinedData.salary || rawData.salary || '',
+        salary: cleanSalary(refinedData.salary || rawData.salary),
         description: refinedData.description || rawData.description || '',
         // Prioritize raw captured link as AI often hallucinations hub links
         applyUrl: rawData.applyUrl || refinedData.applyUrl || '',
@@ -50,8 +73,10 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         batch: parseBatches(rawData.batch && rawData.batch.length > 0 ? rawData.batch : refinedData.batch),
         tags: cleanTags((rawData.tags && rawData.tags.length > 0) ? rawData.tags : (refinedData.tags || (rawData.role ? [rawData.role] : []))),
         jobType: mapJobType(refinedData.jobType || rawData.jobtype || (rawData.title?.toLowerCase().includes('intern') ? 'Internship' : 'FullTime')),
-        roleType: refinedData.roleType || rawData.roleType || rawData.role || 'Engineering',
-        seniority: refinedData.seniority || rawData.seniority || 'Entry',
+        
+        roleType: cleanString(refinedData.roleType || rawData.roleType || rawData.role, 'Engineering'),
+        seniority: cleanString(refinedData.seniority || rawData.seniority, 'Entry'),
+        
         minSalary: refinedData.minSalary || parseMinSalary(refinedData.salary || rawData.pay || rawData.salary),
         isRemote: refinedData.isRemote || (String(refinedData.location || '').toLowerCase().includes('remote')) || (String(rawData.location || '').toLowerCase().includes('remote')) || false,
         rolesResponsibility: formatAiValue(refinedData.rolesResponsibility || rawData.rolesAndResponsibilities),

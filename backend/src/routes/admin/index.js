@@ -7,6 +7,7 @@ const userRoutes = require('./users');
 const scraperRoutes = require('./scraper');
 const settingRoutes = require('./settings');
 const alertRoutes = require('./alerts');
+const notificationRoutes = require('./notifications');
 
 router.use('/stats', statsRoutes);
 router.use('/jobs', jobRoutes);
@@ -14,6 +15,7 @@ router.use('/users', userRoutes);
 router.use('/scraper', scraperRoutes);
 router.use('/settings', settingRoutes);
 router.use('/alerts', alertRoutes);
+router.use('/notifications', notificationRoutes);
 
 // Aliases for backward compatibility or direct dashboard access
 router.use('/', statsRoutes); 

@@ -67,4 +67,26 @@ router.put('/update', attachUser, async (req, res) => {
     }
 });
 
+// Save FCM Token for Push Notifications
+router.post('/fcm-token', attachUser, async (req, res) => {
+    try {
+        const { token } = req.body;
+        const user = req.user;
+
+        if (!user) return res.status(401).json({ error: 'Authentication required' });
+        if (!token) return res.status(400).json({ error: 'Token required' });
+
+        // Add token if it doesn't exist
+        if (!user.fcmTokens.includes(token)) {
+            user.fcmTokens.push(token);
+            await user.save();
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('FCM Token Save Error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 module.exports = router;

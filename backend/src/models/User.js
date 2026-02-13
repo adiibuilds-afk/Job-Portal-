@@ -93,7 +93,10 @@ const UserSchema = new mongoose.Schema({
         score: { type: Number },
         feedback: { type: String },
         date: { type: Date, default: Date.now }
-    }]
+    }],
+    
+    // Push Notifications
+    fcmTokens: { type: [String], default: [] }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

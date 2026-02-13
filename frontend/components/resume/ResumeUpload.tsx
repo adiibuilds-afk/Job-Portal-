@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { Upload, Loader2, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Capacitor } from '@capacitor/core';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
 
 interface ResumeUploadProps {
     resumeText: string;
@@ -12,20 +14,7 @@ interface ResumeUploadProps {
 export default function ResumeUpload({ resumeText, setResumeText, isExtracting, setIsExtracting }: ResumeUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (file.type !== 'application/pdf') {
-            toast.error("Please upload a PDF file.");
-            return;
-        }
-
-        if (file.size > 2 * 1024 * 1024) {
-            toast.error("File size exceeds 2MB limit.");
-            return;
-        }
-
+    const processFile = async (file: File | Blob) => {
         setIsExtracting(true);
         try {
             const pdfjsLib = await import('pdfjs-dist');
@@ -63,12 +52,69 @@ export default function ResumeUpload({ resumeText, setResumeText, isExtracting, 
         }
     };
 
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.type !== 'application/pdf') {
+            toast.error("Please upload a PDF file.");
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error("File size exceeds 2MB limit.");
+            return;
+        }
+
+        await processFile(file);
+    };
+
+    const handleNativeUpload = async () => {
+        try {
+            const result = await FilePicker.pickFiles({
+                types: ['application/pdf'],
+                limit: 1,
+                readData: true
+            });
+
+            if (result.files.length > 0) {
+                const file = result.files[0];
+
+                // Convert base64 data to Blob
+                if (file.data) {
+                    const byteCharacters = atob(file.data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+                    await processFile(blob);
+                } else {
+                    toast.error("Could not read file data.");
+                }
+            }
+        } catch (error) {
+            console.error('File picking failed', error);
+            // toast.error("File selection cancelled or failed.");
+        }
+    };
+
+    const handleUploadClick = () => {
+        if (Capacitor.isNativePlatform()) {
+            handleNativeUpload();
+        } else {
+            fileInputRef.current?.click();
+        }
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between pl-1">
                 <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Resume Content</label>
                 <button
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={handleUploadClick}
                     className="text-[10px] text-amber-500 font-black uppercase tracking-widest hover:underline flex items-center gap-1"
                 >
                     <Upload className="w-3 h-3" /> Upload PDF

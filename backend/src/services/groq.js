@@ -5,58 +5,28 @@ require('dotenv').config({
     override: true 
 });
 
-// Load multiple keys from env (comma separated)
-const rawKey = process.env.GROQ_API_KEY || '';
-console.log(`[Groq Service] Loading keys... (Raw length: ${rawKey.length})`);
-const apiKeys = rawKey.split(',').map(k => k.trim()).filter(k => k);
-console.log(`[Groq Service] Successfully parsed ${apiKeys.length} keys.`);
-if (apiKeys.length === 0) {
+// Load key from env
+const apiKey = process.env.GROQ_API_KEY || '';
+if (!apiKey) {
     console.error('❌ No GROQ_API_KEY found in environment variables!');
 }
 
-// Create a client for each key
-console.log(`[Groq Service] Found ${apiKeys.length} API keys in environment.`);
-const clients = apiKeys.map(key => new Groq({ apiKey: key }));
-let currentKeyIndex = 0;
+const client = new Groq({ apiKey });
 
-const getClient = () => {
-    const client = clients[currentKeyIndex];
-    // console.log(`🔑 Using Groq Key Index: ${currentKeyIndex}`);
-    return client;
-};
-
-const rotateKey = () => {
-    const oldIndex = currentKeyIndex;
-    currentKeyIndex = (currentKeyIndex + 1) % clients.length;
-    console.log(`🔄 Switching Groq Key: Index ${oldIndex} -> ${currentKeyIndex} (Total keys: ${clients.length})`);
-};
-
-const executeWithFallback = async (operation, maxRetries = clients.length) => {
-    let attempts = 0;
-    while (attempts < maxRetries) {
-        try {
-            const client = getClient();
-            return await operation(client);
-        } catch (error) {
-            const isRateLimit = error?.status === 429 || 
-                                error?.error?.code === 'rate_limit_exceeded' || 
-                                error?.error?.error?.code === 'rate_limit_exceeded';
-
-            if (isRateLimit) {
-                console.warn(`⚠️ Groq Rate Limit (Key ${currentKeyIndex}). Rotating key...`);
-                rotateKey();
-                attempts++;
-                // If we've tried all keys, we might need a small delay or just fail
-                if (attempts >= maxRetries) {
-                    console.error('❌ All Groq keys rate limited!');
-                    const AIUsage = require('../models/AIUsage');
-                    await AIUsage.logError(true).catch(() => {});
-                    throw new Error('rate_limit_exceeded_all_keys');
-                }
-            } else {
-                throw error; // Rethrow non-rate-limit errors
-            }
+const executeWithFallback = async (operation) => {
+    try {
+        return await operation(client);
+    } catch (error) {
+        const isRateLimit = error?.status === 429 || 
+                            error?.code === 'rate_limit_exceeded';
+        
+        if (isRateLimit) {
+            console.error('❌ Groq Rate Limit Exceeded!');
+            const AIUsage = require('../models/AIUsage');
+            await AIUsage.logError(true).catch(() => {});
+            throw new Error('rate_limit_exceeded');
         }
+        throw error;
     }
 };
 
@@ -67,36 +37,28 @@ const parseJobWithAI = async (rawText) => {
             messages: [
                 {
                     role: 'system',
-                    content: `You are a job data expert. Extract structured data with high precision.
-Convert the job post into clean JSON.
-
-Fields:
-title, company, companyLogo, location, eligibility, salary, description, applyUrl, lastDate, category
-
-Detailed Content (Formatting: Use bullet points • for strings):
-- rolesResponsibility
-- requirements
-- niceToHave
-
-Engineering & Metadata:
-- batch: Array of strings. Extract specific graduation years (e.g. ["2023", "2024", "2025"]). Look for "2025 batch", "Class of 2024", "Graduating in 2026", etc.
-- tags: Array of strings. Extract SPECIFIC technical skills (e.g., ["Java", "React", "Node.js", "C++", "DSA", "SQL"]). Focus on programming languages, frameworks, and core CS concepts. Avoid generalities like "Software Development" if specific tech is mentioned.
-- jobType: "Internship" or "FullTime".
-- roleType: "SDE", "Frontend", "Backend", "FullStack", "QA", "Data Science", "DevOps", "Other".
-- seniority: "Entry" (0-2y), "Mid" (2-5y), "Senior" (5y+).
-- minSalary: Number (LPA).
-- isRemote: Boolean.
-
+                content: `Extract JSON from job post.
+Fields: title, company, location, salary, eligibility, lastDate, applyUrl.
+Arrays: 
+- rolesResponsibility: Array of strings (NOT objects). Example: ["Design API", "Fix bugs"].
+- requirements: Array of strings.
+- niceToHave: Array of strings.
+- batch: Array of strings (e.g. ["2024"]). 
+- tags: Array of strings (tech stack).
+Enums: jobType(String: Internship/FullTime), roleType(String: SDE/Frontend/Backend/etc), seniority(String: Entry/Mid/Senior), isRemote(bool).
 Rules:
-- User Input > Scraped Content.
-- Clean Title: Role only, remove all suffixes like "at Company" or "Hiring for". Preserve specific stack details if they are part of the role (e.g. "QA Automation Engineer", "Python Developer"). Do NOT default to "Software Engineer" if a more specific role is mentioned.`
+- Title: Role only (no "Hiring for").;
+- Tags: Array of STRINGS only (e.g. ["Java", "React"]). NO objects.
+- Role/Seniority: Return a single STRING value, not an object.
+- Output: Valid JSON only. No markdown.`
                 },
                 {
                     role: 'user',
                     content: rawText
                 }
             ],
-            model: 'llama-3.3-70b-versatile',
+            model: 'llama-3.1-8b-instant',
+            response_format: { type: 'json_object' }
         });
     });
 
@@ -104,23 +66,33 @@ Rules:
     const tokens = completion.usage?.total_tokens || 0;
     try {
       const AIUsage = require('../models/AIUsage');
-      await AIUsage.logUsage(tokens, 'job_parsing', currentKeyIndex);
+      await AIUsage.logUsage(tokens, 'job_parsing', 0);
     } catch (e) { /* silent fail */ }
 
     const content = completion.choices[0]?.message?.content || '{}';
+    // Clean up content: sometimes it adds markdown markers despite JSON mode
+    const cleanContent = content.replace(/```json\n?|```/g, '').trim();
     
     // Robust JSON extraction
-    const startObj = content.indexOf('{');
-    const endObj = content.lastIndexOf('}');
+    const startObj = cleanContent.indexOf('{');
+    const endObj = cleanContent.lastIndexOf('}');
     
     let jsonString = '{}';
     if (startObj !== -1 && endObj !== -1) {
-        jsonString = content.substring(startObj, endObj + 1);
+        jsonString = cleanContent.substring(startObj, endObj + 1);
     }
 
-    return JSON.parse(jsonString);
+    try {
+        return JSON.parse(jsonString);
+    } catch (e) {
+        // Last ditch attempt: fix common trailing comma issue and unquoted keys
+        const fixedJson = jsonString
+            .replace(/,\s*([\]}])/g, '$1') // Trailing commas
+            .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":'); // Unquoted keys
+        return JSON.parse(fixedJson);
+    }
   } catch (error) {
-    if (error.message === 'rate_limit_exceeded_all_keys') {
+    if (error.message === 'rate_limit_exceeded') {
         return { error: 'rate_limit_exceeded' };
     }
     console.error('AI Parsing Error:', error.message);
@@ -148,20 +120,21 @@ ${jobData.description?.substring(0, 800)}
 Generate JSON with these fields:
 1. "title": Clean, SEO-friendly title (Examples: "Software Engineer at Google", "QA Automation Engineer - Python", "Data Scientist at Amazon", "Frontend Developer - React"). 
 2. "description": A compelling 2-3 sentence meta description (max 160 chars) summarizing why this is a great opportunity.
-3. "rolesResponsibility": A bulleted list (using •) of clear roles and responsibilities.
-4. "requirements": A bulleted list (using •) of technical and soft skill requirements.
+3. "rolesResponsibility": Array of strings (clear, concise responsibilities).
+4. "requirements": Array of strings (technical and soft skill requirements).
 5. "eligibility": A concise eligibility criteria string (e.g., "B.Tech/B.E. 2024/2025 Batch").
-6. "batch": Array of strings (e.g., ["2024", "2025"]).
+6. "salary": A string representing the salary (e.g., "₹4-6 LPA" or "Competitive").
+7. "batch": Array of strings (e.g., ["2024", "2025"]).
 7. "tags": Array of strings (Tech Stack, frameworks, soft skills).
 8. "seniority": "Entry", "Mid", or "Senior".
 9. "jobType": "FullTime", "Internship".
 
 Rules:
 - Title must be purely the role and company.
-- Content should be professional and formatted with bullet points for lists.
+- Content should be professional.
 - For 'batch', only include years (e.g., 2024).
 - For 'tags', include specific tech mentioned in the description (e.g., Java, Python, React, DSA). Prioritize specific languages and frameworks over general skills.
-- Output ONLY valid JSON, no markdown.`;
+- Output ONLY valid JSON. No markdown tags. No extra text. Ensure all strings are double-quoted. No trailing commas.`;
 
     const completion = await executeWithFallback(async (client) => {
         return await client.chat.completions.create({
@@ -169,7 +142,8 @@ Rules:
                 { role: 'system', content: 'You are an SEO content generator. Output only valid JSON.' },
                 { role: 'user', content: prompt }
             ],
-            model: 'llama-3.3-70b-versatile',
+            model: 'llama-3.1-8b-instant',
+            response_format: { type: 'json_object' }
         });
     });
 
@@ -177,23 +151,31 @@ Rules:
     const tokens = completion.usage?.total_tokens || 0;
     try {
       const AIUsage = require('../models/AIUsage');
-      await AIUsage.logUsage(tokens, 'seoGeneration', currentKeyIndex);
+      await AIUsage.logUsage(tokens, 'seoGeneration', 0);
     } catch (e) { /* silent fail */ }
 
     const content = completion.choices[0]?.message?.content || '{}';
+    const cleanContent = content.replace(/```json\n?|```/g, '').trim();
     
     // Robust JSON extraction
-    const startObj = content.indexOf('{');
-    const endObj = content.lastIndexOf('}');
+    const startObj = cleanContent.indexOf('{');
+    const endObj = cleanContent.lastIndexOf('}');
     
     let jsonString = '{}';
     if (startObj !== -1 && endObj !== -1) {
-        jsonString = content.substring(startObj, endObj + 1);
+        jsonString = cleanContent.substring(startObj, endObj + 1);
     }
     
-    return JSON.parse(jsonString);
+    try {
+        return JSON.parse(jsonString);
+    } catch (e) {
+        const fixedJson = jsonString
+            .replace(/,\s*([\]}])/g, '$1')
+            .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+        return JSON.parse(fixedJson);
+    }
   } catch (error) {
-    if (error.message === 'rate_limit_exceeded_all_keys') {
+    if (error.message === 'rate_limit_exceeded') {
         return { error: 'rate_limit_exceeded' };
     }
     console.error('SEO Generation Error:', error.message);

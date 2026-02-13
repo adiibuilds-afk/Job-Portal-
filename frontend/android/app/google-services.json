@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "816458422266",
+    "project_id": "jobgrid-c3a56",
+    "storage_bucket": "jobgrid-c3a56.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:816458422266:android:7d16570ac675616b283643",
+        "android_client_info": {
+          "package_name": "com.jobgrid.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIwSqpAZcp7yc3D9pnyLg9lN2s5FC3B60"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

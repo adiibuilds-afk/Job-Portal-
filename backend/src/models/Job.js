@@ -40,6 +40,18 @@ const JobSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   reportCount: { type: Number, default: 0 },
   telegramMessageId: { type: Number },
+  
+  // AI Rate Limit Handling
+  aiStatus: { 
+      type: String, 
+      default: 'completed', 
+      enum: ['pending', 'processing', 'completed', 'failed', 'rate_limited'] 
+  },
+  rawContent: { type: String, select: false }, // Store raw text only when needed (rate limited)
+  
+  // Hybrid Scraping
+  requiresPuppeteer: { type: Boolean, default: false },
+  
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -55,7 +55,7 @@ class LinkedInBundler {
             const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
             const emoji = numberEmojis[index] || '🔹';
             
-            message += `${emoji} ${job.title} @ ${job.company}\n`;
+            message += `${emoji} <b>${job.title}</b> @ ${job.company}\n`;
             message += `📍 Location: ${job.location || 'Remote'}\n`;
             message += `🎓 Batch: ${job.batch?.join(', ') || job.eligibility || 'Any'}\n`;
             message += `🔗 Apply Here: ${jobUrl}\n\n`;
@@ -67,7 +67,7 @@ class LinkedInBundler {
         message += `🔹 Telegram: https://t.me/jobgridupdates\n`;
         message += `🔹 WhatsApp: ${WHATSAPP_GROUP_URL}\n`;
         message += `🔹 LinkedIn: https://www.linkedin.com/company/jobgrid-in\n\n`;
-        message += `#Hiring #SoftwareEngineering #Freshers #JobSearch #TechJobs #SDE #JobGrid #Careers`;
+        message += `<b>#Hiring #SoftwareEngineering #Freshers #JobSearch #TechJobs #SDE #JobGrid #Careers</b>`;
         message += "</code></pre>";
 
         try {

@@ -3,8 +3,11 @@
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from 'react-hot-toast';
 import MaintenanceGuard from "./MaintenanceGuard";
+import { useCapacitor } from "@/hooks/useCapacitor";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+    useCapacitor();
+
     return (
         <SessionProvider>
             <MaintenanceGuard>

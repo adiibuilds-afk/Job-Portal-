@@ -7,6 +7,12 @@ try {
 }
 
 const scrapeJobPageWithPuppeteer = async (url) => {
+    // Check if running in a Restricted Environment (Render Free Tier)
+    if (process.env.RENDER || process.env.SKIP_PUPPETEER) {
+        console.log(`[Puppeteer] Skipping scrape for ${url} (Disabled in this environment).`);
+        return { success: false, error: 'requires_puppeteer', skipped: true };
+    }
+
     if (!puppeteer) {
         console.warn('[Puppeteer] Skipping scrape - Puppeteer is not installed in this environment.');
         return { success: false, error: 'Puppeteer not installed (Production Mode)' };

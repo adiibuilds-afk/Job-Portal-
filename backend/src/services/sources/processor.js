@@ -67,7 +67,34 @@ const processJobUrl = async (url, bot, options = {}) => {
             scraped = await scrapeJobPage(url);
 
             // Fallback for Specific Platforms (Lever, Greenhouse)
+            // Fallback for Specific Platforms (Lever, Greenhouse)
             if (!scraped.success) {
+                // Check if it failed because Puppeteer is required but skipped
+                if (scraped.error === 'requires_puppeteer') {
+                     // Proceed to queuing logic below (we'll move the check down or handle it here)
+                     // Let's handle it here to keep flow clean
+                     console.log(`   🚜 Queuing for Local Machine: ${url}`);
+                     const queuedJob = new Job({
+                        title: 'Pending Local Scrape',
+                        company: 'Unknown',
+                        applyUrl: url,
+                        description: 'Waiting for local machine to scrape with Puppeteer.',
+                        requiresPuppeteer: true,
+                        aiStatus: 'pending',
+                        location: 'Pending',
+                        salary: 'Pending',
+                        jobType: 'FullTime',
+                        roleType: 'Engineering',
+                        seniority: 'Entry',
+                        isRemote: false,
+                        batch: [],
+                        tags: []
+                    });
+                    await queuedJob.save();
+                    console.log(`✅ Saved Pending Job: ${queuedJob._id} [Requires Puppeteer]`);
+                    return { success: true, jobId: queuedJob._id, status: 'queued_local' };
+                }
+
                 const isLever = url.includes('lever.co');
                 const isGreenhouse = url.includes('greenhouse.io') || url.includes('greenhouse.com');
 
@@ -84,7 +111,7 @@ const processJobUrl = async (url, bot, options = {}) => {
                     };
                     fallbackUsed = true;
                 } else {
-                    return { success: false }; // Not a targeted platform, skip
+                    return { success: false, error: scraped.error || 'Scraping failed' }; // Not a targeted platform, skip
                 }
             }
         }
@@ -106,30 +133,82 @@ const processJobUrl = async (url, bot, options = {}) => {
              return { skipped: true, reason: 'duplicate' };
         }
 
-        let enrichedText = `Job URL: ${url}\n\nTitle: ${scraped.title}\n${scraped.content}`;
-        let extractedData = await parseJobWithAI(enrichedText);
+        // Handle Hybrid Scraping (Puppeteer Skipped on Server)
+        if (scraped && scraped.error === 'requires_puppeteer') {
+            console.log(`   🚜 Queuing for Local Machine: ${url}`);
+            
+            const queuedJob = new Job({
+                title: 'Pending Local Scrape',
+                company: 'Unknown',
+                applyUrl: url,
+                description: 'Waiting for local machine to scrape with Puppeteer.',
+                requiresPuppeteer: true,
+                aiStatus: 'pending', // Mark as pending so we know it's not done
+                // Set defaults to satisfy schema
+                location: 'Pending',
+                salary: 'Pending',
+                jobType: 'FullTime',
+                roleType: 'Engineering',
+                seniority: 'Entry',
+                isRemote: false,
+                batch: [],
+                tags: []
+            });
+            
+            await queuedJob.save();
+            console.log(`✅ Saved Pending Job: ${queuedJob._id} [Requires Puppeteer]`);
+            return { success: true, jobId: queuedJob._id, status: 'queued_local' };
+        }
+
+        // Limit content length to avoid token overflow (approx 3000 chars)
+        const truncatedContent = scraped.content ? scraped.content.substring(0, 3000) : '';
+        let enrichedText = `Job URL: ${url}\n\nTitle: ${scraped.title}\n${truncatedContent}`;
         
-        // Handle AI Rate Limit
+        let extractedData = await parseJobWithAI(enrichedText);
+        let aiStatus = 'completed';
+        
+        // Handle AI Rate Limit - Save for later instead of erroring
         if (extractedData && extractedData.error === 'rate_limit_exceeded') {
-            return { error: 'rate_limit' };
+            console.log(`   ⚠️ Rate Limit Hit. Queuing job for later: ${scraped.title}`);
+            aiStatus = 'rate_limited';
+            extractedData = {
+                title: scraped.title,
+                company: scraped.company,
+                applyUrl: scraped.applyUrl || url,
+                description: scraped.content, // Save full content in description for now
+                location: 'Pending AI',
+                jobType: 'FullTime',
+                roleType: 'Engineering',
+                seniority: 'Entry',
+                isRemote: false,
+                salary: 'Pending',
+                batch: [],
+                tags: []
+            };
+        } else if (!extractedData) {
+            // Handle Parsing Error (JSON validation failed or other)
+            console.log(`   ⚠️ AI Parsing Failed. Queuing job for later retry: ${scraped.title}`);
+            aiStatus = 'failed'; // Or 'rate_limited' to retry? Let's use 'failed' for now to detect issues.
+            // valid strategy: fallback to scraped data
+            extractedData = {
+                title: scraped.title,
+                company: scraped.company || 'Unknown',
+                applyUrl: scraped.applyUrl || url,
+                description: scraped.content,
+                tags: [],
+                batch: []
+            };
         }
 
-        // If AI parsing fails but it's a fallback or we have feed data, we at least have basic data
-        if (!extractedData || !extractedData.title) {
-            if (fallbackUsed || options.title) {
-                extractedData = {
-                    title: scraped.title,
-                    company: scraped.company,
-                    applyUrl: scraped.applyUrl || url,
-                    description: scraped.content
-                };
-            } else {
-                return { success: false };
-            }
+        // Only refine if we actually got data from AI
+        let refinedData = {};
+        if (aiStatus === 'completed') {
+             refinedData = await refineJobWithAI(extractedData);
+             if (refinedData && refinedData.error === 'rate_limit_exceeded') {
+                 console.log(`   ⚠️ Rate Limit Hit during refinement. Queuing job.`);
+                 aiStatus = 'rate_limited';
+             }
         }
-
-        const refinedData = await refineJobWithAI(extractedData);
-        if (refinedData && refinedData.error === 'rate_limit_exceeded') return { error: 'rate_limit' };
 
         const isExternalSaaS = (link) => {
             if (!link) return false;
@@ -167,6 +246,11 @@ const processJobUrl = async (url, bot, options = {}) => {
         };
 
         const jobData = await finalizeJobData(refinedData || {}, rawData);
+        
+        jobData.aiStatus = aiStatus;
+        if (aiStatus === 'rate_limited') {
+            jobData.rawContent = `Job URL: ${url}\n\nTitle: ${scraped.title}\n${scraped.content}`;
+        }
 
         // Sanity checks/cleanup: Avoid circular links where the apply button just points back to the listing
         if (jobData.applyUrl && jobData.applyUrl.toLowerCase().includes('talentd.in')) {
@@ -189,18 +273,26 @@ const processJobUrl = async (url, bot, options = {}) => {
 
         const newJob = new Job(jobData);
         await newJob.save();
-        console.log(`✅ Saved: ${newJob.title}`);
-        console.log(`🔗 Apply Link: ${newJob.applyUrl}`);
+        console.log(`✅ Saved: ${newJob.title} [Status: ${aiStatus}]`);
+        if (aiStatus === 'completed') {
+            console.log(`🔗 Apply Link: ${newJob.applyUrl}`);
+            
+            // Trigger native app notifications only for completed jobs
+            const { triggerJobNotifications } = require('../notificationService');
+            triggerJobNotifications(newJob).catch(e => console.error('Push Trigger Error:', e));
 
-        const msgId = await postJobToTelegram(newJob, bot);
-        if (msgId) {
-            newJob.telegramMessageId = msgId;
-            await newJob.save();
-        }
+            const msgId = await postJobToTelegram(newJob, bot);
+            if (msgId) {
+                newJob.telegramMessageId = msgId;
+                await newJob.save();
+            }
 
-        // Add to WhatsApp Bundle if requested
-        if (options.bundler) {
-            await options.bundler.addJob(newJob);
+            // Add to WhatsApp Bundle if requested & completed
+            if (options.bundler) {
+                await options.bundler.addJob(newJob);
+            }
+        } else {
+            console.log(`⏳ Job queued for AI processing later.`);
         }
 
         return { success: true, jobId: newJob._id };

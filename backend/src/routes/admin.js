@@ -846,4 +846,63 @@ router.get('/health', async (req, res) => {
     }
 });
 
+// --- Job Bulk Operations ---
+
+// Bulk Delete Jobs
+router.post('/jobs/bulk-delete', async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids)) {
+            return res.status(400).json({ error: 'IDs array required' });
+        }
+        
+        const result = await Job.deleteMany({ _id: { $in: ids } });
+        
+        const AuditLog = require('../models/AuditLog');
+        await AuditLog.log('JOB_BULK_DELETE', 'system', { count: result.deletedCount, ids });
+
+        res.json({ message: `Deleted ${result.deletedCount} jobs`, success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Admin Job List (Custom pagination/filtering for admin)
+router.get('/jobs', async (req, res) => {
+    try {
+        const { page = 1, limit = 50, q = '', isActive } = req.query;
+        let query = {};
+        
+        if (q) {
+            query.$or = [
+                { title: { $regex: q, $options: 'i' } },
+                { company: { $regex: q, $options: 'i' } }
+            ];
+        }
+        
+        if (isActive !== undefined && isActive !== '') {
+            query.isActive = isActive === 'true';
+        }
+
+        const jobs = await Job.find(query)
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit))
+            .skip((parseInt(page) - 1) * parseInt(limit));
+            
+        const total = await Job.countDocuments(query);
+        
+        res.json({ 
+            jobs, 
+            pagination: { 
+                page: parseInt(page), 
+                limit: parseInt(limit), 
+                total, 
+                pages: Math.ceil(total / parseInt(limit)) 
+            } 
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;

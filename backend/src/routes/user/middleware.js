@@ -17,7 +17,11 @@ const attachUser = async (req, res, next) => {
         if (!user) {
             // Auto-create for now if not found
             const defaultName = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            user = await User.create({ name: defaultName, email });
+            user = await User.create({ name: defaultName, email, lastVisit: new Date() });
+        } else {
+            // Update last visit
+            user.lastVisit = new Date();
+            await user.save();
         }
         req.user = user;
         next();
