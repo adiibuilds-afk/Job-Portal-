@@ -18,12 +18,35 @@ const runAutoScraper = async (bot) => {
 
     // 2. Telegram Channel (InternFreak)
     try {
-        const { scrapeTelegramChannel } = require('../scraper/telegramScraper');
+        // telegramScraper exports the function directly
+        const scrapeTelegramChannel = require('../scraper/telegramScraper');
         // Scrape generic InternFreak channel
         const telegramLinks = await scrapeTelegramChannel('https://telegram.me/s/internfreak');
         await queueLinks(telegramLinks);
     } catch (e) {
         console.error('❌ Telegram Scraper Failed:', e.message);
+    }
+
+    // ... (RG Jobs stays same) ...
+
+    // 6. FreshersJobsAdda
+    try {
+        // Export is runFreshersJobsAaddaManual (note the double 'a' in Aadda)
+        const { runFreshersJobsAaddaManual } = require('../sources/freshersjobsaadda');
+        await runFreshersJobsAaddaManual(bot, 10, compositeBundler);
+    } catch (e) {
+         console.error('❌ FreshersJobsAdda Failed:', e.message);
+    }
+
+    // ...
+
+    // 10. OffCampus (Telegram)
+    try {
+        // Export is runOffcampusManual (lowercase 'c')
+        const { runOffcampusManual } = require('../sources/offcampus');
+        await runOffcampusManual(bot, 10, compositeBundler);
+    } catch (e) {
+        console.error('❌ OffCampus Failed:', e.message);
     }
 
     // 3. RG Jobs (Direct Import)
@@ -73,8 +96,8 @@ const runAutoScraper = async (bot) => {
 
     // 6. FreshersJobsAdda
     try {
-        const { runFreshersJobsAddaManual } = require('../sources/freshersjobsaadda');
-        await runFreshersJobsAddaManual(bot, 10, compositeBundler);
+        const { runFreshersJobsAaddaManual } = require('../sources/freshersjobsaadda');
+        await runFreshersJobsAaddaManual(bot, 10, compositeBundler);
     } catch (e) {
          console.error('❌ FreshersJobsAdda Failed:', e.message);
     }
@@ -105,8 +128,8 @@ const runAutoScraper = async (bot) => {
 
     // 10. OffCampus (Telegram)
     try {
-        const { runOffCampusManual } = require('../sources/offcampus');
-        await runOffCampusManual(bot, 10, compositeBundler);
+        const { runOffcampusManual } = require('../sources/offcampus');
+        await runOffcampusManual(bot, 10, compositeBundler);
     } catch (e) {
         console.error('❌ OffCampus Failed:', e.message);
     }
