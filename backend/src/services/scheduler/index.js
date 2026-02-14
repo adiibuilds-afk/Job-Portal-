@@ -29,7 +29,7 @@ const runAutoScraper = async (bot) => {
         }
     };
     
-    };
+
     
     // Helper to broadcast status
     const broadcast = async (msg) => {
