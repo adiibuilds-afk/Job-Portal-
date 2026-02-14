@@ -24,6 +24,17 @@ const processRateLimitedJobs = async (bot) => {
 
         console.log(`Found ${pendingJobs.length} pending jobs. Processing...`);
 
+        // Initialize Bundlers for this recovery run
+        const adminId = process.env.ToID || process.env.ADMIN_ID;
+        let waBundler, liBundler;
+        
+        if (bot && adminId) {
+            const WhatsAppBundler = require('../sources/whatsappBundler');
+            const LinkedInBundler = require('../sources/linkedinBundler');
+            waBundler = new WhatsAppBundler(bot, adminId);
+            liBundler = new LinkedInBundler(bot, adminId);
+        }
+
         for (const job of pendingJobs) {
             try {
                 if (!job.rawContent) {
@@ -77,10 +88,7 @@ const processRateLimitedJobs = async (bot) => {
 
                 console.log(`✅ Recovered Job: ${job.title}`);
 
-                // 5. Post-Processing (Telegram, Notification)
-                // We typically only want to notify if it's still relatively fresh? 
-                // For now, let's treat it as a new job since users haven't seen it yet.
-                
+                // 5. Post-Processing (Telegram, Notification, Bundles)
                 triggerJobNotifications(job).catch(e => console.error('Push Trigger Error:', e));
 
                 const msgId = await postJobToTelegram(job, bot);
@@ -88,6 +96,10 @@ const processRateLimitedJobs = async (bot) => {
                     job.telegramMessageId = msgId;
                     await job.save();
                 }
+
+                // Add to Bundles
+                if (waBundler) await waBundler.addJob(job);
+                if (liBundler) await liBundler.addJob(job);
 
                 // Small delay to be nice to API
                 await new Promise(r => setTimeout(r, 2000));
@@ -98,6 +110,10 @@ const processRateLimitedJobs = async (bot) => {
                 // but if it's data error, maybe? For now keep it to retry later.
             }
         }
+
+        // Flush bundles after batch
+        if (waBundler) await waBundler.flush();
+        if (liBundler) await liBundler.flush();
 
     } catch (error) {
         console.error('AI Queue Error:', error);
