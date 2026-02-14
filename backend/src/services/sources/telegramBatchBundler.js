@@ -102,21 +102,11 @@ class TelegramBatchBundler {
 
         // Add to each relevant bucket
         for (const bucket of assignedBuckets) {
-            // We need a target Chat ID (the group ID)
-            // Since user is using ONE group for all topics, we can use any specific var or a common one.
-            // But our class uses `this.chatIds`. We need to ensure we have a fallback or a default Group ID.
-            // Let's assume if specific year Chat ID isn't set, we use one common one if available?
-            // Actually, the user will set TELEGRAM_CHAT_20XX to the same ID.
-            
-            // Check if we have a Thread ID configured (except for simple groups)
-            // If thread ID is missing, it goes to 'General' topic (main chat)?
-            
+            // ... (Resolve Target Chat ID logic) ...
             let targetChatId = this.chatIds[bucket];
             
-            // Fallback for General/Older/New Years if their specific CHAT ID isn't set (likely user set only one)
-            // We can pick any valid Chat ID from our config if they are all the same group.
+            // Fallback for General/Old/New
             if (!targetChatId) {
-                 // Try to find ANY defined chat ID
                  const anyKey = Object.keys(this.chatIds).find(k => this.chatIds[k]);
                  if (anyKey) targetChatId = this.chatIds[anyKey];
             }
@@ -126,64 +116,38 @@ class TelegramBatchBundler {
                 continue;
             }
 
-            this.addToBucket(bucket, escapedJob, targetChatId);
+            // Immediately send to Thread (Single Job)
+            await this.sendSingleJob(escapedJob, bucket, targetChatId);
         }
     }
 
-    addToBucket(bucket, job, chatId) {
-        if (!this.batchBuckets[bucket]) {
-            this.batchBuckets[bucket] = { jobs: [], chatId: chatId };
-        }
-        
-        // Avoid duplicates
-        const exists = this.batchBuckets[bucket].jobs.some(j => j._id.toString() === job._id.toString());
-        if (!exists) {
-            this.batchBuckets[bucket].jobs.push(job);
-            // Update chatId just in case
-            this.batchBuckets[bucket].chatId = chatId;
-            console.log(`   📦 Job added to Telegram Queue '${bucket}' (${this.batchBuckets[bucket].jobs.length}/5)`);
-        }
-
-        // Check limit
-        if (this.batchBuckets[bucket].jobs.length >= 5) {
-            this.sendBundle(bucket); // Async but don't await to not block
-        }
-    }
-
-    async sendBundle(batch) {
-        if (!this.batchBuckets[batch] || this.batchBuckets[batch].jobs.length === 0) return;
-
-        const bucketData = this.batchBuckets[batch];
-        const targetChatId = bucketData.chatId;
-        const targetThreadId = this.threadIds[batch]; // Might be undefined for General if not set
-        
-        if (!targetChatId) return;
-
-        console.log(`   📡 Sending Telegram bundle to '${batch}' (Chat: ${targetChatId}, Thread: ${targetThreadId || 'None'})...`);
+    // Removed addToBucket/sendBundle/flush logic for buffering.
+    // New Single Job Sender
+    async sendSingleJob(job, batch, chatId) {
+        const targetThreadId = this.threadIds[batch];
         const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
-        
-        let header = `🎓 <b>Batch: ${batch}</b> Updates\n\n`;
+        const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;
+
+        let header = `🎓 <b>Batch: ${batch}</b> Alert 🚨\n\n`;
         if (batch === 'Older') {
-            header = `🎓 <b>Batch: 2023, 2022 & Older</b> Updates\n\n`;
+            header = `🎓 <b>Batch: 2023, 2022 & Older</b> Alert 🚨\n\n`;
         } else if (batch === 'General') {
-             header = `📢 <b>Latest Job Updates</b> (Open to All)\n\n`;
+             header = `📢 <b>Latest Job Update</b> (Open to All) 🚨\n\n`;
         } else if (batch === '2030') {
-             header = `🎓 <b>Batch: 2030 & Future</b> Updates\n\n`;
-        }
+             header = `🎓 <b>Batch: 2030 & Future</b> Alert 🚨\n\n`;
+        } // 2024-2029 use standard "Batch: XXXX"
 
         let message = header;
+        message += `🚀 <b>${job.title}</b>\n`;
+        message += `🏢 <b>Company:</b> ${job.company}\n`;
         
-        bucketData.jobs.forEach((job, index) => {
-            const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;
-            message += `${index + 1}. <b>${job.title}</b>\n`;
-            message += `🏢 Company: ${job.company}\n`;
-            if (job.eligibility && job.eligibility !== 'N/A') {
-                message += `👥 Eligibility: ${job.eligibility}\n`;
-            }
-            message += `🔗 Apply: ${jobUrl}\n\n`;
-        });
-
-        message += `━━━━━━━━━━━━━━━\n\n`;
+        if (job.eligibility && job.eligibility !== 'N/A') {
+            message += `👥 <b>Eligibility:</b> ${job.eligibility}\n`;
+        }
+        
+        message += `\n🔗 <b>Apply Now:</b>\n${jobUrl}\n\n`;
+        
+        message += `━━━━━━━━━━━━━━━\n`;
         message += `📢 <b>Join Our Channels:</b>\n`;
         message += `🔹 <a href="https://t.me/jobgridupdates">Telegram Channel</a>\n`;
         message += `🔹 <a href="https://chat.whatsapp.com/EuNhXQkwy7Y4ELMjB1oVPd?mode=gi_t">WhatsApp Group</a>\n`;
@@ -194,35 +158,32 @@ class TelegramBatchBundler {
                 disable_web_page_preview: true
             };
 
-            // Support for Topics (Message Threads)
             if (targetThreadId) {
-                options.message_thread_id = parseInt(targetThreadId);
+                const threadIdInt = parseInt(targetThreadId);
+                // Special handling for "General" topic (Thread ID 1 usually main chat, try omitting)
+                if (threadIdInt === 1) {
+                     // Do NOT set options.message_thread_id
+                } else {
+                    options.message_thread_id = threadIdInt;
+                }
             }
 
-            await this.bot.telegram.sendMessage(targetChatId, message, options);
-            console.log(`   ✅ Telegram bundle for '${batch}' sent.`);
-            
-            this.batchBuckets[batch] = null; // Clear bucket
+            await this.bot.telegram.sendMessage(chatId, message, options);
+            console.log(`   ✅ Telegram Job sent to '${batch}' (Thread: ${targetThreadId || 'Main'}).`);
         } catch (err) {
-            console.error(`   ❌ Failed to send Telegram bundle for ${batch} (ID: ${targetChatId}):`, err.message);
+            console.error(`   ❌ Failed to send Telegram Job to ${batch} (ID: ${chatId}):`, err.message);
         }
     }
 
     async removeJob(jobId) {
-        for (const batch in this.batchBuckets) {
-             if (this.batchBuckets[batch] && this.batchBuckets[batch].jobs) {
-                this.batchBuckets[batch].jobs = this.batchBuckets[batch].jobs.filter(j => j._id.toString() !== jobId.toString());
-             }
-        }
+        // No-op for now as we don't track message IDs for thread posts yet (could add later)
+        // Or if you kept message IDs, you could delete. 
+        // For bundling, we just removed from queue. For single post, it's sent immediately.
     }
 
     async flush() {
-        console.log(`   🧹 Flushing all Telegram Group batches...`);
-        for (const batch in this.batchBuckets) {
-            if (this.batchBuckets[batch]) {
-                 await this.sendBundle(batch);
-            }
-        }
+        // No-op
+        console.log(`   🧹 (Flush: No pending jobs, sending mode is instant)`);
     }
 }
 
