@@ -194,10 +194,12 @@ const initScheduler = (bot) => {
         processQueue(bot);
     });
 
-    // Auto-Scraper (Talentd) - Runs every 4 hours
-    cron.schedule('0 */4 * * *', () => {
+    // Auto-Scraper (Talentd) - Runs every 4 hours [DISABLED AS REQUESTED]
+    /*
+    cron.schedule('0 *\/4 * * *', () => {
         runAutoScraper(bot);
     });
+    */
 
 
     
