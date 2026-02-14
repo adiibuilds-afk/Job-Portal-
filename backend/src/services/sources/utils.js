@@ -40,6 +40,28 @@ const postJobToTelegram = async (job, bot) => {
             disable_web_page_preview: true,
         });
         console.log(`✅ Posted to channel: ${job.title}`);
+        
+        // Update Job with Channel Message ID
+        if (job._id) {
+            try {
+                // Determine if 'job' is a Mongoose document or plain object
+                // If it's a doc, we can use job.constructor or import Job model?
+                // Safest to just import Job model at top.
+                await Job.findByIdAndUpdate(job._id, {
+                    telegramMessageId: sent.message_id, // Backward compat
+                    $push: {
+                        telegramMessages: {
+                            chatId: CHANNEL_ID.toString(),
+                            messageId: sent.message_id,
+                            type: 'channel'
+                        }
+                    }
+                });
+            } catch (dbErr) {
+                console.error('⚠️ Failed to save Channel Msg ID to DB:', dbErr.message);
+            }
+        }
+
         return sent.message_id;
     } catch (err) {
         console.error('❌ Failed to post to Telegram:', err.message);

@@ -168,8 +168,27 @@ class TelegramBatchBundler {
                 }
             }
 
-            await this.bot.telegram.sendMessage(chatId, message, options);
-            console.log(`   ✅ Telegram Job sent to '${batch}' (Thread: ${targetThreadId || 'Main'}).`);
+            const sentMsg = await this.bot.telegram.sendMessage(chatId, message, options);
+            console.log(`   ✅ Telegram Job sent to '${batch}' (Thread: ${targetThreadId || 'Main'}). Msg ID: ${sentMsg.message_id}`);
+            
+            // Save Message ID to Backend
+            if (job._id) {
+                // We need to update the job in DB. 
+                // Since this class doesn't have direct DB access easily without importing Job model, 
+                // let's try to import it at top or assume global? 
+                // Better: allow passing a callback or import Job model here.
+                const Job = require('../../models/Job');
+                await Job.findByIdAndUpdate(job._id, {
+                    $push: { 
+                        telegramMessages: {
+                            chatId: chatId.toString(),
+                            messageId: sentMsg.message_id,
+                            type: 'group_thread'
+                        }
+                    }
+                });
+            }
+
         } catch (err) {
             console.error(`   ❌ Failed to send Telegram Job to ${batch} (ID: ${chatId}):`, err.message);
         }

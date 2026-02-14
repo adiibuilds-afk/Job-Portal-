@@ -69,12 +69,38 @@ router.delete('/reported', async (req, res) => {
     }
 });
 
+// Initialize Telegraf for Admin actions
+const { Telegraf } = require('telegraf');
+const bot = process.env.TELEGRAM_BOT_TOKEN ? new Telegraf(process.env.TELEGRAM_BOT_TOKEN) : null;
+
 router.delete('/:id', async (req, res) => {
     try {
-        const job = await Job.findByIdAndDelete(req.params.id);
+        const job = await Job.findById(req.params.id);
         if (!job) return res.status(404).json({ error: 'Job not found' });
-        res.json({ success: true, message: 'Job deleted successfully' });
+
+        // Delete from Telegram if exists
+        if (bot && job.telegramMessages && job.telegramMessages.length > 0) {
+            console.log(`🗑️ Deleting ${job.telegramMessages.length} Telegram messages for job: ${job.title}`);
+            for (const msg of job.telegramMessages) {
+                try {
+                    await bot.telegram.deleteMessage(msg.chatId, msg.messageId);
+                    console.log(`   ✅ Deleted Telegram msg: ${msg.messageId} from ${msg.chatId}`);
+                } catch (err) {
+                    console.error(`   ⚠️ Failed to delete Telegram msg ${msg.messageId}:`, err.message);
+                }
+            }
+        } else if (bot && job.telegramMessageId) {
+             // Fallback for older jobs
+             try {
+                const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID;
+                if (CHANNEL_ID) await bot.telegram.deleteMessage(CHANNEL_ID, job.telegramMessageId);
+             } catch (err) { }
+        }
+
+        await Job.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Job deleted successfully from Database and Telegram' });
     } catch (error) {
+        console.error('Delete Error:', error);
         res.status(500).json({ error: 'Failed to delete job' });
     }
 });
