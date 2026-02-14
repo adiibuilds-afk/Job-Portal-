@@ -58,6 +58,23 @@ The AI will parse your text and create structured job data.
         ctx.replyWithMarkdown(msg);
     });
 
+    bot.command('run', adminOnly, async (ctx) => {
+        try {
+            await ctx.reply('🕷️ Starting Auto-Scraper (All Sources)...');
+            const { runAutoScraper } = require('../../services/scheduler');
+            
+            // Run asynchronously so we don't block the bot
+            runAutoScraper(bot).then(() => {
+                ctx.reply('✅ Auto-Scraper execution completed.');
+            }).catch(err => {
+                console.error('Auto-Scraper Error:', err);
+                ctx.reply(`❌ Auto-Scraper failed: ${err.message}`);
+            });
+        } catch (err) {
+            ctx.reply('❌ Error starting scraper.');
+        }
+    });
+
     bot.command('job', adminOnly, async (ctx) => {
         const rawText = ctx.message.text.replace('/job', '').trim();
         

@@ -9,8 +9,113 @@ const runAutoScraper = async (bot) => {
     console.log('🕷️ Running Auto-Scraper for Talentd...');
     
     // 1. Talentd
-    const talentdLinks = await scrapeTalentdJobs();
-    await queueLinks(talentdLinks);
+    try {
+        const talentdLinks = await scrapeTalentdJobs();
+        await queueLinks(talentdLinks);
+    } catch (e) {
+        console.error('❌ Talentd Scraper Failed:', e.message);
+    }
+
+    // 2. Telegram Channel (InternFreak)
+    try {
+        const { scrapeTelegramChannel } = require('../scraper/telegramScraper');
+        // Scrape generic InternFreak channel
+        const telegramLinks = await scrapeTelegramChannel('https://telegram.me/s/internfreak');
+        await queueLinks(telegramLinks);
+    } catch (e) {
+        console.error('❌ Telegram Scraper Failed:', e.message);
+    }
+
+    // 3. RG Jobs (Direct Import)
+    try {
+        const { importRGJobsDirect } = require('../../scripts/importRGJobs');
+        await importRGJobsDirect(15); 
+    } catch (e) {
+        console.error('❌ RG Jobs Import Failed:', e.message);
+    }
+
+    // --- BUNDLERS INIT ---
+    const WhatsAppBundler = require('../sources/whatsappBundler');
+    const LinkedInBundler = require('../sources/linkedinBundler');
+    const adminId = process.env.ToID || process.env.ADMIN_ID; 
+    
+    // Create instances
+    const waBundler = new WhatsAppBundler(bot, adminId);
+    const liBundler = new LinkedInBundler(bot, adminId);
+
+    // Helper to add to both
+    const compositeBundler = {
+        addJob: async (job) => {
+            await waBundler.addJob(job);
+            await liBundler.addJob(job);
+        },
+        removeJob: async (jobId) => {
+            await waBundler.removeJob(jobId);
+            await liBundler.removeJob(jobId);
+        }
+    };
+
+    // 4. DotAware (Telegram)
+    try {
+        const { runDotAwareManual } = require('../sources/dotaware');
+        await runDotAwareManual(bot, 10, compositeBundler);
+    } catch (e) {
+        console.error('❌ DotAware Scraper Failed:', e.message);
+    }
+
+    // 5. FresherOffCampus (RSS)
+    try {
+        const { runFresherOffCampusManual } = require('../sources/fresheroffcampus');
+        await runFresherOffCampusManual(bot, 10, compositeBundler);
+    } catch (e) {
+        console.error('❌ FresherOffCampus Failed:', e.message);
+    }
+
+    // 6. FreshersJobsAdda
+    try {
+        const { runFreshersJobsAddaManual } = require('../sources/freshersjobsaadda');
+        await runFreshersJobsAddaManual(bot, 10, compositeBundler);
+    } catch (e) {
+         console.error('❌ FreshersJobsAdda Failed:', e.message);
+    }
+
+    // 7. GoCareers
+    try {
+        const { runGoCareersManual } = require('../sources/gocareers');
+        await runGoCareersManual(bot, 10, compositeBundler);
+    } catch (e) {
+        console.error('❌ GoCareers Failed:', e.message);
+    }
+
+    // 8. InternFreak (Direct Source)
+    try {
+        const { runInternFreakManual } = require('../sources/internfreak');
+        await runInternFreakManual(bot, 10, compositeBundler);
+    } catch (e) {
+        console.error('❌ InternFreak Failed:', e.message);
+    }
+
+    // 9. KrishnaKumar (Telegram)
+    try {
+        const { runKrishnaKumarManual } = require('../sources/krishnakumar');
+        await runKrishnaKumarManual(bot, 10, compositeBundler);
+    } catch (e) {
+        console.error('❌ KrishnaKumar Failed:', e.message);
+    }
+
+    // 10. OffCampus (Telegram)
+    try {
+        const { runOffCampusManual } = require('../sources/offcampus');
+        await runOffCampusManual(bot, 10, compositeBundler);
+    } catch (e) {
+        console.error('❌ OffCampus Failed:', e.message);
+    }
+    
+    // Flush remaining jobs
+    await waBundler.flush();
+    await liBundler.flush();
+
+
 };
 
 /**
@@ -27,12 +132,7 @@ const initScheduler = (bot) => {
         runAutoScraper(bot);
     });
 
-    // RG Jobs Direct Import (every 2 hours)
-    const { importRGJobsDirect } = require('../../scripts/importRGJobs');
-    cron.schedule('0 */2 * * *', async () => {
-        console.log('🔄 Running scheduled RG Jobs import...');
-        await importRGJobsDirect(20);
-    });
+
     
     // Indian Jobs API Import (every 3 days)
     try {

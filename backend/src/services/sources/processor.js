@@ -134,10 +134,11 @@ const processJobUrl = async (url, bot, options = {}) => {
         }
 
         // Handle Hybrid Scraping (Puppeteer Skipped on Server)
-        if (scraped && scraped.error === 'requires_puppeteer') {
-            console.log(`   🚜 Queuing for Local Machine: ${url}`);
-            
-            const queuedJob = new Job({
+        // Check if scraping failed because Puppeteer is required but skipped
+        if (!scraped.success && scraped.error === 'requires_puppeteer') {
+             console.log(`   🚜 Queuing for Local Machine: ${url}`);
+             
+             const queuedJob = new Job({
                 title: 'Pending Local Scrape',
                 company: 'Unknown',
                 applyUrl: url,

@@ -7,7 +7,8 @@ class WhatsAppBundler {
     constructor(bot, adminId) {
         this.bot = bot;
         this.adminId = adminId;
-        this.jobs = [];
+        // Buckets for each batch: { '2024': [], '2025': [], 'General': [] }
+        this.batchBuckets = {}; 
     }
 
     async addJob(job) {
@@ -28,23 +29,42 @@ class WhatsAppBundler {
             eligibility: escapeHTML(jobObj.eligibility)
         };
 
-        this.jobs.push(escapedJob);
-        console.log(`   📦 Job added to WhatsApp bundle (${this.jobs.length}/5)`);
-        
-        if (this.jobs.length >= 5) {
-            await this.sendBundle();
+        // Determine batches
+        let batches = jobObj.batch || [];
+        if (!batches || batches.length === 0) {
+            batches = ['General'];
+        }
+
+        // Add to each relevant bucket
+        for (const batch of batches) {
+            if (!this.batchBuckets[batch]) {
+                this.batchBuckets[batch] = [];
+            }
+            
+            // Avoid duplicates in the same bucket
+            const exists = this.batchBuckets[batch].some(j => j._id.toString() === jobObj._id.toString());
+            if (!exists) {
+                this.batchBuckets[batch].push(escapedJob);
+                console.log(`   📦 Job added to WhatsApp batch '${batch}' (${this.batchBuckets[batch].length}/5)`);
+            }
+
+            // Check limit for this batch
+            if (this.batchBuckets[batch].length >= 5) {
+                await this.sendBundle(batch);
+            }
         }
     }
 
-    async sendBundle() {
-        if (this.jobs.length === 0) return;
+    async sendBundle(batch) {
+        if (!this.batchBuckets[batch] || this.batchBuckets[batch].length === 0) return;
 
-        console.log(`   📡 Sending WhatsApp bundle to Admin...`);
+        console.log(`   📡 Sending WhatsApp bundle for Batch '${batch}'...`);
         const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
         
         let message = "<pre><code>";
+        message += `🎓 *Batch: ${batch}* Updates\n\n`;
         
-        this.jobs.forEach((job, index) => {
+        this.batchBuckets[batch].forEach((job, index) => {
             const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;
             message += `${index + 1}. *${job.title}*\n`;
             message += `🏢 Company: ${job.company}\n`;
@@ -66,29 +86,32 @@ class WhatsAppBundler {
                 parse_mode: 'HTML',
                 disable_web_page_preview: true
             });
-            console.log(`   ✅ WhatsApp bundle sent to Admin.`);
+            console.log(`   ✅ WhatsApp bundle for '${batch}' sent.`);
 
-            // Send separator for next batch
-            await this.bot.telegram.sendMessage(this.adminId, "n\ne\nx\nT");
+            // Send separator
+            await this.bot.telegram.sendMessage(this.adminId, `--- End of ${batch} ---`);
             
-            this.jobs = []; // Clear bundle
+            this.batchBuckets[batch] = []; // Clear bucket
         } catch (err) {
-            console.error('   ❌ Failed to send WhatsApp bundle:', err.message);
+            console.error(`   ❌ Failed to send WhatsApp bundle for ${batch}:`, err.message);
         }
     }
 
     async removeJob(jobId) {
-        const initialCount = this.jobs.length;
-        this.jobs = this.jobs.filter(j => j._id.toString() !== jobId.toString());
-        if (this.jobs.length < initialCount) {
-            console.log(`   📦 Job removed from WhatsApp bundle (${this.jobs.length}/5)`);
+        // Remove from all buckets
+        for (const batch in this.batchBuckets) {
+             const initialCount = this.batchBuckets[batch].length;
+             this.batchBuckets[batch] = this.batchBuckets[batch].filter(j => j._id.toString() !== jobId.toString());
+             if (this.batchBuckets[batch].length < initialCount) {
+                 console.log(`   📦 Job removed from WhatsApp batch '${batch}'`);
+             }
         }
     }
 
     async flush() {
-        if (this.jobs.length > 0) {
-            console.log(`   🧹 Flushing remaining jobs to WhatsApp bundle...`);
-            await this.sendBundle();
+        console.log(`   🧹 Flushing all WhatsApp batches...`);
+        for (const batch in this.batchBuckets) {
+            await this.sendBundle(batch);
         }
     }
 }
