@@ -8,6 +8,27 @@ const { scrapeTalentdJobs } = require('../scraper');
 const runAutoScraper = async (bot) => {
     console.log('🕷️ Running Auto-Scraper for Talentd...');
     
+    // --- BUNDLERS INIT ---
+    const WhatsAppBundler = require('../sources/whatsappBundler');
+    const LinkedInBundler = require('../sources/linkedinBundler');
+    const adminId = process.env.ToID || process.env.ADMIN_ID; 
+    
+    // Create instances
+    const waBundler = new WhatsAppBundler(bot, adminId);
+    const liBundler = new LinkedInBundler(bot, adminId);
+
+    // Helper to add to both
+    const compositeBundler = {
+        addJob: async (job) => {
+            await waBundler.addJob(job);
+            await liBundler.addJob(job);
+        },
+        removeJob: async (jobId) => {
+            await waBundler.removeJob(jobId);
+            await liBundler.removeJob(jobId);
+        }
+    };
+    
     // 1. Talentd
     try {
         const talentdLinks = await scrapeTalentdJobs();
@@ -57,26 +78,7 @@ const runAutoScraper = async (bot) => {
         console.error('❌ RG Jobs Import Failed:', e.message);
     }
 
-    // --- BUNDLERS INIT ---
-    const WhatsAppBundler = require('../sources/whatsappBundler');
-    const LinkedInBundler = require('../sources/linkedinBundler');
-    const adminId = process.env.ToID || process.env.ADMIN_ID; 
-    
-    // Create instances
-    const waBundler = new WhatsAppBundler(bot, adminId);
-    const liBundler = new LinkedInBundler(bot, adminId);
 
-    // Helper to add to both
-    const compositeBundler = {
-        addJob: async (job) => {
-            await waBundler.addJob(job);
-            await liBundler.addJob(job);
-        },
-        removeJob: async (jobId) => {
-            await waBundler.removeJob(jobId);
-            await liBundler.removeJob(jobId);
-        }
-    };
 
     // 4. DotAware (Telegram)
     try {
