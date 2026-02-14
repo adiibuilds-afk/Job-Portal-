@@ -176,21 +176,26 @@ const run = async () => {
              bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
              
              if (process.env.ADMIN_ID) {
-                const WhatsAppBundler = require('../services/sources/whatsappBundler');
+                // const WhatsAppBundler = require('../services/sources/whatsappBundler');
+                const TelegramBatchBundler = require('../services/sources/telegramBatchBundler');
                 const LinkedInBundler = require('../services/sources/linkedinBundler');
                 bundler = {
-                    whatsapp: new WhatsAppBundler(bot, process.env.ADMIN_ID),
+                    // whatsapp: new WhatsAppBundler(bot, process.env.ADMIN_ID),
+                    telegram: new TelegramBatchBundler(bot),
                     linkedin: new LinkedInBundler(bot, process.env.ADMIN_ID),
                     async addJob(job) {
-                        await this.whatsapp.addJob(job);
+                        // await this.whatsapp.addJob(job);
+                        await this.telegram.addJob(job);
                         await this.linkedin.addJob(job);
                     },
                     async removeJob(jobId) {
-                        await this.whatsapp.removeJob(jobId);
+                        // await this.whatsapp.removeJob(jobId);
+                        await this.telegram.removeJob(jobId);
                         await this.linkedin.removeJob(jobId);
                     },
                     async flush() {
-                        await this.whatsapp.flush();
+                        // await this.whatsapp.flush();
+                        await this.telegram.flush();
                         await this.linkedin.flush();
                     }
                 };

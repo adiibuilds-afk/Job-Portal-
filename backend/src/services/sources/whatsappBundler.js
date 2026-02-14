@@ -31,26 +31,52 @@ class WhatsAppBundler {
 
         // Determine batches
         let batches = jobObj.batch || [];
+        
+        // Target Groups
+        const targetGroups = {
+            '2030': '2030', // Future proofing
+            '2029': '2029',
+            '2028': '2028',
+            '2027': '2027',
+            '2026': '2026',
+            'Older': 'Older' // 2025, 2024, 2023, etc.
+        };
+
+        let assignedBuckets = new Set();
+
         if (!batches || batches.length === 0) {
-            batches = ['General'];
+            assignedBuckets.add('Older');
+        } else {
+            batches.forEach(b => {
+                const year = parseInt(b);
+                if (!isNaN(year)) {
+                    if (year >= 2026) {
+                        assignedBuckets.add(year.toString());
+                    } else {
+                        assignedBuckets.add('Older');
+                    }
+                } else {
+                    assignedBuckets.add('Older');
+                }
+            });
         }
 
         // Add to each relevant bucket
-        for (const batch of batches) {
-            if (!this.batchBuckets[batch]) {
-                this.batchBuckets[batch] = [];
+        for (const bucket of assignedBuckets) {
+            if (!this.batchBuckets[bucket]) {
+                this.batchBuckets[bucket] = [];
             }
             
             // Avoid duplicates in the same bucket
-            const exists = this.batchBuckets[batch].some(j => j._id.toString() === jobObj._id.toString());
+            const exists = this.batchBuckets[bucket].some(j => j._id.toString() === jobObj._id.toString());
             if (!exists) {
-                this.batchBuckets[batch].push(escapedJob);
-                console.log(`   📦 Job added to WhatsApp batch '${batch}' (${this.batchBuckets[batch].length}/5)`);
+                this.batchBuckets[bucket].push(escapedJob);
+                console.log(`   📦 Job added to WhatsApp batch '${bucket}' (${this.batchBuckets[bucket].length}/5)`);
             }
 
             // Check limit for this batch
-            if (this.batchBuckets[batch].length >= 5) {
-                await this.sendBundle(batch);
+            if (this.batchBuckets[bucket].length >= 5) {
+                await this.sendBundle(bucket);
             }
         }
     }
@@ -62,7 +88,12 @@ class WhatsAppBundler {
         const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
         
         let message = "<pre><code>";
-        message += `🎓 *Batch: ${batch}* Updates\n\n`;
+        let header = `🎓 *Batch: ${batch}* Updates\n\n`;
+        if (batch === 'Older') {
+            header = `🎓 *Batch: 2025, 2024 & Older* Updates\n\n`;
+        }
+        
+        message += header;
         
         this.batchBuckets[batch].forEach((job, index) => {
             const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;

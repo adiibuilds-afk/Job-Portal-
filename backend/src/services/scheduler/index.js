@@ -9,22 +9,27 @@ const runAutoScraper = async (bot) => {
     console.log('🕷️ Running Auto-Scraper for Talentd...');
     
     // --- BUNDLERS INIT ---
-    const WhatsAppBundler = require('../sources/whatsappBundler');
+    // --- BUNDLERS INIT ---
+    // const WhatsAppBundler = require('../sources/whatsappBundler'); // Disabled as per request
+    const TelegramBatchBundler = require('../sources/telegramBatchBundler');
     const LinkedInBundler = require('../sources/linkedinBundler');
     const adminId = process.env.ToID || process.env.ADMIN_ID; 
     
     // Create instances
-    const waBundler = new WhatsAppBundler(bot, adminId);
+    // const waBundler = new WhatsAppBundler(bot, adminId);
+    const tgBundler = new TelegramBatchBundler(bot);
     const liBundler = new LinkedInBundler(bot, adminId);
 
     // Helper to add to both
     const compositeBundler = {
         addJob: async (job) => {
-            await waBundler.addJob(job);
+            // await waBundler.addJob(job);
+            await tgBundler.addJob(job);
             await liBundler.addJob(job);
         },
         removeJob: async (jobId) => {
-            await waBundler.removeJob(jobId);
+            // await waBundler.removeJob(jobId);
+            await tgBundler.removeJob(jobId);
             await liBundler.removeJob(jobId);
         }
     };
@@ -177,7 +182,8 @@ const runAutoScraper = async (bot) => {
     }
     
     // Flush remaining jobs
-    await waBundler.flush();
+    // await waBundler.flush();
+    await tgBundler.flush();
     await liBundler.flush();
     
     await broadcast('🏁 *Auto-Scraper Cycle Completed*');

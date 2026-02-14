@@ -25,13 +25,16 @@ const processRateLimitedJobs = async (bot) => {
         console.log(`Found ${pendingJobs.length} pending jobs. Processing...`);
 
         // Initialize Bundlers for this recovery run
+        // Initialize Bundlers for this recovery run
         const adminId = process.env.ToID || process.env.ADMIN_ID;
-        let waBundler, liBundler;
+        let tgBundler, liBundler;
         
         if (bot && adminId) {
-            const WhatsAppBundler = require('../sources/whatsappBundler');
+            // const WhatsAppBundler = require('../sources/whatsappBundler');
+            const TelegramBatchBundler = require('../sources/telegramBatchBundler');
             const LinkedInBundler = require('../sources/linkedinBundler');
-            waBundler = new WhatsAppBundler(bot, adminId);
+            // waBundler = new WhatsAppBundler(bot, adminId);
+            tgBundler = new TelegramBatchBundler(bot);
             liBundler = new LinkedInBundler(bot, adminId);
         }
 
@@ -98,7 +101,8 @@ const processRateLimitedJobs = async (bot) => {
                 }
 
                 // Add to Bundles
-                if (waBundler) await waBundler.addJob(job);
+                // if (waBundler) await waBundler.addJob(job);
+                if (tgBundler) await tgBundler.addJob(job);
                 if (liBundler) await liBundler.addJob(job);
 
                 // Small delay to be nice to API
@@ -112,7 +116,8 @@ const processRateLimitedJobs = async (bot) => {
         }
 
         // Flush bundles after batch
-        if (waBundler) await waBundler.flush();
+        // if (waBundler) await waBundler.flush();
+        if (tgBundler) await tgBundler.flush();
         if (liBundler) await liBundler.flush();
 
     } catch (error) {
