@@ -32,6 +32,8 @@ const JobSchema = new mongoose.Schema({
   rolesResponsibility: { type: String, default: '' },
   requirements: { type: String, default: '' },
   niceToHave: { type: String, default: '' },
+  companyInsights: { type: String, default: '' },
+  interviewTips: { type: String, default: '' },
 
   // Analytics & Status
   views: { type: Number, default: 0 },

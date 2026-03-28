@@ -44,6 +44,7 @@ function NavbarContent() {
         { name: 'All Jobs', href: '/jobs' },
         { name: 'Dashboard', href: '/dashboard' },
         { name: 'Forum', href: '/forum' },
+        { name: 'Blog', href: '/blog' },
         // Dynamic Batch Link
         {
             name: userBatch ? `Jobs for ${userBatch}` : 'Jobs for your Batch',

@@ -95,6 +95,8 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         rolesResponsibility: formatAiValue(refinedData.rolesResponsibility || rawData.rolesAndResponsibilities),
         requirements: formatAiValue(refinedData.requirements || rawData.requirements),
         niceToHave: formatAiValue(refinedData.niceToHave || rawData.niceToHave),
+        companyInsights: formatAiValue(refinedData.companyInsights || ''),
+        interviewTips: formatAiValue(refinedData.interviewTips || ''),
         isActive: true,
         isFeatured: false
     };

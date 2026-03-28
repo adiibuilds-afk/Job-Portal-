@@ -24,6 +24,8 @@ export interface Job {
     rolesResponsibility?: string;
     requirements?: string;
     niceToHave?: string;
+    companyInsights?: string;
+    interviewTips?: string;
 
     views: number;
     clicks: number;

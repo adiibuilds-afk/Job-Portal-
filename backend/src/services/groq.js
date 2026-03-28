@@ -129,12 +129,15 @@ Generate JSON with these fields:
 7. "tags": Array of strings (Tech Stack, frameworks, soft skills).
 8. "seniority": "Entry", "Mid", or "Senior".
 9. "jobType": "FullTime", "Internship".
+10. "companyInsights": Write 2 detailed, highly unique, and engaging paragraphs discussing why working at this company (or a similar company) as this role is a great career move. Make it sound insightful and original. (Must be a String).
+11. "interviewTips": Write 2 detailed, highly unique and role-specific paragraphs on how a candidate can best prepare for an interview for this exact position. Give actionable, non-generic advice. (Must be a String).
 
 Rules:
 - Title must be purely the role and company.
 - Content should be professional.
 - For 'batch', only include years (e.g., 2024, 2025, 2026).
 - For 'tags', include specific tech mentioned in the description (e.g., Java, Python, React, DSA). Prioritize specific languages and frameworks over general skills.
+- The 'companyInsights' and 'interviewTips' fields MUST be detailed, well-written paragraphs that add massive unique value to the page (crucial for SEO).
 - Output ONLY valid JSON. No markdown tags. No extra text. Ensure all strings are double-quoted. No trailing commas.`;
 
     const completion = await executeWithFallback(async (client) => {

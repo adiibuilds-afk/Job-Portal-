@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' }, // Google Auth Images
       { protocol: 'https', hostname: 'logo.clearbit.com' }, // Company Logos
+      { protocol: 'https', hostname: 'images.unsplash.com' }, // Blog Post Headers
     ],
   },
   compiler: {
