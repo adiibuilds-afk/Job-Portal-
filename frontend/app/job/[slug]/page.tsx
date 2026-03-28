@@ -18,6 +18,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         return {
             title: `${job.title} at ${job.company} | JobGrid`,
             description: `${job.title} job opening at ${job.company}. Location: ${job.location}. Salary: ${job.salary}. Apply now!`,
+            alternates: {
+                canonical: `/job/${slug}`,
+            },
             openGraph: {
                 title: `${job.title} at ${job.company}`,
                 description: `${job.title} job opening at ${job.company}. Apply now!`,

@@ -78,9 +78,6 @@ export const metadata: Metadata = {
   verification: {
     google: "vZ7c5Hm0Ph_6jXcY0HC8N1UdGazM7_hdp68l8SH-jR0",
   },
-  alternates: {
-    canonical: "https://jobgrid.in",
-  },
   other: {
     'google-adsense-account': 'ca-pub-3356299280733421',
   },

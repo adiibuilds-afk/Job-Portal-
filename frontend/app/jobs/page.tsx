@@ -13,6 +13,9 @@ import JobSorter from '@/components/jobs/JobSorter';
 export const metadata: Metadata = {
     title: 'Browse Jobs | JobGrid - B.Tech, IT & Software Engineering Jobs',
     description: 'Explore 10,000+ software engineering, SDE, full-stack, backend, frontend & data science jobs. Filter by batch, role type, and location. Apply now!',
+    alternates: {
+        canonical: '/jobs',
+    },
     openGraph: {
         title: 'Browse IT & Software Jobs | JobGrid',
         description: 'Explore 10,000+ tech jobs for B.Tech graduates. Updated hourly.',
