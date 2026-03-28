@@ -28,6 +28,11 @@ export default function PrivacyPage() {
                         <h2 className="text-xl font-bold text-white mb-3">4. Third-Party Links</h2>
                         <p>Our site contains links to external job boards. We are not responsible for the privacy practices of those sites.</p>
                     </section>
+
+                    <section>
+                        <h2 className="text-xl font-bold text-white mb-3">5. Google AdSense & Advertising</h2>
+                        <p>We use Google AdSense to display ads on our platform. Google, as a third-party vendor, uses cookies to serve ads based on your prior visits to our site or other websites. Google's use of advertising cookies enables it and its partners to serve ads based on your internet usage. You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noreferrer" className="text-amber-500 hover:underline">Google Ads Settings</a>.</p>
+                    </section>
                 </div>
             </div>
             <Footer />

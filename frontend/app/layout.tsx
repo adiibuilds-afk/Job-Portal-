@@ -7,6 +7,7 @@ import EmailSubscriptionTrigger from '@/components/EmailSubscriptionTrigger';
 import { Analytics } from '@vercel/analytics/next';
 import Navbar from "@/components/Navbar";
 import LivePulse from "@/components/LivePulse";
+import Script from "next/script";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -92,6 +93,12 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         <meta name="theme-color" content="#000000" />
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3356299280733421"
+          crossOrigin="anonymous"
+          strategy="lazyOnload"
+        />
       </head>
       <body className={`${outfit.variable} font-sans antialiased`}>
         <Providers>
