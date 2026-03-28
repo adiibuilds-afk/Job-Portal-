@@ -100,6 +100,9 @@ class TelegramBatchBundler {
         // Final fallback if set is empty
         if (assignedBuckets.size === 0) assignedBuckets.add('General');
 
+        console.log(`   🧐 Debug Bundler: Job '${jobObj.title}' assigned to buckets: [${Array.from(assignedBuckets).join(', ')}]`);
+        console.log(`   🧐 Debug Batches: ${JSON.stringify(batches)}`);
+
         // Add to each relevant bucket
         for (const bucket of assignedBuckets) {
             // ... (Resolve Target Chat ID logic) ...

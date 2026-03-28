@@ -18,6 +18,10 @@ firebase-service-account.json
 **/firebase-service-account.json
 google-services.json
 **/google-services.json
+google-indexing-service-account.json
+**/google-indexing-service-account.json
+jobgrid-486609-dea4d0d06531.json
+**/jobgrid-486609-dea4d0d06531.json
 
 # misc
 .DS_Store
@@ -34,6 +38,12 @@ yarn-error.log*
 .agent/
 brain/
 
+# local data/scripts
 linkdin.txt
 email.txt
+*.txt
+!frontend/public/jobgrid-indexing-2026.txt
+*.bat
+*.lnk
+*.ps1
 .planning

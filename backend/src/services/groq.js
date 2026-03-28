@@ -37,17 +37,18 @@ const parseJobWithAI = async (rawText) => {
             messages: [
                 {
                     role: 'system',
-                content: `Extract JSON from job post.
+                content: `The current year is ${new Date().getFullYear()}. Extract JSON from job post.
 Fields: title, company, location, salary, eligibility, lastDate, applyUrl.
 Arrays: 
 - rolesResponsibility: Array of strings (NOT objects). Example: ["Design API", "Fix bugs"].
 - requirements: Array of strings.
 - niceToHave: Array of strings.
-- batch: Array of strings (e.g. ["2024"]). 
+- batch: Array of strings (e.g. ["2024", "2025", "2026", "2027", "2028"]). Extract the EXACT year(s) mentioned in the job post title or description. Do NOT default to older years.
 - tags: Array of strings (tech stack).
 Enums: jobType(String: Internship/FullTime), roleType(String: SDE/Frontend/Backend/etc), seniority(String: Entry/Mid/Senior), isRemote(bool).
 Rules:
 - Title: Role only (no "Hiring for").;
+- Batch: Extract batch years EXACTLY as mentioned. If the title says "2026", batch must include "2026". If "Fresher" is mentioned without a year, use the current year ${new Date().getFullYear()}.
 - Tags: Array of STRINGS only (e.g. ["Java", "React"]). NO objects.
 - Role/Seniority: Return a single STRING value, not an object.
 - Output: Valid JSON only. No markdown.`
@@ -122,9 +123,9 @@ Generate JSON with these fields:
 2. "description": A compelling 2-3 sentence meta description (max 160 chars) summarizing why this is a great opportunity.
 3. "rolesResponsibility": Array of strings (clear, concise responsibilities).
 4. "requirements": Array of strings (technical and soft skill requirements).
-5. "eligibility": A concise eligibility criteria string (e.g., "B.Tech/B.E. 2024/2025 Batch").
+5. "eligibility": A concise eligibility criteria string (e.g., "B.Tech/B.E. 2025/2026 Batch").
 6. "salary": A string representing the salary (e.g., "₹4-6 LPA" or "Competitive").
-7. "batch": Array of strings (e.g., ["2024", "2025"]).
+7. "batch": Array of strings (e.g., ["2024", "2025", "2026"]). Extract EXACT years from the original title/description.
 7. "tags": Array of strings (Tech Stack, frameworks, soft skills).
 8. "seniority": "Entry", "Mid", or "Senior".
 9. "jobType": "FullTime", "Internship".
@@ -132,7 +133,7 @@ Generate JSON with these fields:
 Rules:
 - Title must be purely the role and company.
 - Content should be professional.
-- For 'batch', only include years (e.g., 2024).
+- For 'batch', only include years (e.g., 2024, 2025, 2026).
 - For 'tags', include specific tech mentioned in the description (e.g., Java, Python, React, DSA). Prioritize specific languages and frameworks over general skills.
 - Output ONLY valid JSON. No markdown tags. No extra text. Ensure all strings are double-quoted. No trailing commas.`;
 

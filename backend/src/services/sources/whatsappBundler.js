@@ -7,8 +7,8 @@ class WhatsAppBundler {
     constructor(bot, adminId) {
         this.bot = bot;
         this.adminId = adminId;
-        // Buckets for each batch: { '2024': [], '2025': [], 'General': [] }
-        this.batchBuckets = {}; 
+        // Single queue for all jobs
+        this.jobQueue = []; 
     }
 
     async addJob(job) {
@@ -29,73 +29,31 @@ class WhatsAppBundler {
             eligibility: escapeHTML(jobObj.eligibility)
         };
 
-        // Determine batches
-        let batches = jobObj.batch || [];
-        
-        // Target Groups
-        const targetGroups = {
-            '2030': '2030', // Future proofing
-            '2029': '2029',
-            '2028': '2028',
-            '2027': '2027',
-            '2026': '2026',
-            'Older': 'Older' // 2025, 2024, 2023, etc.
-        };
-
-        let assignedBuckets = new Set();
-
-        if (!batches || batches.length === 0) {
-            assignedBuckets.add('Older');
-        } else {
-            batches.forEach(b => {
-                const year = parseInt(b);
-                if (!isNaN(year)) {
-                    if (year >= 2026) {
-                        assignedBuckets.add(year.toString());
-                    } else {
-                        assignedBuckets.add('Older');
-                    }
-                } else {
-                    assignedBuckets.add('Older');
-                }
-            });
+        // Avoid duplicates in the queue
+        const exists = this.jobQueue.some(j => j._id.toString() === jobObj._id.toString());
+        if (!exists) {
+            this.jobQueue.push(escapedJob);
+            console.log(`   📦 Job added to WhatsApp queue (${this.jobQueue.length}/5)`);
         }
 
-        // Add to each relevant bucket
-        for (const bucket of assignedBuckets) {
-            if (!this.batchBuckets[bucket]) {
-                this.batchBuckets[bucket] = [];
-            }
-            
-            // Avoid duplicates in the same bucket
-            const exists = this.batchBuckets[bucket].some(j => j._id.toString() === jobObj._id.toString());
-            if (!exists) {
-                this.batchBuckets[bucket].push(escapedJob);
-                console.log(`   📦 Job added to WhatsApp batch '${bucket}' (${this.batchBuckets[bucket].length}/5)`);
-            }
-
-            // Check limit for this batch
-            if (this.batchBuckets[bucket].length >= 5) {
-                await this.sendBundle(bucket);
-            }
+        // Check limit
+        if (this.jobQueue.length >= 5) {
+            await this.sendBundle();
         }
     }
 
-    async sendBundle(batch) {
-        if (!this.batchBuckets[batch] || this.batchBuckets[batch].length === 0) return;
+    async sendBundle() {
+        if (this.jobQueue.length === 0) return;
 
-        console.log(`   📡 Sending WhatsApp bundle for Batch '${batch}'...`);
+        console.log(`   📡 Sending WhatsApp bundle...`);
         const WEBSITE_URL = process.env.WEBSITE_URL || 'https://jobgrid.in';
         
         let message = "<pre><code>";
-        let header = `🎓 *Batch: ${batch}* Updates\n\n`;
-        if (batch === 'Older') {
-            header = `🎓 *Batch: 2025, 2024 & Older* Updates\n\n`;
-        }
+        let header = `🎓 *Latest Job Updates*\n\n`;
         
         message += header;
         
-        this.batchBuckets[batch].forEach((job, index) => {
+        this.jobQueue.forEach((job, index) => {
             const jobUrl = `${WEBSITE_URL}/job/${job.slug}`;
             message += `${index + 1}. *${job.title}*\n`;
             message += `🏢 Company: ${job.company}\n`;
@@ -117,33 +75,28 @@ class WhatsAppBundler {
                 parse_mode: 'HTML',
                 disable_web_page_preview: true
             });
-            console.log(`   ✅ WhatsApp bundle for '${batch}' sent.`);
+            console.log(`   ✅ WhatsApp bundle sent.`);
 
             // Send separator
-            await this.bot.telegram.sendMessage(this.adminId, `--- End of ${batch} ---`);
+            await this.bot.telegram.sendMessage(this.adminId, `--- End of Bundle ---`);
             
-            this.batchBuckets[batch] = []; // Clear bucket
+            this.jobQueue = []; // Clear queue
         } catch (err) {
-            console.error(`   ❌ Failed to send WhatsApp bundle for ${batch}:`, err.message);
+            console.error(`   ❌ Failed to send WhatsApp bundle:`, err.message);
         }
     }
 
     async removeJob(jobId) {
-        // Remove from all buckets
-        for (const batch in this.batchBuckets) {
-             const initialCount = this.batchBuckets[batch].length;
-             this.batchBuckets[batch] = this.batchBuckets[batch].filter(j => j._id.toString() !== jobId.toString());
-             if (this.batchBuckets[batch].length < initialCount) {
-                 console.log(`   📦 Job removed from WhatsApp batch '${batch}'`);
-             }
-        }
+         const initialCount = this.jobQueue.length;
+         this.jobQueue = this.jobQueue.filter(j => j._id.toString() !== jobId.toString());
+         if (this.jobQueue.length < initialCount) {
+             console.log(`   📦 Job removed from WhatsApp queue`);
+         }
     }
 
     async flush() {
-        console.log(`   🧹 Flushing all WhatsApp batches...`);
-        for (const batch in this.batchBuckets) {
-            await this.sendBundle(batch);
-        }
+        console.log(`   🧹 Flushing WhatsApp queue...`);
+        await this.sendBundle();
     }
 }
 

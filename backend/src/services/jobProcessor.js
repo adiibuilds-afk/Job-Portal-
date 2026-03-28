@@ -70,7 +70,20 @@ const finalizeJobData = async (refinedData, rawData = {}) => {
         // Prioritize raw captured link as AI often hallucinations hub links
         applyUrl: rawData.applyUrl || refinedData.applyUrl || '',
         category: cleanCategory(refinedData.category || rawData.category),
-        batch: parseBatches(rawData.batch && rawData.batch.length > 0 ? rawData.batch : refinedData.batch),
+        batch: (() => {
+            let baseBatch = parseBatches(rawData.batch && rawData.batch.length > 0 ? rawData.batch : refinedData.batch);
+            // Fallback: extract years from title/eligibility to catch what AI misses
+            const titleStr = `${rawData.title || ''} ${refinedData.eligibility || ''} ${rawData.eligibility || ''}`;
+            const yearMatches = titleStr.match(/\b(20[2-3]\d)\b/g);
+            if (yearMatches) {
+                const titleYears = [...new Set(yearMatches)];
+                // Merge title years into batch (avoid duplicates)
+                titleYears.forEach(y => {
+                    if (!baseBatch.includes(y)) baseBatch.push(y);
+                });
+            }
+            return baseBatch;
+        })(),
         tags: cleanTags((rawData.tags && rawData.tags.length > 0) ? rawData.tags : (refinedData.tags || (rawData.role ? [rawData.role] : []))),
         jobType: mapJobType(refinedData.jobType || rawData.jobtype || (rawData.title?.toLowerCase().includes('intern') ? 'Internship' : 'FullTime')),
         

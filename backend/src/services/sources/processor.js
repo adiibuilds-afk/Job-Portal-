@@ -4,6 +4,7 @@ const { refineJobWithAI, finalizeJobData } = require('../jobProcessor');
 const { downloadAndProcessLogo: downloadAndSaveLogo } = require('../../utils/imageProcessor');
 const Job = require('../../models/Job');
 const { postJobToTelegram } = require('./utils');
+const sitemapService = require('../sitemapService');
 
 /**
  * Extracts company name from common platform URLs for fallback
@@ -281,6 +282,9 @@ const processJobUrl = async (url, bot, options = {}) => {
             // Trigger native app notifications only for completed jobs
             const { triggerJobNotifications } = require('../notificationService');
             triggerJobNotifications(newJob).catch(e => console.error('Push Trigger Error:', e));
+
+            // Trigger search engine notifications (Sitemap / Indexing)
+            sitemapService.notifyNewJob(newJob).catch(e => console.error('Sitemap Notification Error:', e));
 
             const msgId = await postJobToTelegram(newJob, bot);
             if (msgId) {

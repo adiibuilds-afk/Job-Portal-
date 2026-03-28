@@ -9,7 +9,7 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 // Import Sources
 const { runRGJobsManual } = require('../services/sources/rgjobs');
-const { runTalentdManual } = require('../services/sources/talentd');
+// const { runTalentdManual } = require('../services/sources/talentd');
 const { runKrishnaKumarManual } = require('../services/sources/krishnakumar');
 const { runInternFreakManual } = require('../services/sources/internfreak');
 const { runGoCareersManual } = require('../services/sources/gocareers');
@@ -22,7 +22,7 @@ const readline = require('readline');
 
 const SOURCE_LIST = [
     { name: 'RG Jobs', url: 'https://rgjobs.in', key: 'rgjobs', fn: runRGJobsManual },
-    { name: 'Talentd', url: 'https://www.talentd.in/jobs', key: 'talentd', fn: runTalentdManual },
+    // { name: 'Talentd', url: 'https://www.talentd.in/jobs', key: 'talentd', fn: runTalentdManual },
     { name: 'Krishna Kumar (Telegram)', url: 'https://t.me/s/jobs_and_internships_updates', key: 'krishnakumar', fn: runKrishnaKumarManual },
     { name: 'InternFreak (Telegram)', url: 'https://t.me/s/internfreak', key: 'internfreak', fn: runInternFreakManual },
     { name: 'GoCareers (Telegram)', url: 'https://t.me/s/gocareers', key: 'gocareers', fn: runGoCareersManual },
@@ -133,25 +133,29 @@ const askQuestion = (query) => {
 const run = async () => {
     try {
         console.log('\n--- 🎯 Manual Job Source Trigger ---');
-        console.log('Select sources to run (e.g., 1,3,5 or type "all"):');
-        
-        SOURCE_LIST.forEach((s, i) => {
-            console.log(`[${i + 1}] ${s.name.padEnd(30)} | ${s.url}`);
-        });
-        console.log(`[A] Run All Sources`);
+        const args = process.argv.slice(2);
+        let choice = args[0];
+        let limitStr = args[1];
 
-        const choice = await askQuestion('\nChoice: ');
+        if (!choice) {
+            SOURCE_LIST.forEach((s, i) => {
+                console.log(`[${i + 1}] ${s.name.padEnd(30)} | ${s.url}`);
+            });
+            console.log(`[A] Run All Sources`);
+            choice = await askQuestion('\nChoice (or "all"): ');
+        } else {
+            console.log(`\nChoice (from args): ${choice}`);
+        }
 
         let selected = [];
         if (choice.toLowerCase() === 'all' || choice.toLowerCase() === 'a') {
             selected = SOURCE_LIST.filter(s => s.key !== 'direct');
-        } else if (choice.toLowerCase() === 'd') {
+        } else if (choice.toLowerCase() === 'd' || choice.toLowerCase() === 'direct') {
             selected = [SOURCE_LIST.find(s => s.key === 'direct')];
         } else {
             const indexes = choice.split(',').map(x => parseInt(x.trim()) - 1);
             selected = SOURCE_LIST.filter((_, i) => indexes.includes(i));
         }
-    
 
         if (selected.length === 0) {
             console.log('❌ No valid sources selected.');
@@ -162,7 +166,11 @@ const run = async () => {
         console.log('\nSelected Sources:');
         selected.forEach(s => console.log(` - ${s.name}: ${s.url}`));
 
-        const limitStr = await askQuestion('\nJob Limit per source (default 20): ');
+        if (!limitStr) {
+            limitStr = await askQuestion('\nJob Limit per source (default 20): ');
+        } else {
+            console.log(`Limit (from args): ${limitStr}`);
+        }
         const limit = parseInt(limitStr) || 20;
 
         console.log('\n⏳ Connecting to MongoDB...');
@@ -203,14 +211,26 @@ const run = async () => {
         }
 
         // Process selected sources
+        let totalNewJobs = 0;
         for (const source of selected) {
+            if (totalNewJobs >= limit && choice.toLowerCase() === 'all') {
+                console.log(`\n🛑 Global limit of ${limit} jobs reached. Skipping remaining sources.`);
+                break;
+            }
+
             console.log(`\n🚀 Starting Source: ${source.name} (${source.url})`);
             
             let result;
+            const remainingLimit = choice.toLowerCase() === 'all' ? (limit - totalNewJobs) : limit;
+
             if (source.key === 'direct') {
                 result = await runDirectLinks(bot, bundler);
             } else {
-                result = await source.fn(bot, limit, bundler); 
+                result = await source.fn(bot, remainingLimit, bundler); 
+            }
+
+            if (result && result.processed) {
+                totalNewJobs += result.processed;
             }
 
             if (result && result.action === 'quit') {
@@ -230,7 +250,7 @@ const run = async () => {
         }
 
         if (bundler) await bundler.flush();
-        console.log('\n✨ All selected sources processed.');
+        console.log(`\n✨ All selected sources processed. Total new jobs: ${totalNewJobs}`);
         process.exit(0);
 
     } catch (err) {
