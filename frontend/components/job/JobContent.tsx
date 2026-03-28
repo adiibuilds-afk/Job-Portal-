@@ -1,11 +1,10 @@
 "use client";
 
-import { CheckCircle2, ExternalLink, FileText, Target, Lightbulb, Award, ChevronRight, Building2, BookOpen, Sparkles } from 'lucide-react';
+import { CheckCircle2, ExternalLink, FileText, Target, Lightbulb, Award, ChevronRight } from 'lucide-react';
 import { Job } from '@/types';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { motion } from 'framer-motion';
 
 interface JobContentProps {
     job: Job;
@@ -141,56 +140,6 @@ export default function JobContent({ job }: JobContentProps) {
                         </button>
                     </div>
                 </div>
-            </div>
-
-            {/* AI Insights & Prep Sections - Glassmorphism Style */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {job.companyInsights && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="glass-card rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group"
-                    >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-all duration-700" />
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                                <Building2 className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-black text-white">Company Insights</h2>
-                                <p className="text-xs text-indigo-400 font-bold uppercase tracking-widest">AI Analysis</p>
-                            </div>
-                        </div>
-                        <div className="text-zinc-300 leading-relaxed text-lg italic border-l-2 border-indigo-500/30 pl-6">
-                            {job.companyInsights}
-                        </div>
-                    </motion.div>
-                )}
-
-                {job.interviewTips && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.1 }}
-                        className="glass-card rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group"
-                    >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-3xl group-hover:bg-rose-500/10 transition-all duration-700" />
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
-                                <BookOpen className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-black text-white">Interview Guide</h2>
-                                <p className="text-xs text-rose-400 font-bold uppercase tracking-widest">Premium Resource</p>
-                            </div>
-                        </div>
-                        <div className="text-zinc-300 leading-relaxed text-lg italic border-l-2 border-rose-500/30 pl-6">
-                            {job.interviewTips}
-                        </div>
-                    </motion.div>
-                )}
             </div>
             
             {/* Disclaimer */}

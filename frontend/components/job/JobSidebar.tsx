@@ -4,7 +4,8 @@ import JobActions from '@/components/JobActions';
 import AdBanner from '@/components/AdBanner';
 import ColdEmailGenerator from './ColdEmailGenerator';
 import { Job } from '@/types';
-import { AlertTriangle, Share2, Briefcase, Code2, Globe, Calendar, MousePointerClick, Eye, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Share2, Briefcase, Code2, Building2, BookOpen, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface JobSidebarProps {
     job: Job;
@@ -144,6 +145,55 @@ export default function JobSidebar({ job, slug }: JobSidebarProps) {
             </div>
 
             <AdBanner slotId="sidebar-1" />
+
+            {/* AI Career Advice Section */}
+            {(job.companyInsights || job.interviewTips) && (
+                <div className="space-y-4 pt-4">
+                    <div className="flex items-center gap-2 px-1">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <h4 className="text-xs font-black text-zinc-500 uppercase tracking-[0.2em]">Career Advice</h4>
+                    </div>
+
+                    {job.companyInsights && (
+                        <motion.div 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 relative overflow-hidden group"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all duration-700" />
+                            <div className="flex items-center gap-3 mb-4 relative z-10">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                    <Building2 className="w-4 h-4 text-white" />
+                                </div>
+                                <h5 className="text-sm font-black text-white">Company Insights</h5>
+                            </div>
+                            <p className="text-zinc-400 text-xs leading-relaxed relative z-10 whitespace-pre-wrap">
+                                {job.companyInsights}
+                            </p>
+                        </motion.div>
+                    )}
+
+                    {job.interviewTips && (
+                        <motion.div 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 relative overflow-hidden group"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all duration-700" />
+                            <div className="flex items-center gap-3 mb-4 relative z-10">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
+                                    <BookOpen className="w-4 h-4 text-white" />
+                                </div>
+                                <h5 className="text-sm font-black text-white">Interview Guide</h5>
+                            </div>
+                            <p className="text-zinc-400 text-xs leading-relaxed relative z-10 whitespace-pre-wrap">
+                                {job.interviewTips}
+                            </p>
+                        </motion.div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
